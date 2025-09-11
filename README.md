@@ -1,15 +1,17 @@
 # Effect CLI Application Template
 
+> 📚 **Full Documentation**: [docs/INDEX.md](docs/INDEX.md)
+
 A comprehensive template for building type-safe, scalable command-line applications using Effect.js and @effect/cli.
 
-## Features
+## ✨ Key Features
 
-- **Type-Safe CLI**: Fully typed arguments, options, and command handlers
-- **Effect.js Integration**: Leverages Effect for error handling, dependency injection, and composability  
-- **Modular Architecture**: Clean separation between production and example commands
-- **Configurable Examples**: Easy-to-toggle sample commands for learning and development
-- **Auto-formatting**: Integrated ESLint and Prettier with save-on-format
-- **Service Pattern**: Demonstrates Effect service layers and dependency injection 
+- **🔒 Type-Safe CLI**: Fully typed arguments, options, and command handlers
+- **⚡ Effect.js Integration**: Error handling, dependency injection, and composability  
+- **📦 Modular Architecture**: Clean separation between production and example commands
+- **🎛️ Configurable Examples**: Easy-to-toggle sample commands for learning
+- **🎨 Auto-formatting**: Integrated ESLint and Prettier
+- **🏗️ Service Pattern**: Effect service layers and dependency injection 
 
 ## Running Code
 
@@ -177,18 +179,18 @@ export const ExampleConfig = {
 export const ENABLE_EXAMPLES = process.env.NODE_ENV !== 'production'
 ```
 
-For detailed example management, see [EXAMPLES.md](./EXAMPLES.md).
+📖 **자세한 내용**: [Configuration > Examples](docs/configuration/EXAMPLES.md)
 
-## Effect.js Patterns
+## 🏗️ Effect.js Patterns
 
-This template demonstrates key Effect.js patterns:
+주요 패턴들 (자세한 설명은 문서 참조):
 
-- **Effect.gen**: Generator-style async/await syntax
-- **Service Pattern**: Dependency injection with Context.GenericTag
-- **Error Handling**: Type-safe error management
-- **CLI Integration**: Type-safe command-line interfaces
+- **Effect.gen**: Generator 스타일 비동기 처리
+- **Service Pattern**: Context.GenericTag를 통한 의존성 주입  
+- **Error Handling**: 타입 안전한 에러 관리
+- **CLI Integration**: 타입 안전한 명령행 인터페이스
 
-For detailed Effect.js documentation, see the [Effect.js guide](./docs/effect-js-guide.md).
+📖 **자세한 내용**: [API > Effect Patterns](docs/api/EFFECT_PATTERNS.md)
 
 ## Development
 
