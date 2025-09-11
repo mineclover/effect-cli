@@ -39,9 +39,10 @@ Effect CLI 프로젝트의 모든 문서를 주제별로 정리한 중앙 인덱
 ### 🔧 API Reference
 기술 레퍼런스
 
-- [Effect.js 패턴](./api/EFFECT_PATTERNS.md) - Effect.js 사용 패턴
-- [CLI API](./api/CLI_API.md) - Effect CLI API 레퍼런스
-- [서비스 API](./api/SERVICE_API.md) - 파일시스템 서비스 API
+- [Effect.js 패턴](./api/EFFECT_PATTERNS.md) ✅ - Effect.js 사용 패턴
+- [Effect.js 가이드](./effect-js-guide.md) ✅ - 프로젝트 특화 Effect.js API
+- [CLI API](./api/CLI_API.md) 📝 - Effect CLI API 레퍼런스
+- [서비스 API](./api/SERVICE_API.md) 📝 - 파일시스템 서비스 API
 
 ### 📚 Guides & Tutorials
 실무 가이드 및 튜토리얼
@@ -53,9 +54,10 @@ Effect CLI 프로젝트의 모든 문서를 주제별로 정리한 중앙 인덱
 ### 🚨 Operations
 운영 및 배포
 
-- [빌드 및 배포](./operations/BUILD_DEPLOY.md) - CI/CD 및 배포 가이드
-- [모니터링](./operations/MONITORING.md) - 로깅 및 에러 추적
-- [성능 최적화](./operations/PERFORMANCE.md) - CLI 성능 개선
+- [MCP 도구 사용법](./operations/MCP_USAGE.md) ✅ - Notion MCP 문서화 워크플로우
+- [빌드 및 배포](./operations/BUILD_DEPLOY.md) 📝 - CI/CD 및 배포 가이드
+- [모니터링](./operations/MONITORING.md) 📝 - 로깅 및 에러 추적
+- [성능 최적화](./operations/PERFORMANCE.md) 📝 - CLI 성능 개선
 
 ## 🎯 문서 찾기
 
