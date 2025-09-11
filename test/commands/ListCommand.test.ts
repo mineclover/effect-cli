@@ -1,6 +1,6 @@
 import { Effect } from "effect"
 import { describe, expect, it, vi } from "vitest"
-import { listCommand } from "../../src/commands/ListCommand.js"
+import { listCommand } from "../../src/examples/ListCommand.js"
 import * as FileSystemTest from "../../src/services/FileSystemTest.js"
 
 describe("ListCommand", () => {

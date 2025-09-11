@@ -18,6 +18,6 @@ run(process.argv).pipe(
   Effect.provide(NodeContext.layer),
   Effect.provide(AppLive),
   Effect.provide(DevToolsLive),
-  Effect.catchAll((e) => Effect.logError(e)),
+  Effect.tapErrorCause(Effect.logError),
   NodeRuntime.runMain
 )

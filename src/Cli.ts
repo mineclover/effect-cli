@@ -1,43 +1,30 @@
+// From: src/Cli.ts - 서브커맨드 등록 패턴
 import * as Command from "@effect/cli/Command"
 import * as Console from "effect/Console"
 
-// ============================================
-// EXAMPLE COMMANDS (Remove this section for production)
-// ============================================
-// To exclude examples, comment out the import line below:
+// Example commands (configurable via examples/config.ts)
 import { advancedCommand, catCommand, findCommand, listCommand, sampleCommand } from "./examples/index.js"
 
-// ============================================
-// YOUR COMMANDS
-// ============================================
-// Import your actual commands here:
-// import { myCommand } from "./commands/MyCommand.js"
-
-// ============================================
-// CLI CONFIGURATION
-// ============================================
-// Create main command following Effect CLI pattern
+// 메인 커맨드 생성
 const mainCommand = Command.make(
   "file-explorer",
   {},
   () => Console.log("Effect File Explorer CLI - use --help to see available commands")
 )
 
-// Add subcommands using the official Effect CLI pattern
+// 공식 패턴: Command.withSubcommands 사용
 const command = mainCommand.pipe(
   Command.withSubcommands([
-    // Example commands (remove these for production):
     listCommand,
     catCommand,
     findCommand,
     sampleCommand,
     advancedCommand
-    // Add your commands here:
-    // myCommand,
   ])
 )
 
+// 커맨드 실행 - 올바른 Command.run 사용법
 export const run = Command.run(command, {
-  name: "Effect File Explorer CLI",
+  name: "Effect File Explorer",
   version: "1.0.0"
 })
