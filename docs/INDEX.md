@@ -28,6 +28,7 @@ Effect CLI 프로젝트의 모든 문서를 주제별로 정리한 중앙 인덱
 - [타입 안전성](./development/TYPE_SAFETY.md) - Effect.js 타입 안전성 패턴
 - [테스트 작성](./development/TESTING.md) - 명령어 테스트 방법
 - [디버깅](./development/DEBUGGING.md) - 개발 중 문제 해결
+- [Queue System Tasks](./development/QUEUE_SYSTEM_TASKS.md) ✅ - 큐 시스템 구현 작업 계획
 
 ### 📋 Configuration
 설정 및 커스터마이징
@@ -49,6 +50,7 @@ Effect CLI 프로젝트의 모든 문서를 주제별로 정리한 중앙 인덱
 
 - [첫 번째 명령어 만들기](./guides/FIRST_COMMAND.md) - 단계별 명령어 생성
 - [복잡한 명령어 구현](./guides/ADVANCED_COMMANDS.md) - 고급 패턴 활용
+- [Queue System](./guides/QUEUE_SYSTEM.md) ✅ - 내부 큐 관리 및 복원력 시스템
 - [모범 사례](./guides/BEST_PRACTICES.md) - 권장 개발 패턴
 
 ### 🚨 Operations
