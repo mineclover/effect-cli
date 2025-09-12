@@ -5,23 +5,25 @@ import * as NodeRuntime from "@effect/platform-node/NodeRuntime"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import { run } from "./Cli.js"
-import { MinimalCliLayer, getLayerForEnvironment } from "./layers/index.js"
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
+import * as NodePath from "@effect/platform-node/NodePath"
+import * as NodeContext from "@effect/platform-node/NodeContext"
 
 /**
  * Phase 3.3: CLI Layer Integration
  * 
- * Production CLI with complete queue system integration including:
- * - Complete queue system (Phase 1 Foundation + Phase 2 Stability)
- * - Transparent queue adapter for seamless integration
- * - Original services enhanced with queue functionality
- * - Node.js platform context
- * - Development tools for monitoring
+ * Minimal CLI setup for testing basic functionality
+ * - Just the platform essentials without complex queue dependencies
  */
 
 const DevToolsLive = DevTools.layer()
 
-// Use minimal layer for now to test basic functionality
-const AppLayer = MinimalCliLayer
+// Absolute minimal layer - just platform services without FileSystemLive
+const AppLayer = Layer.mergeAll(
+  NodeContext.layer,
+  NodeFileSystem.layer,
+  NodePath.layer
+)
 
 // Complete application layer with queue integration
 const FullAppLayer = AppLayer.pipe(

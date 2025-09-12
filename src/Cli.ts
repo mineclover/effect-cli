@@ -2,8 +2,12 @@
 import * as Command from "@effect/cli/Command"
 import * as Console from "effect/Console"
 
-// Example commands (configurable via examples/config.ts)
-import { advancedCommand, catCommand, findCommand, listCommand, sampleCommand } from "./examples/index.js"
+// Simple test command that uses platform FileSystem directly
+import { simpleListCommand } from "./examples/SimpleListCommand.js"
+import { simpleQueueCommand } from "./examples/SimpleQueueCommand.js"
+
+// Example commands (configurable via examples/config.ts) - temporarily disabled
+// import { advancedCommand, catCommand, findCommand, listCommand, sampleCommand } from "./examples/index.js"
 
 // Queue-enhanced commands (Phase 3) - temporarily disabled for testing
 // import { queueCommand } from "./examples/QueueCommand.js"
@@ -19,16 +23,11 @@ const mainCommand = Command.make(
 
 // 공식 패턴: Command.withSubcommands 사용
 // Phase 3: Queue-enhanced CLI with transparent integration
+// Add simple test commands to verify FileSystem and Queue integration
 const command = mainCommand.pipe(
   Command.withSubcommands([
-    listCommand,          // Original listing 
-    catCommand,
-    findCommand,
-    sampleCommand,
-    advancedCommand
-    // enhancedListCommand,  // Queue-enhanced directory listing - disabled for testing
-    // queueCommand,         // Queue management commands - disabled for testing
-    // uxDemoCommand        // User experience demonstration (Phase 3.4) - disabled for testing
+    simpleListCommand,
+    simpleQueueCommand
   ])
 )
 

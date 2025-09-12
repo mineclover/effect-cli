@@ -50,8 +50,18 @@ export * from "./CircuitBreakerLive.js"
 export * from "./AdaptiveThrottlerLive.js"
 export * from "./StabilityMonitorLive.js"
 
+// Phase 4: Advanced optimization modules
+export * from "./PerformanceProfiler.js"
+export * from "./MemoryOptimizer.js"
+export * from "./AdvancedCache.js"
+
 // Re-export service tags for dependency injection
 export { InternalQueue, QueueMonitor, QueuePersistence, SchemaManager, CircuitBreaker, AdaptiveThrottler, StabilityMonitor } from "./types.js"
+
+// Phase 4 service tags
+export { PerformanceProfiler } from "./PerformanceProfiler.js"
+export { MemoryOptimizer } from "./MemoryOptimizer.js"  
+export { AdvancedCache } from "./AdvancedCache.js"
 
 // Import service tags for internal use
 import { AdaptiveThrottler, StabilityMonitor } from "./types.js"

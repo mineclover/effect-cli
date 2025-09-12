@@ -285,7 +285,7 @@ export const InternalQueueLive = Layer.effect(
 
         const queueSizes = yield* Effect.all(
           Object.fromEntries(
-            Array.from(states.entries()).map(([group, state]) => [
+            [...states.entries()].map(([group, state]) => [
               group,
               Queue.size(state.queue)
             ])
@@ -293,7 +293,7 @@ export const InternalQueueLive = Layer.effect(
         )
 
         const queues = Object.fromEntries(
-          Array.from(states.entries()).map(([group, state]) => [
+          [...states.entries()].map(([group, state]) => [
             group,
             {
               size: queueSizes[group] || 0,
@@ -305,7 +305,7 @@ export const InternalQueueLive = Layer.effect(
 
         const totalPending = Object.values(queues).reduce((sum, q) => sum + q.size, 0)
         const totalRunning = running.size
-        const processingFibers = Array.from(states.values())
+        const processingFibers = [...states.values()]
           .map((state) => Option.getOrNull(state.processingFiber))
           .filter(Boolean) as Array<Fiber.RuntimeFiber<never, never>>
 
@@ -380,7 +380,7 @@ export const InternalQueueLive = Layer.effect(
     const getRunningTasks = () =>
       Effect.gen(function*() {
         const running = yield* Ref.get(runningTasks)
-        return Array.from(running.keys())
+        return [...running.keys()]
       })
 
     const cleanup = () =>
@@ -392,13 +392,13 @@ export const InternalQueueLive = Layer.effect(
 
         // Get all processing fibers
         const states = yield* Ref.get(processingStates)
-        const processingFibers = Array.from(states.values())
+        const processingFibers = [...states.values()]
           .map((state) => Option.getOrNull(state.processingFiber))
           .filter(Boolean) as Array<Fiber.RuntimeFiber<never, never>>
 
         // Get all running task fibers
         const running = yield* Ref.get(runningTasks)
-        const taskFibers = Array.from(running.values()).map((rt) => rt.fiber)
+        const taskFibers = [...running.values()].map((rt) => rt.fiber)
 
         // Interrupt all fibers
         yield* Effect.forEach(
