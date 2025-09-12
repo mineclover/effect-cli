@@ -11,7 +11,8 @@ A comprehensive template for building type-safe, scalable command-line applicati
 - **📦 Modular Architecture**: Clean separation between production and example commands
 - **🎛️ Configurable Examples**: Easy-to-toggle sample commands for learning
 - **🎨 Auto-formatting**: Integrated ESLint and Prettier
-- **🏗️ Service Pattern**: Effect service layers and dependency injection 
+- **🏗️ Service Pattern**: Effect service layers and dependency injection
+- **⚡ Queue System**: Built-in task queue management with persistence and monitoring 
 
 ## Running Code
 
@@ -113,9 +114,61 @@ pnpm dev find ./ "*.ts"
 
 # See all available commands
 pnpm dev --help
+
+# Try the Queue System Demo
+pnpm tsx src/examples/QueueDemo.ts
+
+# Check Queue Status
+pnpm tsx src/examples/QueueStatusCommand.ts
 ```
 
-### 3. Add Your Own Commands
+### 3. Queue System Usage
+
+The template includes a comprehensive queue system for managing background tasks:
+
+```typescript
+import { 
+  QueueSystem,
+  queueFileOperation,
+  queueComputationTask,
+  initializeQueueSystem,
+  getQueueStatus 
+} from "./services/Queue/index.js"
+
+// Initialize queue system
+const sessionId = yield* initializeQueueSystem()
+
+// Queue file operations
+const taskId = yield* queueFileOperation(
+  Effect.gen(function* () {
+    // Your file operation here
+    return yield* readFile("data.txt")
+  }),
+  {
+    type: "file-read",
+    filePath: "data.txt",
+    priority: 1 // High priority
+  }
+)
+
+// Queue computations
+yield* queueComputationTask(
+  Effect.gen(function* () {
+    // Your computation here
+    return complexCalculation(data)
+  }),
+  {
+    priority: 5,
+    isMemoryIntensive: true
+  }
+)
+
+// Monitor queue status
+const status = yield* getQueueStatus()
+console.log(`Pending: ${status.queue.totalPending}`)
+```
+
+### 4. Add Your Own Commands
 
 Create a new command in `src/commands/`:
 
