@@ -16,6 +16,302 @@ Effect.js 패턴 기반 Queue System 구현을 위한 상세한 작업 계획입
 - bun:sqlite 기반 데이터 지속성
 - 재요청 시 기존 큐 초기화
 
+## 📁 파일 구조 및 작업 위치
+
+```
+src/
+├── services/Queue/                    # 큐 시스템 핵심 서비스
+│   ├── schemas/                       # 데이터베이스 스키마 파일들
+│   │   ├── schema.sql                 # ✅ 메인 스키마 (기완성)
+│   │   └── migrations.sql             # ✅ 마이그레이션 (기완성)
+│   ├── SchemaManager.ts               # ✅ 스키마 관리 서비스 (기완성)
+│   ├── types.ts                       # 📝 큐 시스템 타입 정의
+│   ├── QueuePersistenceLive.ts        # 📝 SQLite 지속성 레이어
+│   ├── InternalQueueLive.ts           # 📝 Effect.js 큐 구현  
+│   ├── CircuitBreakerLive.ts          # 📝 회로 차단기
+│   ├── AdaptiveThrottlerLive.ts       # 📝 적응형 스로틀링
+│   ├── StabilityMonitorLive.ts        # 📝 안정성 모니터링
+│   ├── QueueMonitorLive.ts            # 📝 CLI 모니터링 서비스
+│   └── index.ts                       # 📝 통합 Layer 조립
+├── services/
+│   ├── QueuedFileSystemLive.ts        # 📝 큐가 통합된 파일 시스템
+│   ├── FileSystemLive.ts              # ✅ 기존 파일 시스템 (유지)
+│   └── FileSystem.ts                  # ✅ 파일 시스템 인터페이스 (유지)
+├── examples/
+│   ├── QueueCommand.ts                # 📝 큐 관리 CLI 명령어 (새로 추가)
+│   ├── ListCommand.ts                 # ✅ 기존 명령어 (큐 통합 예정)
+│   ├── CatCommand.ts                  # ✅ 기존 명령어 (큐 통합 예정)
+│   ├── FindCommand.ts                 # ✅ 기존 명령어 (큐 통합 예정)
+│   └── index.ts                       # 🔄 QueueCommand 추가
+├── Cli.ts                             # 🔄 QueueCommand 서브커맨드 등록
+└── bin.ts                             # ✅ 진입점 (변경 없음)
+
+# 런타임 생성 파일들
+.effect-cli/
+├── queue.db                           # SQLite 데이터베이스 (런타임 생성)
+├── queue.db-journal                   # SQLite 저널 파일 (런타임)
+└── logs/                              # 로그 파일들 (옵션)
+    ├── queue-YYYY-MM-DD.log
+    └── heartbeat-YYYY-MM-DD.log
+```
+
+**범례**:
+- ✅ **완료됨**: 이미 구현된 파일
+- 📝 **구현 대상**: 새로 만들어야 할 파일  
+- 🔄 **수정 필요**: 기존 파일에 큐 통합
+
+## 🚀 CLI 통합 및 실행 시나리오
+
+### CLI 명령어 구조
+```bash
+# 기본 파일 작업 (큐가 투명하게 적용됨)
+file-explorer ls /path/to/dir           # 큐를 통해 디렉토리 리스팅
+file-explorer cat file.txt              # 큐를 통해 파일 읽기
+file-explorer find . "*.js"             # 큐를 통해 파일 검색
+
+# 큐 관리 전용 명령어 (새로 추가)
+file-explorer queue status              # 현재 큐 상태 조회
+file-explorer queue watch               # 실시간 진행률 모니터링  
+file-explorer queue history             # 과거 실행 통계
+file-explorer queue clear               # 큐 초기화 후 새 세션 시작
+file-explorer queue schema              # 데이터베이스 스키마 상태
+```
+
+### Layer 조립 및 서비스 주입 패턴
+
+```typescript
+// src/services/Queue/index.ts - 통합 Layer
+export const QueueSystemLayer = Layer.mergeAll(
+  SchemaManagerLive,        // 스키마 관리 (기반)
+  QueuePersistenceLive,     // SQLite 지속성 
+  InternalQueueLive,        // Effect.js 큐
+  CircuitBreakerLive,       // 회로 차단기
+  AdaptiveThrottlerLive,    // 적응형 스로틀링
+  StabilityMonitorLive,     // 안정성 모니터링
+  QueueMonitorLive          // CLI 모니터링
+).pipe(
+  Layer.provide(NodeContext.layer),
+  Layer.provide(DevTools.layer())
+)
+
+// src/services/QueuedFileSystemLive.ts - 투명한 큐 통합
+export const QueuedFileSystemLive = FileSystemLive.pipe(
+  Layer.provide(QueueSystemLayer)
+)
+
+// src/Cli.ts - 서브커맨드 등록
+import { queueCommand } from "./examples/QueueCommand.js"
+
+const command = mainCommand.pipe(
+  Command.withSubcommands([
+    listCommand,      // 기존 명령어 (큐 투명 적용)  
+    catCommand,       // 기존 명령어 (큐 투명 적용)
+    findCommand,      // 기존 명령어 (큐 투명 적용)
+    queueCommand,     // 새로운 큐 관리 명령어
+    sampleCommand,
+    advancedCommand
+  ])
+)
+```
+
+## 🎬 기능적 실행 시나리오
+
+### 시나리오 1: 일반 사용자 - 투명한 큐 적용
+```bash
+# 사용자는 큐의 존재를 모르고 평상시처럼 사용
+$ file-explorer ls /large/directory
+
+# 백그라운드에서 일어나는 일:
+# 1. QueuedFileSystemLive가 요청을 가로챔
+# 2. sessionId 생성 및 이전 세션 정리
+# 3. 디렉토리 리스팅 작업을 큐에 등록
+# 4. 적응형 스로틀링 적용
+# 5. Circuit Breaker 상태 확인
+# 6. 실제 파일시스템 작업 실행
+# 7. 결과 반환 + SQLite에 기록
+
+📁 Documents/
+📁 Pictures/
+📄 README.md
+📄 package.json
+
+Total: 2 files, 2 directories
+```
+
+### 시나리오 2: 대용량 처리 - 큐 모니터링
+```bash
+# Terminal 1: 대용량 검색 실행
+$ file-explorer find /huge/codebase "*.ts"
+# 백그라운드에서 수천 개 파일 처리...
+
+# Terminal 2: 실시간 모니터링
+$ file-explorer queue watch
+
+┌─ Queue Status (Session: abc-123) ─────────────────┐
+│ Total Tasks: 1,247     Completed: 856    (68.6%) │
+│ Running: 5             Pending: 386      (30.9%) │
+│ Failed: 0              Success Rate: 100%        │
+│                                                   │
+│ Resource Groups:                                  │
+│ 📁 filesystem    ████████████░░░ 78%     (1,245) │
+│ 🌐 network       ████████████████ 100%   (2)     │
+│                                                   │
+│ Performance:                                      │
+│ ⚡ Avg Duration: 45ms    📊 Throughput: 28/min   │
+│ 💾 Memory: 145MB        🔄 Circuit: Closed       │
+└───────────────────────────────────────────────────┘
+
+Process Status:
+🟢 Healthy | Uptime: 00:02:34 | GC: 0 | Failures: 0
+```
+
+### 시나리오 3: 시스템 관리자 - 완전한 제어
+```bash
+# 현재 큐 상태 확인
+$ file-explorer queue status
+{
+  "sessionId": "session-20250112-143022",
+  "totalTasks": 0,
+  "completedTasks": 0,
+  "runningTasks": 0,
+  "pendingTasks": 0,
+  "successRate": 0,
+  "lastUpdated": "2025-01-12T14:30:22.123Z"
+}
+
+# 데이터베이스 스키마 상태
+$ file-explorer queue schema
+Database Schema Status:
+Version: 1.0.0
+Tables: 6
+Valid: true
+Last Migration: 2025-01-12T14:30:15.456Z
+
+# 7일간 통계 조회
+$ file-explorer queue history
+┌──────────────┬──────────────┬───────────┬────────┬─────────────────┐
+│ Date         │ Session Count│ Completed │ Failed │ Avg Success Rate│
+├──────────────┼──────────────┼───────────┼────────┼─────────────────┤
+│ 2025-01-12   │ 3            │ 1,247     │ 2      │ 99.8%           │
+│ 2025-01-11   │ 5            │ 892       │ 0      │ 100.0%          │
+│ 2025-01-10   │ 2            │ 443       │ 1      │ 99.7%           │
+└──────────────┴──────────────┴───────────┴────────┴─────────────────┘
+
+# 문제 발생 시 큐 초기화
+$ file-explorer queue clear
+Queue cleared. New session: session-20250112-143155
+```
+
+### 시나리오 4: 개발자 - 디버깅 및 분석
+```bash
+# 상세한 프로세스 상태 확인
+$ file-explorer queue watch --verbose
+
+┌─ Detailed Queue Analysis ────────────────────────┐
+│ Session: session-20250112-143022                 │
+│ Started: 2025-01-12 14:30:22 (5 minutes ago)     │
+│                                                   │
+│ Circuit Breaker Status:                           │
+│ 📁 filesystem: Closed (0 failures)               │
+│ 🌐 network: Closed (0 failures)                  │
+│ 💻 computation: Closed (0 failures)              │
+│ 🧠 memory-intensive: HalfOpen (3 failures)       │
+│                                                   │
+│ Recent Tasks (Last 10):                          │
+│ ✅ read-file:/path/a.ts (45ms) [filesystem]      │
+│ ✅ read-file:/path/b.ts (38ms) [filesystem]      │
+│ ❌ read-file:/path/c.ts (timeout) [filesystem]   │
+│ ✅ find-files:/src (234ms) [filesystem]          │
+│                                                   │
+│ Memory Status:                                    │
+│ 🟢 Heap: 145MB / 512MB (28%)                     │
+│ 🟢 GC: Last triggered 2 minutes ago              │
+│ 🟢 Memory Leak: Not detected                     │
+└───────────────────────────────────────────────────┘
+
+Heartbeat: Process PID 12345 healthy, last seen 1s ago
+```
+
+### 시나리오 5: 장기 실행 - 안정성 검증
+```bash
+# 며칠간 계속 실행되는 서비스
+$ file-explorer watch /monitored/directory --continuous
+
+# 다른 터미널에서 상태 확인
+$ file-explorer queue status
+{
+  "sessionId": "session-20250110-090000", 
+  "uptime": "2 days, 14 hours, 23 minutes",
+  "totalTasksProcessed": 45678,
+  "totalFailures": 23,
+  "successRate": 99.95,
+  "memoryStable": true,
+  "lastGC": "2025-01-12T14:25:00.000Z",
+  "processStatus": "healthy"
+}
+
+# 프로세스 재시작 후에도 상태 복구
+$ kill -TERM 12345
+$ file-explorer ls /some/path
+# 자동으로 이전 미완료 작업들을 pending으로 복구하고 처리 계속
+```
+
+### 시나리오 6: 에러 복구 - Circuit Breaker 동작
+```bash
+# 네트워크 에러가 연속 발생하는 상황
+$ file-explorer fetch-remote-files /remote/path
+
+# 큐 상태 확인
+$ file-explorer queue status
+{
+  "circuitBreakerStatus": {
+    "network": "Open",
+    "lastFailure": "2025-01-12T14:35:22.123Z",
+    "consecutiveFailures": 5,
+    "recoveryTime": "60 seconds remaining"
+  }
+}
+
+# 60초 후 자동으로 HalfOpen 상태로 전환
+# 다시 성공하면 Closed로 복구
+```
+
+## 🏗️ 구현 시작점 및 통합 전략
+
+### Phase 0: 준비 작업 (현재)
+```bash
+# 기본 디렉토리 생성
+mkdir -p src/services/Queue
+mkdir -p .effect-cli/logs
+
+# 타입 정의부터 시작 (의존성 없음)
+touch src/services/Queue/types.ts
+touch src/services/Queue/index.ts
+```
+
+### 통합 우선순위
+1. **타입 시스템** → 모든 서비스의 기반
+2. **QueuePersistence** → SQLite 연동 및 세션 관리
+3. **InternalQueue** → Effect.js 큐 구현
+4. **QueueMonitor** → CLI 명령어 구현 
+5. **QueuedFileSystem** → 기존 명령어 투명 통합
+6. **나머지 서비스들** → 고급 기능 추가
+
+### 개발자 워크플로우
+```bash
+# 1. 개발 중 테스트
+npm run dev     # 타입 체크 + 컴파일
+npm test       # 단위 테스트
+
+# 2. 큐 시스템 상태 확인
+file-explorer queue schema    # 스키마 정상 여부
+file-explorer queue status    # 큐 동작 여부
+
+# 3. 실제 사용 테스트
+file-explorer ls .            # 투명한 큐 적용 테스트
+file-explorer queue watch     # 큐 동작 모니터링
+```
+
 ## 📋 Phase 1: 지속성 기반 타입 시스템 + bun:sqlite (Week 1)
 
 ### 1.1 스키마 관리 시스템 + 타입 시스템 통합
