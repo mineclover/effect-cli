@@ -12,12 +12,13 @@
  * @created 2025-01-12
  */
 
-import { describe, it, expect } from "bun:test"
+import { describe, it, expect } from "vitest"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as TestContext from "effect/TestContext"
+import * as TestClock from "effect/TestClock"
 
 import type {
   HeartbeatState,
@@ -103,8 +104,8 @@ describe("StabilityMonitor - Heartbeat Monitoring", () => {
       
       const initialHeartbeat = yield* monitor.getHeartbeat()
       
-      // Wait a small amount of time
-      yield* Effect.sleep(Duration.millis(10))
+      // Advance test clock by 10 milliseconds
+      yield* TestClock.adjust(Duration.millis(10))
       
       // Perform health check
       yield* monitor.performHealthCheck()
@@ -411,7 +412,8 @@ describe("StabilityMonitor - Memory Monitoring", () => {
       const monitor = yield* StabilityMonitor
       
       const metrics1 = yield* monitor.getHealthMetrics()
-      yield* Effect.sleep(Duration.millis(50))
+      // Advance test clock by 50 milliseconds instead of sleeping
+      yield* TestClock.adjust(Duration.millis(50))
       const metrics2 = yield* monitor.getHealthMetrics()
       
       const mem1 = metrics1.memory

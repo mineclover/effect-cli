@@ -8,6 +8,7 @@ import { run } from "./Cli.js"
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
 import * as NodePath from "@effect/platform-node/NodePath"
 import * as NodeContext from "@effect/platform-node/NodeContext"
+import { FileSystemLive } from "./services/FileSystemLive.js"
 
 /**
  * Phase 3.3: CLI Layer Integration
@@ -18,7 +19,7 @@ import * as NodeContext from "@effect/platform-node/NodeContext"
 
 const DevToolsLive = DevTools.layer()
 
-// Absolute minimal layer - just platform services without FileSystemLive
+// Absolute minimal layer - just platform services without complex queue dependencies
 const AppLayer = Layer.mergeAll(
   NodeContext.layer,
   NodeFileSystem.layer,

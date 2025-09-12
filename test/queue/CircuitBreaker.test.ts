@@ -5,7 +5,7 @@
  * in the Effect CLI Queue System Phase 2.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "bun:test"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as TestContext from "effect/TestContext"

@@ -22,13 +22,8 @@ import type {
   QueueTask 
 } from "./types.js"
 
-import { 
-  InternalQueue,
-  queueFileOperation,
-  queueNetworkOperation, 
-  queueComputationTask,
-  createTask
-} from "./index.js"
+import { InternalQueue } from "./types.js"
+import { createTask } from "./InternalQueueLive.js"
 
 // ============================================================================
 // TYPE DEFINITIONS

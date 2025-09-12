@@ -26,6 +26,7 @@ import { SchemaManagerLive } from "./SchemaManager.js"
 import { CircuitBreakerLive } from "./CircuitBreakerLive.js"
 import { AdaptiveThrottlerLive } from "./AdaptiveThrottlerLive.js"
 import { StabilityMonitorLive } from "./StabilityMonitorLive.js"
+import { TransparentQueueAdapterLive } from "./TransparentQueueAdapter.js"
 
 // ============================================================================
 // HIGH-LEVEL QUEUE OPERATIONS
@@ -50,6 +51,9 @@ export * from "./CircuitBreakerLive.js"
 export * from "./AdaptiveThrottlerLive.js"
 export * from "./StabilityMonitorLive.js"
 
+// Phase 3: CLI Integration modules
+export * from "./TransparentQueueAdapter.js"
+
 // Phase 4: Advanced optimization modules
 export * from "./PerformanceProfiler.js"
 export * from "./MemoryOptimizer.js"
@@ -57,6 +61,9 @@ export * from "./AdvancedCache.js"
 
 // Re-export service tags for dependency injection
 export { InternalQueue, QueueMonitor, QueuePersistence, SchemaManager, CircuitBreaker, AdaptiveThrottler, StabilityMonitor } from "./types.js"
+
+// Phase 3 service tags
+export { TransparentQueueAdapter } from "./TransparentQueueAdapter.js"
 
 // Phase 4 service tags
 export { PerformanceProfiler } from "./PerformanceProfiler.js"
@@ -118,11 +125,21 @@ export const StabilityQueueSystemLayer = Layer.mergeAll(
 )
 
 /**
+ * Phase 3.5 CLI Integration Queue System Layer
+ *
+ * Includes transparent adapter for seamless CLI integration
+ */
+export const CLIIntegratedQueueSystemLayer = Layer.mergeAll(
+  StabilityQueueSystemLayer,
+  TransparentQueueAdapterLive.pipe(Layer.provide(StabilityQueueSystemLayer))
+)
+
+/**
  * Complete Queue System Layer (Production)
  *
- * Alias for StabilityQueueSystemLayer - includes Phase 1 + Phase 2 features
+ * Alias for CLIIntegratedQueueSystemLayer - includes Phase 1 + Phase 2 + Phase 3.5 features
  */
-export const QueueSystemLayer = StabilityQueueSystemLayer
+export const QueueSystemLayer = CLIIntegratedQueueSystemLayer
 
 /**
  * Test Queue System Layer
@@ -420,11 +437,13 @@ export const resumeAllQueues = () =>
 // ============================================================================
 
 /**
- * Default queue system configuration (Phase 2 Complete)
+ * Default queue system configuration (Phase 3.5 Complete)
  */
 export const QueueSystem = {
   Layer: QueueSystemLayer,
   BasicLayer: BasicQueueSystemLayer,
+  StabilityLayer: StabilityQueueSystemLayer,
+  CLIIntegratedLayer: CLIIntegratedQueueSystemLayer,
   TestLayer: TestQueueSystemLayer,
 
   // Operations

@@ -5,9 +5,10 @@ import * as Console from "effect/Console"
 // Simple test command that uses platform FileSystem directly
 import { simpleListCommand } from "./examples/SimpleListCommand.js"
 import { simpleQueueCommand } from "./examples/SimpleQueueCommand.js"
+import { simpleSampleCommand } from "./examples/SimpleSampleCommand.js"
 
-// Example commands (configurable via examples/config.ts) - temporarily disabled
-// import { advancedCommand, catCommand, findCommand, listCommand, sampleCommand } from "./examples/index.js"
+// Example commands (configurable via examples/config.ts)
+import { advancedCommand, catCommand, findCommand, listCommand, sampleCommand } from "./examples/index.js"
 
 // Queue-enhanced commands (Phase 3) - temporarily disabled for testing
 // import { queueCommand } from "./examples/QueueCommand.js"
@@ -27,7 +28,8 @@ const mainCommand = Command.make(
 const command = mainCommand.pipe(
   Command.withSubcommands([
     simpleListCommand,
-    simpleQueueCommand
+    simpleQueueCommand,
+    simpleSampleCommand
   ])
 )
 

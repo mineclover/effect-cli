@@ -5,7 +5,7 @@
  * in the Effect CLI Queue System Phase 2.2.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from "bun:test"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Fiber from "effect/Fiber"

@@ -4,6 +4,20 @@
 
 A comprehensive template for building type-safe, scalable command-line applications using Effect.js and @effect/cli.
 
+## 📖 Documentation
+
+### Queue System Documentation
+- **[🚀 Quick Start Guide](docs/queue-system/README.md)** - Get started with the queue system
+- **[📘 Complete User Guide](docs/EFFECT_CLI_QUEUE_SYSTEM.md)** - Comprehensive documentation
+- **[🔧 API Reference](docs/QUEUE_SYSTEM_API.md)** - Technical API documentation
+- **[💡 Examples](docs/queue-system/examples.md)** - Code examples and patterns
+- **[🏗️ Architecture](docs/development/queue-plan/README.md)** - System design and implementation
+
+### General Documentation
+- **[📚 Main Index](docs/INDEX.md)** - Complete documentation index
+- **[⚙️ Configuration](docs/configuration/EXAMPLES.md)** - Configuration guide
+- **[🎯 Effect Patterns](docs/api/EFFECT_PATTERNS.md)** - Effect.js patterns and usage
+
 ## ✨ Key Features
 
 - **🔒 Type-Safe CLI**: Fully typed arguments, options, and command handlers
@@ -106,14 +120,23 @@ pnpm install
 # List files in current directory
 pnpm dev list ./
 
-# Read a file  
-pnpm dev cat package.json
+# List with detailed information
+pnpm dev list --long ./
 
-# Search for TypeScript files
-pnpm dev find ./ "*.ts"
+# Try the comprehensive sample command
+pnpm dev sample package.json ./ "ts"
+
+# Sample with verbose output and JSON format
+pnpm dev sample --verbose --format json package.json ./ "config"
+
+# Sample with table format and limit results
+pnpm dev sample --format table --limit 5 package.json ./ "md"
 
 # See all available commands
 pnpm dev --help
+
+# Check specific command help
+pnpm dev sample --help
 
 # Try the Queue System Demo
 pnpm tsx src/examples/QueueDemo.ts
@@ -122,7 +145,36 @@ pnpm tsx src/examples/QueueDemo.ts
 pnpm tsx src/examples/QueueStatusCommand.ts
 ```
 
-### 3. Queue System Usage
+### 3. Sample Command Examples
+
+The `sample` command demonstrates various CLI patterns:
+
+**Basic Usage:**
+```sh
+pnpm dev sample <file> <path> <pattern>
+```
+
+**Advanced Options:**
+```sh
+# Verbose mode with JSON output
+pnpm dev sample --verbose --format json package.json ./ "config"
+
+# Table format with result limit
+pnpm dev sample --format table --limit 3 README.md src/ "Command"
+
+# Default text format
+pnpm dev sample package.json ./ "ts"
+```
+
+**Sample Command Features:**
+- **Arguments**: File to read, directory to search, search pattern
+- **Output Formats**: `text` (default), `json`, `table`
+- **Options**: `--verbose`, `--limit`, `--format`
+- **File Analysis**: Shows file content preview and line count
+- **Directory Search**: Finds files/folders matching the pattern
+- **Flexible Output**: Multiple format options for different use cases
+
+### 4. Queue System Usage
 
 The template includes a comprehensive queue system for managing background tasks:
 
@@ -168,7 +220,11 @@ const status = yield* getQueueStatus()
 console.log(`Pending: ${status.queue.totalPending}`)
 ```
 
-### 4. Add Your Own Commands
+### 5. Add Your Own Commands
+
+Learn from the comprehensive sample command pattern first:
+- 📄 **[SimpleSampleCommand.ts](src/examples/SimpleSampleCommand.ts)** - Complete example with all patterns
+- 📄 **[SimpleListCommand.ts](src/examples/SimpleListCommand.ts)** - Basic file system usage
 
 Create a new command in `src/commands/`:
 
