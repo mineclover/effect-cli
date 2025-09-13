@@ -9,7 +9,6 @@ import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
-import { FileSystem } from "@effect/platform/FileSystem"
 
 // Arguments
 const nameArg = Args.text({ name: "name" }).pipe(
@@ -41,46 +40,32 @@ export const greetCommand = Command.make("greet", {
   Command.withDescription("Greet someone with customizable options"),
   Command.withHandler(({ name, formal, language, count }) =>
     Effect.gen(function*() {
-      // FileSystem 서비스 테스트
-      const fs = yield* FileSystem
-      
-      yield* Console.log("🚀 Greet Command Started")
-      
       // 인사말 생성
       const getGreeting = (lang: string, isFormal: boolean): string => {
         if (lang === "ko") {
           return isFormal ? "안녕하십니까" : "안녕하세요"
         } else if (lang === "ja") {
-          return isFormal ? "こんにちは" : "やあ"
+          return isFormal ? "おはようございます" : "こんにちは"
         } else {
           return isFormal ? "Good day" : "Hello"
         }
       }
-      
+
+      const getEmoji = (isFormal: boolean): string => {
+        return isFormal ? "🎩" : "👋"
+      }
+
       const greeting = getGreeting(language, formal)
-      
+      const emoji = getEmoji(formal)
+
       // 지정된 횟수만큼 인사
       for (let i = 0; i < count; i++) {
-        const countSuffix = count > 1 ? ` (${i + 1}/${count})` : ""
-        yield* Console.log(`${greeting}, ${name}!${countSuffix}`)
+        if (formal) {
+          yield* Console.log(`${greeting}, ${name}. ${emoji}`)
+        } else {
+          yield* Console.log(`${greeting} ${name}! ${emoji}`)
+        }
       }
-      
-      // 추가 정보 출력
-      yield* Console.log(`\n📊 Summary:`)
-      yield* Console.log(`   Name: ${name}`)
-      yield* Console.log(`   Language: ${language}`)
-      yield* Console.log(`   Style: ${formal ? "formal" : "casual"}`)
-      yield* Console.log(`   Count: ${count}`)
-      
-      // FileSystem 사용 테스트 (현재 디렉토리 확인)
-      try {
-        const currentDir = yield* fs.readDirectory("./")
-        yield* Console.log(`\n📁 Current directory has ${currentDir.length} items`)
-      } catch (error) {
-        yield* Console.log(`\n❌ Could not read directory: ${error}`)
-      }
-      
-      yield* Console.log("✅ Greet Command Completed")
     })
   )
 )
