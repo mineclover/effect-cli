@@ -54,11 +54,11 @@ const mockFailingOperation = (errorMessage: string) =>
 /**
  * Run effect with test layer
  */
-const runTest = <A, E>(effect: Effect.Effect<A, E>) =>
+const runTest = <A, E>(effect: Effect.Effect<A, E, any>) =>
   Effect.runPromise(
     effect.pipe(
       Effect.provide(QueueSystem.BasicLayer)
-    )
+    ) as Effect.Effect<A, E, never>
   )
 
 // ============================================================================

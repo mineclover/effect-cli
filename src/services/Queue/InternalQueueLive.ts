@@ -26,7 +26,7 @@ import { generateTaskId, InternalQueue, QueueError, QueuePersistence } from "./t
 
 interface ProcessingState {
   readonly queue: Queue.Queue<QueueTask>
-  readonly processingFiber: Option.Option<Fiber.RuntimeFiber<never, never>>
+  readonly processingFiber: Option.Option<Fiber.RuntimeFiber<void, never>>
   readonly isPaused: boolean
   readonly lastProcessed: Option.Option<Date>
 }
@@ -246,8 +246,8 @@ export const InternalQueueLive = Layer.effect(
           lastError: Option.none(),
           errorStack: Option.none(),
           filePath: task.operationData.pipe(
-            Option.map((data: any) => data.filePath),
-            Option.flatten
+            Option.map((data: any) => data.filePath as string | undefined),
+            Option.filter((path): path is string => typeof path === "string")
           ),
           fileSize: Option.none(),
           fileHash: Option.none(),

@@ -1,32 +1,69 @@
-# Effect CLI Application Template
+# Effect CLI Application Framework
 
 > 📚 **Full Documentation**: [docs/INDEX.md](docs/INDEX.md)
 
-A comprehensive template for building type-safe, scalable command-line applications using Effect.js and @effect/cli.
+A production-ready framework for building type-safe, scalable command-line applications using Effect.js and @effect/cli.
+
+## 🎯 Project Structure
+
+### Core Framework (`src/`)
+```
+src/
+├── commands/           # 🎯 Main CLI Commands
+│   ├── GreetCommand.ts     # Basic template example
+│   ├── QueueCommand.ts     # Queue management (core feature)
+│   ├── QueueStatusCommand.ts
+│   └── SimpleQueueCommand.ts
+├── services/           # 🔧 Core Services
+│   ├── Queue/              # Task queue management system
+│   ├── UserExperience/     # UX enhancement services
+│   ├── FileSystem.ts       # File system interface
+│   └── FileSystemLive.ts   # File system implementation
+├── Cli.ts             # Main CLI configuration
+└── bin.ts             # CLI entry point
+```
+
+### Learning Samples (`samples/`)
+```
+samples/
+├── commands/          # 📚 CLI Pattern Examples
+│   ├── ListCommand.ts      # Basic file operations
+│   ├── SampleCommand.ts    # Advanced CLI patterns
+│   ├── EnhancedListCommand.ts
+│   └── [10+ more examples]
+└── README.md          # Sample documentation
+```
+
+### Development Guides (`docs/testing/`)
+```
+docs/testing/
+├── TDD_GUIDELINES.md       # Test-driven development guide
+├── TEST_CONVENTIONS.md     # Testing standards and patterns
+└── TESTING_REFERENCE.md    # Complete testing reference
+```
+
+## ✨ Core Features
+
+- **🔒 Type-Safe CLI**: Fully typed arguments, options, and command handlers
+- **⚡ Effect.js Integration**: Error handling, dependency injection, and composability
+- **📦 Queue Management**: Production-ready task queue system with monitoring
+- **🧪 TDD Framework**: Comprehensive testing infrastructure and guidelines
+- **🎨 Auto-formatting**: Integrated ESLint and Prettier
+- **🏗️ Service Pattern**: Effect service layers and dependency injection
 
 ## 📖 Documentation
 
-### Queue System Documentation
+### Queue System (Core Feature)
 - **[🚀 Quick Start Guide](docs/queue-system/README.md)** - Get started with the queue system
 - **[📘 Complete User Guide](docs/EFFECT_CLI_QUEUE_SYSTEM.md)** - Comprehensive documentation
 - **[🔧 API Reference](docs/QUEUE_SYSTEM_API.md)** - Technical API documentation
 - **[💡 Examples](docs/queue-system/examples.md)** - Code examples and patterns
-- **[🏗️ Architecture](docs/development/queue-plan/README.md)** - System design and implementation
 
-### General Documentation
-- **[📚 Main Index](docs/INDEX.md)** - Complete documentation index
-- **[⚙️ Configuration](docs/configuration/EXAMPLES.md)** - Configuration guide
-- **[🎯 Effect Patterns](docs/api/EFFECT_PATTERNS.md)** - Effect.js patterns and usage
-
-## ✨ Key Features
-
-- **🔒 Type-Safe CLI**: Fully typed arguments, options, and command handlers
-- **⚡ Effect.js Integration**: Error handling, dependency injection, and composability  
-- **📦 Modular Architecture**: Clean separation between production and example commands
-- **🎛️ Configurable Examples**: Easy-to-toggle sample commands for learning
-- **🎨 Auto-formatting**: Integrated ESLint and Prettier
-- **🏗️ Service Pattern**: Effect service layers and dependency injection
-- **⚡ Queue System**: Built-in task queue management with persistence and monitoring 
+### Development Framework
+- **[🧪 TDD Guidelines](docs/testing/TDD_GUIDELINES.md)** - Test-driven development approach
+- **[📋 Test Conventions](docs/testing/TEST_CONVENTIONS.md)** - Testing standards
+- **[📚 Testing Reference](docs/testing/TESTING_REFERENCE.md)** - Complete testing guide
+- **[🎯 Effect Patterns](docs/api/EFFECT_PATTERNS.md)** - Effect.js patterns and usage 
 
 ## Running Code
 

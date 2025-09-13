@@ -1,26 +1,22 @@
 /**
  * Layer Composition Strategy
- * 
+ *
  * Hierarchical layer composition for the Effect CLI with queue system integration.
  * Provides different layer configurations for production, development, and testing.
- * 
+ *
  * Phase 3.3: CLI Layer Integration
- * 
+ *
  * @version 2.0.0 (Queue Enhanced)
  * @created 2025-01-12
  */
 
-import * as Layer from "effect/Layer"
 import * as NodeContext from "@effect/platform-node/NodeContext"
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
 import * as NodePath from "@effect/platform-node/NodePath"
+import * as Layer from "effect/Layer"
 
 // Queue System Layers (Phase 1 + Phase 2)
-import { 
-  QueueSystemLayer,
-  BasicQueueSystemLayer,
-  StabilityQueueSystemLayer
-} from "../services/Queue/index.js"
+import { BasicQueueSystemLayer, QueueSystemLayer, StabilityQueueSystemLayer } from "../services/Queue/index.js"
 
 // Queue Integration Layer (Phase 3)
 import { TransparentQueueAdapterLive } from "../services/Queue/TransparentQueueAdapter.js"
@@ -37,7 +33,7 @@ import { FileSystemLive } from "../services/FileSystemLive.js"
 
 /**
  * Production CLI Layer with complete queue system integration
- * 
+ *
  * Includes:
  * - Complete queue system (Phase 1 Foundation + Phase 2 Stability)
  * - Transparent queue adapter for seamless integration
@@ -49,28 +45,24 @@ export const ProductionCliLayer = Layer.mergeAll(
   NodeContext.layer,
   NodeFileSystem.layer,
   NodePath.layer,
-  
   // Complete queue system (Phases 1 + 2)
   QueueSystemLayer,
-  
   // Transparent queue integration (Phase 3)
   TransparentQueueAdapterLive.pipe(
     Layer.provide(QueueSystemLayer)
   ),
-  
   // Original services (FileSystem remains available for non-queue operations if needed)
   FileSystemLive
 )
 
 /**
  * Enhanced Production Layer with all Phase 3 features
- * 
+ *
  * This is the recommended layer for production CLI usage.
  * Includes all queue features, stability monitoring, and user experience enhancements.
  */
 export const EnhancedProductionCliLayer = Layer.mergeAll(
   ProductionCliLayer,
-  
   // User Experience Enhancement (Phase 3.4)
   UserExperienceEnhancerLive.pipe(
     Layer.provide(QueueSystemLayer)
@@ -83,42 +75,36 @@ export const EnhancedProductionCliLayer = Layer.mergeAll(
 
 /**
  * Development CLI Layer for testing and development
- * 
+ *
  * Uses lighter queue configuration and enables additional debugging features.
  */
 export const DevelopmentCliLayer = Layer.mergeAll(
   NodeContext.layer,
   NodeFileSystem.layer,
   NodePath.layer,
-  
   // Basic queue system for development
   BasicQueueSystemLayer,
-  
   // Queue integration
   TransparentQueueAdapterLive.pipe(
     Layer.provide(BasicQueueSystemLayer)
   ),
-  
   // Original services
   FileSystemLive
 )
 
 /**
  * Stability Testing Layer
- * 
+ *
  * Includes full stability features for testing Phase 2 functionality
  */
 export const StabilityTestingLayer = Layer.mergeAll(
   NodeContext.layer,
-  
   // Full stability queue system
   StabilityQueueSystemLayer,
-  
   // Queue integration
   TransparentQueueAdapterLive.pipe(
     Layer.provide(StabilityQueueSystemLayer)
   ),
-  
   // Original services
   FileSystemLive
 )
@@ -129,38 +115,33 @@ export const StabilityTestingLayer = Layer.mergeAll(
 
 /**
  * Unit Test Layer
- * 
+ *
  * Lightweight layer for unit testing individual components.
  * Does not require database or file system access.
  */
 export const UnitTestLayer = Layer.mergeAll(
   // Test queue system (would use mocked implementations)
   BasicQueueSystemLayer,
-  
   // Queue integration
   TransparentQueueAdapterLive.pipe(
     Layer.provide(BasicQueueSystemLayer)
   )
-  
   // Note: FileSystemLive would be replaced with FileSystemTest in actual testing
 )
 
 /**
  * Integration Test Layer
- * 
+ *
  * Full integration layer for end-to-end testing of CLI functionality.
  */
 export const IntegrationTestLayer = Layer.mergeAll(
   NodeContext.layer,
-  
   // Complete queue system
   QueueSystemLayer,
-  
   // Queue integration
   TransparentQueueAdapterLive.pipe(
     Layer.provide(QueueSystemLayer)
   ),
-  
   // Real services for integration testing
   FileSystemLive
 )
@@ -171,7 +152,7 @@ export const IntegrationTestLayer = Layer.mergeAll(
 
 /**
  * Queue-Only Layer
- * 
+ *
  * Just the queue system without CLI integration.
  * Useful for queue system testing and standalone queue operations.
  */
@@ -182,7 +163,7 @@ export const QueueOnlyLayer = Layer.mergeAll(
 
 /**
  * Minimal CLI Layer
- * 
+ *
  * CLI without queue integration - fallback for environments where
  * queue system cannot be initialized.
  */
@@ -220,7 +201,7 @@ export const getLayerForEnvironment = (env: string = process.env.NODE_ENV || "pr
  */
 export interface LayerFeatures {
   readonly queue: boolean
-  readonly stability: boolean  
+  readonly stability: boolean
   readonly transparency: boolean
   readonly userExperience: boolean
 }
@@ -233,20 +214,20 @@ export const getLayerForFeatures = (features: Partial<LayerFeatures>) => {
     userExperience: true,
     ...features
   }
-  
+
   if (!fullFeatures.queue) {
     return MinimalCliLayer
   }
-  
+
   let layer = fullFeatures.stability ? StabilityQueueSystemLayer : BasicQueueSystemLayer
-  
+
   if (fullFeatures.transparency) {
     layer = Layer.mergeAll(
       layer,
       TransparentQueueAdapterLive.pipe(Layer.provide(layer))
     )
   }
-  
+
   return Layer.mergeAll(
     NodeContext.layer,
     layer,

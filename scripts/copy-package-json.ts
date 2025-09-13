@@ -6,25 +6,25 @@ const program = Effect.gen(function*() {
   const fs = yield* FileSystem.FileSystem
   const path = yield* Path.Path
   yield* Effect.log("[Build] Copying package.json and schema files ...")
-  
+
   // Copy schema files to dist/schemas
   const schemasDir = path.join("dist", "schemas")
   const sourceSchemas = path.join("src", "services", "Queue", "schemas")
-  
+
   yield* fs.makeDirectory(schemasDir, { recursive: true }).pipe(
     Effect.catchAll(() => Effect.void) // Ignore if directory exists
   )
-  
+
   const schemaFiles = yield* fs.readDirectory(sourceSchemas)
   yield* Effect.forEach(schemaFiles, (file) => {
-    if (file.endsWith('.sql')) {
+    if (file.endsWith(".sql")) {
       const sourcePath = path.join(sourceSchemas, file)
       const destPath = path.join(schemasDir, file)
       return fs.copy(sourcePath, destPath)
     }
     return Effect.void
   })
-  
+
   yield* Effect.log("[Build] Schema files copied to dist/schemas")
   yield* Effect.log("[Build] Copying package.json ...")
   const json: any = yield* fs.readFileString("package.json").pipe(Effect.map(JSON.parse))

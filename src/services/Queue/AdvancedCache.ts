@@ -1,11 +1,11 @@
 /**
  * Advanced Cache System for Effect CLI Queue System
- * 
+ *
  * Multi-tier caching with intelligent eviction policies, cache warming,
  * and performance-aware cache management for optimal queue performance.
- * 
+ *
  * Phase 4.3: Advanced Caching Strategies and Queue Optimization
- * 
+ *
  * @version 1.0.0
  * @created 2025-01-12
  */
@@ -15,10 +15,10 @@ import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
-import * as HashMap from "effect/HashMap"
-import * as Schedule from "effect/Schedule"
+// import * as HashMap from "effect/HashMap" // Unused import
+import type * as Schedule from "effect/Schedule"
 
-import type { ResourceGroup, OperationType } from "./types.js"
+// import type { ResourceGroup, OperationType } from "./types.js" // Unused import
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -40,10 +40,10 @@ export type EvictionPolicy = "lru" | "lfu" | "ttl" | "adaptive" | "priority"
 export interface CacheEntry<T> {
   readonly key: string
   readonly value: T
-  readonly tier: CacheTier
+  tier: CacheTier // Mutable to allow tier promotion/demotion
   readonly createdAt: number
-  readonly lastAccessed: number
-  readonly accessCount: number
+  lastAccessed: number // Mutable for access tracking
+  accessCount: number // Mutable for access tracking
   readonly size: number
   readonly ttl?: number
   readonly priority: number
@@ -110,7 +110,7 @@ export interface AdvancedCache {
   readonly delete: (key: string) => Effect.Effect<boolean>
   readonly clear: (pattern?: string) => Effect.Effect<number>
   readonly getStats: () => Effect.Effect<CacheStats>
-  readonly optimize: () => Effect.Effect<OptimizationResult>
+  readonly optimize: () => Effect.Effect<CacheOptimizationResult>
   readonly preload: (keys: ReadonlyArray<string>) => Effect.Effect<number>
   readonly invalidatePattern: (pattern: string) => Effect.Effect<number>
   readonly exportCache: (format: "json" | "binary") => Effect.Effect<string>
@@ -135,7 +135,7 @@ export interface CacheSetOptions {
 /**
  * Cache optimization result
  */
-export interface OptimizationResult {
+export interface CacheOptimizationResult {
   readonly entriesEvicted: number
   readonly memoryReclaimed: number
   readonly performanceImprovement: number
@@ -174,14 +174,15 @@ interface TierStats {
  */
 export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
   AdvancedCache,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
+    yield* Effect.void
     // Cache storage tiers
     const memoryCacheEntries = new Map<string, CacheEntry<any>>()
     const ssdCacheEntries = new Map<string, CacheEntry<any>>() // Simulated SSD cache
     const diskCacheEntries = new Map<string, CacheEntry<any>>() // Simulated disk cache
-    
+
     // Cache statistics
-    let stats = {
+    const stats = {
       totalHits: 0,
       totalMisses: 0,
       totalEvictions: 0,
@@ -197,7 +198,7 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
       evictionPolicy: "adaptive",
       tierThresholds: {
         memory: 128 * 1024 * 1024, // 128MB
-        ssd: 1024 * 1024 * 1024,   // 1GB
+        ssd: 1024 * 1024 * 1024, // 1GB
         disk: 10 * 1024 * 1024 * 1024, // 10GB
         network: 0 // Not applicable for local cache
       },
@@ -215,7 +216,7 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
      */
     const calculateEntrySize = (value: any): number => {
       const jsonString = JSON.stringify(value)
-      return Buffer.byteLength(jsonString, 'utf8')
+      return Buffer.byteLength(jsonString, "utf8")
     }
 
     /**
@@ -234,12 +235,12 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
       if (entry.accessCount > 10 && entry.size < 1024 * 1024) {
         return "memory"
       }
-      
+
       // Medium-sized, moderately accessed entries go to SSD
       if (entry.accessCount > 3 && entry.size < 10 * 1024 * 1024) {
         return "ssd"
       }
-      
+
       // Large or infrequently accessed entries go to disk
       return "disk"
     }
@@ -248,37 +249,37 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
      * Apply eviction policy
      */
     const selectEvictionCandidates = (
-      entries: Map<string, CacheEntry<any>>, 
-      policy: EvictionPolicy, 
+      entries: Map<string, CacheEntry<any>>,
+      policy: EvictionPolicy,
       count: number
     ): ReadonlyArray<string> => {
       const entryArray = [...entries.entries()]
-      
+
       switch (policy) {
         case "lru":
           return entryArray
             .sort((a, b) => a[1].lastAccessed - b[1].lastAccessed)
             .slice(0, count)
             .map(([key]) => key)
-            
+
         case "lfu":
           return entryArray
             .sort((a, b) => a[1].accessCount - b[1].accessCount)
             .slice(0, count)
             .map(([key]) => key)
-            
+
         case "ttl":
           return entryArray
             .filter(([_, entry]) => isExpired(entry))
             .slice(0, count)
             .map(([key]) => key)
-            
+
         case "priority":
           return entryArray
             .sort((a, b) => a[1].priority - b[1].priority)
             .slice(0, count)
             .map(([key]) => key)
-            
+
         case "adaptive":
           // Adaptive policy considers multiple factors
           return entryArray
@@ -287,15 +288,15 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
               const frequencyScore = 1 / (entry.accessCount + 1)
               const sizeScore = entry.size / (1024 * 1024) // Size in MB
               const priorityScore = (10 - entry.priority) / 10
-              
+
               const evictionScore = recencyScore + frequencyScore + sizeScore + priorityScore
-              
+
               return { key, score: evictionScore }
             })
             .sort((a, b) => b.score - a.score)
             .slice(0, count)
             .map(({ key }) => key)
-            
+
         default:
           return entryArray.slice(0, count).map(([key]) => key)
       }
@@ -308,10 +309,10 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
       const totalEntries = memoryCacheEntries.size + ssdCacheEntries.size + diskCacheEntries.size
       const totalMemoryUsage = Array.from(memoryCacheEntries.values())
         .reduce((sum, entry) => sum + entry.size, 0)
-      
+
       const hitRate = stats.totalHits / Math.max(1, stats.totalHits + stats.totalMisses)
       const missRate = 1 - hitRate
-      
+
       return {
         hitRate,
         missRate,
@@ -336,10 +337,10 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
     // ========================================================================
 
     const tierManager: CacheTierManager = {
-      getFromTier: (tier: CacheTier, key: string) => 
-        Effect.gen(function* () {
+      getFromTier: (tier: CacheTier, key: string) =>
+        Effect.gen(function*() {
           let entry: CacheEntry<any> | undefined
-          
+
           switch (tier) {
             case "memory":
               entry = memoryCacheEntries.get(key)
@@ -355,20 +356,20 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
             default:
               return Option.none()
           }
-          
+
           if (!entry || isExpired(entry)) {
             return Option.none()
           }
-          
+
           // Update access statistics
           entry.accessCount++
           entry.lastAccessed = Date.now()
-          
+
           return Option.some(entry.value)
         }),
 
       setToTier: (tier: CacheTier, key: string, entry: CacheEntry<any>) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           switch (tier) {
             case "memory":
               memoryCacheEntries.set(key, entry)
@@ -385,7 +386,7 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
         }),
 
       evictFromTier: (tier: CacheTier, key: string) =>
-        Effect.gen(function* () {
+        Effect.sync(() => {
           switch (tier) {
             case "memory":
               return memoryCacheEntries.delete(key)
@@ -399,9 +400,9 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
         }),
 
       getTierStats: (tier: CacheTier) =>
-        Effect.gen(function* () {
+        Effect.sync(() => {
           let entries: Map<string, CacheEntry<any>>
-          
+
           switch (tier) {
             case "memory":
               entries = memoryCacheEntries
@@ -415,10 +416,10 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
             default:
               entries = new Map()
           }
-          
+
           const totalSize = [...entries.values()]
             .reduce((sum, entry) => sum + entry.size, 0)
-          
+
           return {
             tier,
             entryCount: entries.size,
@@ -429,13 +430,13 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
         }),
 
       promoteTier: (key: string, fromTier: CacheTier, toTier: CacheTier) =>
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           const value = yield* tierManager.getFromTier(fromTier, key)
-          
+
           if (Option.isNone(value)) {
             return false
           }
-          
+
           // Get the full entry from the source tier
           let sourceEntry: CacheEntry<any> | undefined
           switch (fromTier) {
@@ -449,24 +450,24 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
               sourceEntry = diskCacheEntries.get(key)
               break
           }
-          
+
           if (!sourceEntry) return false
-          
+
           // Create new entry for target tier
           const promotedEntry: CacheEntry<any> = {
             ...sourceEntry,
             tier: toTier,
             lastAccessed: Date.now()
           }
-          
+
           // Set in target tier
           yield* tierManager.setToTier(toTier, key, promotedEntry)
-          
+
           // Remove from source tier
           yield* tierManager.evictFromTier(fromTier, key)
-          
+
           yield* Effect.log(`📈 Promoted cache entry '${key}' from ${fromTier} to ${toTier}`)
-          
+
           return true
         })
     }
@@ -476,41 +477,41 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
     // ========================================================================
 
     const get = <T>(key: string, preferredTier?: CacheTier): Effect.Effect<Option.Option<T>> =>
-      Effect.gen(function* () {
-        const searchTiers: CacheTier[] = preferredTier 
+      Effect.gen(function*() {
+        const searchTiers: Array<CacheTier> = preferredTier
           ? [preferredTier, "memory", "ssd", "disk"]
           : ["memory", "ssd", "disk"]
-        
+
         for (const tier of searchTiers) {
           const result = yield* tierManager.getFromTier(tier, key)
-          
+
           if (Option.isSome(result)) {
             stats.totalHits++
-            
+
             // Auto-promote frequently accessed entries to faster tiers
             if (tier !== "memory") {
               const entries = tier === "ssd" ? ssdCacheEntries : diskCacheEntries
               const entry = entries.get(key)
-              
+
               if (entry && entry.accessCount > 5) {
                 const targetTier = tier === "disk" ? "ssd" : "memory"
                 yield* tierManager.promoteTier(key, tier, targetTier)
               }
             }
-            
+
             return result
           }
         }
-        
+
         stats.totalMisses++
         return Option.none()
       })
 
     const set = <T>(key: string, value: T, options: CacheSetOptions = {}): Effect.Effect<void> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const size = calculateEntrySize(value)
         const now = Date.now()
-        
+
         const entry: CacheEntry<T> = {
           key,
           value,
@@ -519,118 +520,123 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
           lastAccessed: now,
           accessCount: 0,
           size,
-          ttl: options.ttl ? Duration.toMillis(options.ttl) : undefined,
+          ...(options.ttl && { ttl: Duration.toMillis(options.ttl) }),
           priority: options.priority || 5,
           computeCost: options.computeCost || 1
         }
-        
+
         // Determine optimal tier if not specified
         const targetTier = options.tier || determineOptimalTier(entry)
         entry.tier = targetTier
-        
+
         // Check if eviction is needed
         yield* maybeEvict(targetTier)
-        
+
         // Store in target tier
         yield* tierManager.setToTier(targetTier, key, entry)
-        
+
         stats.totalSets++
-        
+
         yield* Effect.log(`💾 Cached '${key}' in ${targetTier} tier (${(size / 1024).toFixed(1)}KB)`)
       })
 
     const maybeEvict = (tier: CacheTier): Effect.Effect<void> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const tierStats = yield* tierManager.getTierStats(tier)
         const threshold = defaultConfig.tierThresholds[tier]
-        
+
         if (tierStats.totalSize > threshold) {
-          const entries = tier === "memory" ? memoryCacheEntries 
-                        : tier === "ssd" ? ssdCacheEntries 
-                        : diskCacheEntries
-          
+          const entries = tier === "memory" ?
+            memoryCacheEntries
+            : tier === "ssd" ?
+            ssdCacheEntries
+            : diskCacheEntries
+
           const evictionCandidates = selectEvictionCandidates(
-            entries, 
-            defaultConfig.evictionPolicy, 
+            entries,
+            defaultConfig.evictionPolicy,
             Math.ceil(entries.size * 0.1) // Evict 10% of entries
           )
-          
+
           for (const key of evictionCandidates) {
             yield* tierManager.evictFromTier(tier, key)
             stats.totalEvictions++
           }
-          
+
           yield* Effect.log(`🗑️ Evicted ${evictionCandidates.length} entries from ${tier} tier`)
         }
       })
 
     const deleteEntry = (key: string): Effect.Effect<boolean> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         let deleted = false
-        
-        for (const tier of ["memory", "ssd", "disk"] as CacheTier[]) {
+
+        for (const tier of ["memory", "ssd", "disk"] as Array<CacheTier>) {
           const result = yield* tierManager.evictFromTier(tier, key)
           if (result) deleted = true
         }
-        
+
         if (deleted) {
           yield* Effect.log(`🗑️ Deleted cache entry '${key}'`)
         }
-        
+
         return deleted
       })
 
     const clear = (pattern?: string): Effect.Effect<number> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         let clearedCount = 0
-        
-        for (const tier of ["memory", "ssd", "disk"] as CacheTier[]) {
-          const entries = tier === "memory" ? memoryCacheEntries
-                        : tier === "ssd" ? ssdCacheEntries
-                        : diskCacheEntries
-          
+
+        for (const tier of ["memory", "ssd", "disk"] as Array<CacheTier>) {
+          const entries = tier === "memory" ?
+            memoryCacheEntries
+            : tier === "ssd" ?
+            ssdCacheEntries
+            : diskCacheEntries
+
           const keysToDelete = pattern
-            ? [...entries.keys()].filter(key => key.includes(pattern))
+            ? [...entries.keys()].filter((key) => key.includes(pattern))
             : [...entries.keys()]
-          
+
           for (const key of keysToDelete) {
             yield* tierManager.evictFromTier(tier, key)
             clearedCount++
           }
         }
-        
-        yield* Effect.log(`🧹 Cleared ${clearedCount} cache entries${pattern ? ` matching '${pattern}'` : ''}`)
-        
+
+        yield* Effect.log(`🧹 Cleared ${clearedCount} cache entries${pattern ? ` matching '${pattern}'` : ""}`)
+
         return clearedCount
       })
 
-    const getStats = (): Effect.Effect<CacheStats> =>
-      Effect.succeed(getCurrentStats())
+    const getStats = (): Effect.Effect<CacheStats> => Effect.succeed(getCurrentStats())
 
-    const optimize = (): Effect.Effect<OptimizationResult> =>
-      Effect.gen(function* () {
+    const optimize = (): Effect.Effect<CacheOptimizationResult> =>
+      Effect.gen(function*() {
         const startTime = Date.now()
         const startStats = getCurrentStats()
-        
+
         yield* Effect.log("🚀 Starting cache optimization...")
-        
+
         // 1. Remove expired entries
         let expiredRemoved = 0
-        for (const tier of ["memory", "ssd", "disk"] as CacheTier[]) {
-          const entries = tier === "memory" ? memoryCacheEntries
-                        : tier === "ssd" ? ssdCacheEntries
-                        : diskCacheEntries
-          
+        for (const tier of ["memory", "ssd", "disk"] as Array<CacheTier>) {
+          const entries = tier === "memory" ?
+            memoryCacheEntries
+            : tier === "ssd" ?
+            ssdCacheEntries
+            : diskCacheEntries
+
           const expiredKeys = [...entries.entries()]
             .filter(([_, entry]) => isExpired(entry))
             .map(([key]) => key)
-          
+
           for (const key of expiredKeys) {
             yield* tierManager.evictFromTier(tier, key)
             expiredRemoved++
           }
         }
-        
+
         // 2. Promote frequently accessed entries
         let promotionsCount = 0
         for (const [key, entry] of diskCacheEntries.entries()) {
@@ -639,42 +645,42 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
             promotionsCount++
           }
         }
-        
+
         for (const [key, entry] of ssdCacheEntries.entries()) {
           if (entry.accessCount > 20) {
             yield* tierManager.promoteTier(key, "ssd", "memory")
             promotionsCount++
           }
         }
-        
+
         const endStats = getCurrentStats()
         const optimizationTime = Date.now() - startTime
         const memoryReclaimed = startStats.memoryUsage - endStats.memoryUsage
-        
-        const result: OptimizationResult = {
+
+        const result: CacheOptimizationResult = {
           entriesEvicted: expiredRemoved,
           memoryReclaimed,
           performanceImprovement: promotionsCount * 0.1, // Estimated 10% improvement per promotion
           optimizationTime,
           strategy: "hybrid-cleanup-promotion"
         }
-        
+
         stats.lastOptimization = Date.now()
-        
+
         yield* Effect.log(
           `✅ Cache optimization complete: ${expiredRemoved} expired entries removed, ` +
-          `${promotionsCount} entries promoted, ${(memoryReclaimed / 1024 / 1024).toFixed(1)}MB reclaimed`
+            `${promotionsCount} entries promoted, ${(memoryReclaimed / 1024 / 1024).toFixed(1)}MB reclaimed`
         )
-        
+
         return result
       })
 
     const preload = (keys: ReadonlyArray<string>): Effect.Effect<number> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         yield* Effect.log(`🔄 Preloading ${keys.length} cache entries...`)
-        
+
         let preloadedCount = 0
-        
+
         // This would integrate with actual data sources
         for (const key of keys) {
           // Mock preload operation
@@ -682,19 +688,18 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
           yield* set(key, mockValue, { priority: 8 }) // High priority for preloaded entries
           preloadedCount++
         }
-        
+
         yield* Effect.log(`✅ Preloaded ${preloadedCount} entries`)
-        
+
         return preloadedCount
       })
 
-    const invalidatePattern = (pattern: string): Effect.Effect<number> =>
-      clear(pattern)
+    const invalidatePattern = (pattern: string): Effect.Effect<number> => clear(pattern)
 
     const exportCache = (format: "json" | "binary"): Effect.Effect<string> =>
-      Effect.gen(function* () {
+      Effect.sync(() => {
         const allEntries = new Map<string, CacheEntry<any>>()
-        
+
         // Collect all entries from all tiers
         for (const [key, entry] of memoryCacheEntries.entries()) {
           allEntries.set(key, entry)
@@ -705,54 +710,58 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
         for (const [key, entry] of diskCacheEntries.entries()) {
           allEntries.set(key, entry)
         }
-        
+
         if (format === "json") {
-          return JSON.stringify({
-            timestamp: new Date().toISOString(),
-            entries: Array.from(allEntries.entries()),
-            stats: getCurrentStats()
-          }, null, 2)
+          return JSON.stringify(
+            {
+              timestamp: new Date().toISOString(),
+              entries: Array.from(allEntries.entries()),
+              stats: getCurrentStats()
+            },
+            null,
+            2
+          )
         } else {
           // Binary format would be implemented for production
-          return Buffer.from(JSON.stringify(Array.from(allEntries.entries()))).toString('base64')
+          return Buffer.from(JSON.stringify(Array.from(allEntries.entries()))).toString("base64")
         }
       })
 
     const importCache = (data: string, format: "json" | "binary"): Effect.Effect<number> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         let entries: Array<[string, CacheEntry<any>]>
-        
+
         if (format === "json") {
           const parsed = JSON.parse(data)
           entries = parsed.entries || []
         } else {
-          const decoded = Buffer.from(data, 'base64').toString()
+          const decoded = Buffer.from(data, "base64").toString()
           entries = JSON.parse(decoded)
         }
-        
+
         let importedCount = 0
-        
+
         for (const [key, entry] of entries) {
           if (!isExpired(entry)) {
             yield* tierManager.setToTier(entry.tier, key, entry)
             importedCount++
           }
         }
-        
+
         yield* Effect.log(`📥 Imported ${importedCount} cache entries`)
-        
+
         return importedCount
       })
 
     const scheduleWarmup = (config: CacheWarmingConfig): Effect.Effect<void> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         if (!config.enabled) return
-        
+
         yield* Effect.log("🔥 Scheduling cache warmup...")
-        
+
         // This would be implemented with proper scheduling
         yield* Effect.fork(
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             for (const pattern of config.warmupPatterns) {
               // Mock warmup operation
               const keys = [`${pattern}-1`, `${pattern}-2`, `${pattern}-3`]
@@ -761,9 +770,7 @@ export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
             }
           }).pipe(
             Effect.repeat(config.warmupSchedule),
-            Effect.catchAll(error => 
-              Effect.log(`❌ Cache warmup error: ${error}`)
-            )
+            Effect.catchAll((error) => Effect.log(`❌ Cache warmup error: ${error}`))
           )
         )
       })

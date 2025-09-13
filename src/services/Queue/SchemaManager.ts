@@ -67,13 +67,14 @@ const MAIN_SCHEMA_FILE = join(SCHEMA_DIR, "schema.sql")
 export const SchemaManagerLive = Layer.effect(
   SchemaManager,
   Effect.gen(function*() {
+    yield* Effect.void
     const db = {
-      exec: (sql: string) => undefined,
-      prepare: (sql: string) => ({
-        run: (...params: Array<any>) => undefined,
-        all: (...params: Array<any>) => {
+      exec: (_sql: string) => undefined,
+      prepare: (_sql: string) => ({
+        run: (..._params: Array<any>) => undefined,
+        all: (..._params: Array<any>) => {
           // Mock table existence for schema validation
-          if (sql.includes("SELECT name FROM sqlite_master WHERE type='table'")) {
+          if (_sql.includes("SELECT name FROM sqlite_master WHERE type='table'")) {
             return [
               { name: "queue_tasks" },
               { name: "queue_metrics" },
@@ -84,7 +85,7 @@ export const SchemaManagerLive = Layer.effect(
             ]
           }
           // Mock index existence for schema validation
-          if (sql.includes("SELECT name FROM sqlite_master WHERE type='index'")) {
+          if (_sql.includes("SELECT name FROM sqlite_master WHERE type='index'")) {
             return [
               { name: "idx_queue_tasks_status" },
               { name: "idx_queue_tasks_resource_group" },
@@ -93,12 +94,12 @@ export const SchemaManagerLive = Layer.effect(
             ]
           }
           // Mock schema version check
-          if (sql.includes("SELECT * FROM schema_version")) {
+          if (_sql.includes("SELECT * FROM schema_version")) {
             return [{ version: "1.0.0", applied_at: new Date().toISOString(), checksum: "test" }]
           }
           return []
         },
-        get: (...params: Array<any>) => null
+        get: (..._params: Array<any>) => null
       }),
       close: () => undefined
     }

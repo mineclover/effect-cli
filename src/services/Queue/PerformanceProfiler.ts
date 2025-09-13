@@ -1,11 +1,11 @@
 /**
  * Performance Profiler for Effect CLI Queue System
- * 
+ *
  * Advanced performance profiling and bottleneck identification system.
  * Provides detailed metrics collection, analysis, and optimization recommendations.
- * 
+ *
  * Phase 4.1: Performance Profiling and Bottleneck Identification
- * 
+ *
  * @version 1.0.0
  * @created 2025-01-12
  */
@@ -14,10 +14,9 @@ import * as Context from "effect/Context"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
-import * as Option from "effect/Option"
-import * as Array from "effect/Array"
+// import * as Option from "effect/Option" // Unused import
 
-import type { ResourceGroup, OperationType } from "./types.js"
+import type { OperationType, ResourceGroup } from "./types.js"
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -41,7 +40,7 @@ export interface OperationMetrics {
   readonly cpuDelta: number
   readonly queueWaitTime: number
   readonly success: boolean
-  readonly errorType?: string
+  readonly errorType: string | undefined
 }
 
 /**
@@ -89,8 +88,16 @@ export interface ResourceUtilization {
  * Performance profiler service interface
  */
 export interface PerformanceProfiler {
-  readonly startProfiling: (operationId: string, operationType: OperationType, resourceGroup: ResourceGroup) => Effect.Effect<ProfilingSession>
-  readonly endProfiling: (session: ProfilingSession, success: boolean, errorType?: string) => Effect.Effect<OperationMetrics>
+  readonly startProfiling: (
+    operationId: string,
+    operationType: OperationType,
+    resourceGroup: ResourceGroup
+  ) => Effect.Effect<ProfilingSession>
+  readonly endProfiling: (
+    session: ProfilingSession,
+    success: boolean,
+    errorType?: string
+  ) => Effect.Effect<OperationMetrics>
   readonly getPerformanceStats: (timeWindow?: Duration.Duration) => Effect.Effect<PerformanceStats>
   readonly analyzeBottlenecks: () => Effect.Effect<ReadonlyArray<BottleneckAnalysis>>
   readonly getResourceUtilization: () => Effect.Effect<ReadonlyArray<ResourceUtilization>>
@@ -122,11 +129,12 @@ export interface ProfilingSession {
  */
 export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.effect(
   PerformanceProfiler,
-  Effect.gen(function* () {
+  Effect.gen(function*() {
+    yield* Effect.void
     // Storage for performance metrics
-    const operationMetrics: OperationMetrics[] = []
+    const operationMetrics: Array<OperationMetrics> = []
     const activeSessions = new Map<string, ProfilingSession>()
-    const resourceUtilizationHistory = new Map<ResourceGroup, Array<{ timestamp: number, utilization: number }>>()
+    const resourceUtilizationHistory = new Map<ResourceGroup, Array<{ timestamp: number; utilization: number }>>()
 
     // ========================================================================
     // UTILITY FUNCTIONS
@@ -161,10 +169,10 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
      * Analyze bottlenecks based on metrics
      */
     const identifyBottlenecks = (metrics: ReadonlyArray<OperationMetrics>): ReadonlyArray<BottleneckAnalysis> => {
-      const bottlenecks: BottleneckAnalysis[] = []
+      const bottlenecks: Array<BottleneckAnalysis> = []
 
       // Memory bottleneck analysis
-      const highMemoryOps = metrics.filter(m => m.memoryDelta > 50 * 1024 * 1024) // 50MB threshold
+      const highMemoryOps = metrics.filter((m) => m.memoryDelta > 50 * 1024 * 1024) // 50MB threshold
       if (highMemoryOps.length > metrics.length * 0.1) {
         bottlenecks.push({
           type: "memory",
@@ -176,12 +184,12 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
             "Consider streaming for large data processing",
             "Review object lifecycle management"
           ],
-          affectedOperations: highMemoryOps.map(op => op.operationType)
+          affectedOperations: highMemoryOps.map((op) => op.operationType)
         })
       }
 
       // CPU bottleneck analysis
-      const highCpuOps = metrics.filter(m => m.cpuDelta > 1000) // 1 second CPU time
+      const highCpuOps = metrics.filter((m) => m.cpuDelta > 1000) // 1 second CPU time
       if (highCpuOps.length > metrics.length * 0.1) {
         bottlenecks.push({
           type: "cpu",
@@ -193,12 +201,12 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
             "Implement worker threads for computation-heavy operations",
             "Optimize algorithms and data structures"
           ],
-          affectedOperations: highCpuOps.map(op => op.operationType)
+          affectedOperations: highCpuOps.map((op) => op.operationType)
         })
       }
 
       // Queue wait time analysis
-      const highWaitOps = metrics.filter(m => m.queueWaitTime > 5000) // 5 second wait
+      const highWaitOps = metrics.filter((m) => m.queueWaitTime > 5000) // 5 second wait
       if (highWaitOps.length > metrics.length * 0.1) {
         bottlenecks.push({
           type: "queue",
@@ -210,12 +218,12 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
             "Implement priority queuing for critical operations",
             "Consider load balancing across multiple queues"
           ],
-          affectedOperations: highWaitOps.map(op => op.operationType)
+          affectedOperations: highWaitOps.map((op) => op.operationType)
         })
       }
 
       // Error rate analysis
-      const errorRate = metrics.filter(m => !m.success).length / metrics.length
+      const errorRate = metrics.filter((m) => !m.success).length / metrics.length
       if (errorRate > 0.05) { // 5% error rate threshold
         bottlenecks.push({
           type: "io",
@@ -227,7 +235,7 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
             "Add circuit breaker patterns",
             "Review error handling and recovery strategies"
           ],
-          affectedOperations: metrics.filter(m => !m.success).map(op => op.operationType)
+          affectedOperations: metrics.filter((m) => !m.success).map((op) => op.operationType)
         })
       }
 
@@ -243,7 +251,7 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
       operationType: OperationType,
       resourceGroup: ResourceGroup
     ): Effect.Effect<ProfilingSession> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const session: ProfilingSession = {
           operationId,
           operationType,
@@ -255,9 +263,9 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
         }
 
         activeSessions.set(operationId, session)
-        
+
         yield* Effect.log(`🔍 Started profiling ${operationType} operation: ${operationId}`)
-        
+
         return session
       })
 
@@ -266,7 +274,7 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
       success: boolean,
       errorType?: string
     ): Effect.Effect<OperationMetrics> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const endTime = Date.now()
         const endMemory = getCurrentMemory()
         const endCpu = getCurrentCpu()
@@ -302,20 +310,20 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
 
         yield* Effect.log(
           `📊 Profiling completed for ${session.operationType}: ` +
-          `${metrics.duration}ms, Memory: ${(metrics.memoryDelta / 1024 / 1024).toFixed(1)}MB, ` +
-          `Success: ${success}`
+            `${metrics.duration}ms, Memory: ${(metrics.memoryDelta / 1024 / 1024).toFixed(1)}MB, ` +
+            `Success: ${success}`
         )
 
         return metrics
       })
 
     const getPerformanceStats = (timeWindow?: Duration.Duration): Effect.Effect<PerformanceStats> =>
-      Effect.gen(function* () {
-        const windowStart = timeWindow 
+      Effect.sync(() => {
+        const windowStart = timeWindow
           ? Date.now() - Duration.toMillis(timeWindow)
           : 0
 
-        const filteredMetrics = operationMetrics.filter(m => m.startTime >= windowStart)
+        const filteredMetrics = operationMetrics.filter((m) => m.startTime >= windowStart)
 
         if (filteredMetrics.length === 0) {
           return {
@@ -332,10 +340,13 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
           }
         }
 
-        const durations = Array.sort(filteredMetrics.map(m => m.duration), (a, b) => a - b)
+        const durations: ReadonlyArray<number> = filteredMetrics.map((m) => m.duration).sort((a, b) => a - b)
         const totalDuration = filteredMetrics.reduce((sum, m) => sum + m.duration, 0)
-        const errorCount = filteredMetrics.filter(m => !m.success).length
-        const timeSpan = Math.max(1, (filteredMetrics[filteredMetrics.length - 1].endTime - filteredMetrics[0].startTime) / 1000)
+        const errorCount = filteredMetrics.filter((m) => !m.success).length
+        const timeSpan = Math.max(
+          1,
+          (filteredMetrics[filteredMetrics.length - 1].endTime - filteredMetrics[0].startTime) / 1000
+        )
 
         const stats: PerformanceStats = {
           totalOperations: filteredMetrics.length,
@@ -345,7 +356,8 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
           p99Duration: calculatePercentile(durations, 99),
           throughput: filteredMetrics.length / timeSpan,
           errorRate: errorCount / filteredMetrics.length,
-          memoryEfficiency: filteredMetrics.reduce((sum, m) => sum + (m.memoryDelta > 0 ? 1 : 0), 0) / filteredMetrics.length,
+          memoryEfficiency: filteredMetrics.reduce((sum, m) => sum + (m.memoryDelta > 0 ? 1 : 0), 0) /
+            filteredMetrics.length,
           cpuUtilization: filteredMetrics.reduce((sum, m) => sum + m.cpuDelta, 0) / filteredMetrics.length / 1000,
           bottleneckPoints: identifyBottlenecks(filteredMetrics)
         }
@@ -354,18 +366,16 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
       })
 
     const analyzeBottlenecks = (): Effect.Effect<ReadonlyArray<BottleneckAnalysis>> =>
-      Effect.gen(function* () {
-        return identifyBottlenecks(operationMetrics)
-      })
+      Effect.sync(() => identifyBottlenecks(operationMetrics))
 
     const getResourceUtilization = (): Effect.Effect<ReadonlyArray<ResourceUtilization>> =>
-      Effect.gen(function* () {
-        const resourceGroups: ResourceGroup[] = ["filesystem", "network", "computation", "memory-intensive"]
-        
-        return resourceGroups.map(group => {
-          const groupMetrics = operationMetrics.filter(m => m.resourceGroup === group)
+      Effect.sync(() => {
+        const resourceGroups: Array<ResourceGroup> = ["filesystem", "network", "computation", "memory-intensive"]
+
+        return resourceGroups.map((group) => {
+          const groupMetrics = operationMetrics.filter((m) => m.resourceGroup === group)
           const recentMetrics = groupMetrics.slice(-50) // Last 50 operations
-          
+
           const avgWaitTime = recentMetrics.length > 0
             ? recentMetrics.reduce((sum, m) => sum + m.queueWaitTime, 0) / recentMetrics.length
             : 0
@@ -376,15 +386,15 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
 
           // Simplified bottleneck score based on wait time and error rate
           const errorRate = recentMetrics.length > 0
-            ? recentMetrics.filter(m => !m.success).length / recentMetrics.length
+            ? recentMetrics.filter((m) => !m.success).length / recentMetrics.length
             : 0
-          
+
           const bottleneckScore = Math.min(100, (avgWaitTime / 1000) * 10 + errorRate * 50)
 
           return {
             resourceGroup: group,
             concurrentOperations: [...activeSessions.values()]
-              .filter(s => s.resourceGroup === group).length,
+              .filter((s) => s.resourceGroup === group).length,
             maxConcurrency: 10, // This would come from configuration
             utilizationPercentage: Math.min(100, throughput * 10),
             avgWaitTime,
@@ -395,42 +405,60 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
       })
 
     const exportProfilingData = (format: "json" | "csv"): Effect.Effect<string> =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         if (format === "json") {
-          return JSON.stringify({
-            timestamp: new Date().toISOString(),
-            totalMetrics: operationMetrics.length,
-            activeSessions: activeSessions.size,
-            metrics: operationMetrics,
-            resourceUtilization: yield* getResourceUtilization(),
-            performanceStats: yield* getPerformanceStats()
-          }, null, 2)
+          return JSON.stringify(
+            {
+              timestamp: new Date().toISOString(),
+              totalMetrics: operationMetrics.length,
+              activeSessions: activeSessions.size,
+              metrics: operationMetrics,
+              resourceUtilization: yield* getResourceUtilization(),
+              performanceStats: yield* getPerformanceStats()
+            },
+            null,
+            2
+          )
         } else {
           // CSV format
           const headers = [
-            "operationId", "operationType", "resourceGroup", "duration",
-            "memoryDelta", "cpuDelta", "queueWaitTime", "success", "errorType"
+            "operationId",
+            "operationType",
+            "resourceGroup",
+            "duration",
+            "memoryDelta",
+            "cpuDelta",
+            "queueWaitTime",
+            "success",
+            "errorType"
           ].join(",")
-          
-          const rows = operationMetrics.map(m =>
+
+          const rows = operationMetrics.map((m) =>
             [
-              m.operationId, m.operationType, m.resourceGroup, m.duration,
-              m.memoryDelta, m.cpuDelta, m.queueWaitTime, m.success, m.errorType || ""
+              m.operationId,
+              m.operationType,
+              m.resourceGroup,
+              m.duration,
+              m.memoryDelta,
+              m.cpuDelta,
+              m.queueWaitTime,
+              m.success,
+              m.errorType || ""
             ].join(",")
           )
-          
+
           return [headers, ...rows].join("\n")
         }
       })
 
     const clearProfilingData = (olderThan?: Duration.Duration): Effect.Effect<number> =>
-      Effect.gen(function* () {
-        const cutoffTime = olderThan 
+      Effect.gen(function*() {
+        const cutoffTime = olderThan
           ? Date.now() - Duration.toMillis(olderThan)
           : 0
 
         const beforeCount = operationMetrics.length
-        
+
         // Remove old metrics
         while (operationMetrics.length > 0 && operationMetrics[0].startTime < cutoffTime) {
           operationMetrics.shift()
@@ -438,7 +466,11 @@ export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.e
 
         const removedCount = beforeCount - operationMetrics.length
 
-        yield* Effect.log(`🧹 Cleared ${removedCount} profiling records older than ${olderThan ? Duration.toMillis(olderThan) : "all"}ms`)
+        yield* Effect.log(
+          `🧹 Cleared ${removedCount} profiling records older than ${
+            olderThan ? Duration.toMillis(olderThan) : "all"
+          }ms`
+        )
 
         return removedCount
       })

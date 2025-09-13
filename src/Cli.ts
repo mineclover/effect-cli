@@ -1,44 +1,28 @@
-// From: src/Cli.ts - 서브커맨드 등록 패턴
+/**
+ * Effect CLI Application
+ *
+ * Main CLI configuration combining core functionality with optional samples.
+ */
 import * as Command from "@effect/cli/Command"
 import * as Console from "effect/Console"
 
-// Simple test command that uses platform FileSystem directly
-import { simpleListCommand } from "./examples/SimpleListCommand.js"
-import { simpleQueueCommand } from "./examples/SimpleQueueCommand.js"
-import { simpleSampleCommand } from "./examples/SimpleSampleCommand.js"
-
-// Production commands
-import { productionCommands } from "./commands/index.js"
-
-// Example commands (configurable via examples/config.ts)
-import { advancedCommand, catCommand, findCommand, listCommand, sampleCommand } from "./examples/index.js"
-
-// Queue-enhanced commands (Phase 3) - temporarily disabled for testing
-// import { queueCommand } from "./examples/QueueCommand.js"
-// import { enhancedListCommand } from "./examples/EnhancedListCommand.js"
-// import { uxDemoCommand } from "./examples/UXDemoCommand.js"
+// Main commands (core functionality + templates)
+import { greetCommand, queueCommand, queueStatusCommand, simpleQueueCommand } from "./commands/index.js"
 
 // 메인 커맨드 생성
 const mainCommand = Command.make(
-  "file-explorer",
+  "effect-cli",
   {},
-  () => Console.log("Effect File Explorer CLI - use --help to see available commands")
+  () => Console.log("Effect CLI Application - use --help to see available commands")
 )
 
-// 공식 패턴: Command.withSubcommands 사용
-// Phase 3: Queue-enhanced CLI with transparent integration
-// Add simple test commands to verify FileSystem and Queue integration
+// CLI 구성: 메인 기능 명령어들
 const command = mainCommand.pipe(
-  Command.withSubcommands([
-    simpleListCommand,
-    simpleQueueCommand,
-    simpleSampleCommand,
-    ...productionCommands
-  ])
+  Command.withSubcommands([greetCommand, queueCommand, queueStatusCommand, simpleQueueCommand])
 )
 
-// 커맨드 실행 - 올바른 Command.run 사용법
+// 커맨드 실행
 export const run = Command.run(command, {
-  name: "Effect File Explorer",
+  name: "Effect CLI Application",
   version: "1.0.0"
 })

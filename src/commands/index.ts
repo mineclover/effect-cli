@@ -1,38 +1,33 @@
 /**
- * Production Commands
+ * Main CLI Commands
  *
- * Import your actual production commands here.
- * These commands will be included in the final CLI application.
+ * Core functionality commands for the Effect CLI application.
+ * These include both template examples and production-ready queue management.
  */
 
-// Import your production commands here:
+// Template commands
 import { greetCommand } from "./GreetCommand.js"
-// import { deployCommand } from "./DeployCommand.js"
+
+// Queue management commands (core functionality)
+import { queueCommand } from "./QueueCommand.js"
+import { queueStatusCommand } from "./QueueStatusCommand.js"
+import { simpleQueueCommand } from "./SimpleQueueCommand.js"
 
 /**
- * Production commands array
- * Add your actual commands to this array
+ * Main commands array
+ * Core CLI functionality including queue management
  */
-export const productionCommands = [
-  // Add your production commands here:
+export const mainCommands = [
+  // Template command (replace with your commands)
   greetCommand,
-  // deployCommand,
+
+  // Queue management (core functionality)
+  queueCommand,
+  queueStatusCommand,
+  simpleQueueCommand
 ]
 
 /**
  * Individual command exports
- * Export your commands individually for selective use
  */
-export { greetCommand }
-
-/**
- * Usage in Cli.ts:
- *
- * import { productionCommands } from "./commands/index.js"
- * import { exampleCommands } from "./examples/index.js"  // Optional
- *
- * Command.withSubcommands([
- *   ...productionCommands,
- *   ...exampleCommands,  // Remove this line for production
- * ])
- */
+export { greetCommand, queueCommand, queueStatusCommand, simpleQueueCommand }

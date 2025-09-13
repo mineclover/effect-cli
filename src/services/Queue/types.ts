@@ -336,7 +336,7 @@ export interface QueueStatus {
   }>
   readonly totalPending: number
   readonly totalRunning: number
-  readonly processingFibers: ReadonlyArray<Fiber.RuntimeFiber<never, never>>
+  readonly processingFibers: ReadonlyArray<Fiber.RuntimeFiber<void, never>>
 }
 
 /**

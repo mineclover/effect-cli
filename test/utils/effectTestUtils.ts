@@ -8,13 +8,13 @@
  * @created 2025-09-13
  */
 
-import * as Context from "effect/Context"
+import * as TestContext from "@effect/vitest"
+import type * as Context from "effect/Context"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
 import * as Exit from "effect/Exit"
-import * as TestContext from "@effect/vitest"
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest"
+import * as Layer from "effect/Layer"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 // ============================================================================
 // EFFECT TEST PATTERNS
@@ -31,12 +31,12 @@ export const testWithLayer = <R, E, A>(
   expectations?: (result: A) => void | Promise<void>
 ) =>
   it(name, () =>
-    effect.pipe(
-      Effect.provide(layer),
-      Effect.tap(result => Effect.sync(() => expectations?.(result))),
-      TestContext.it
-    )
-  )
+    TestContext.it(
+      effect.pipe(
+        Effect.provide(layer),
+        Effect.tap((result) => Effect.sync(() => expectations?.(result)))
+      )
+    ))
 
 /**
  * Test Pattern: Effect Success Case
@@ -46,7 +46,7 @@ export const expectSuccess = <A, E>(
   effect: Effect.Effect<A, E>,
   expectedValue?: A
 ): Effect.Effect<A, never> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const exit = yield* Effect.exit(effect)
 
     if (Exit.isFailure(exit)) {
@@ -70,7 +70,7 @@ export const expectFailure = <A, E>(
   effect: Effect.Effect<A, E>,
   errorMatcher?: (error: E) => boolean
 ): Effect.Effect<E, never> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const exit = yield* Effect.exit(effect)
 
     if (Exit.isSuccess(exit)) {
@@ -95,7 +95,7 @@ export const expectTimingWithin = <A, E>(
   maxDurationMs: number,
   minDurationMs: number = 0
 ): Effect.Effect<{ result: A; duration: Duration.Duration }, E> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const startTime = yield* Effect.sync(() => Date.now())
     const result = yield* effect
     const endTime = yield* Effect.sync(() => Date.now())
@@ -104,15 +104,19 @@ export const expectTimingWithin = <A, E>(
     const durationMs = Duration.toMillis(duration)
 
     if (durationMs > maxDurationMs) {
-      yield* Effect.fail(new Error(
-        `Effect took ${durationMs}ms, expected max ${maxDurationMs}ms`
-      ) as E)
+      yield* Effect.fail(
+        new Error(
+          `Effect took ${durationMs}ms, expected max ${maxDurationMs}ms`
+        ) as E
+      )
     }
 
     if (durationMs < minDurationMs) {
-      yield* Effect.fail(new Error(
-        `Effect took ${durationMs}ms, expected min ${minDurationMs}ms`
-      ) as E)
+      yield* Effect.fail(
+        new Error(
+          `Effect took ${durationMs}ms, expected min ${minDurationMs}ms`
+        ) as E
+      )
     }
 
     return { result, duration }
@@ -127,34 +131,34 @@ export const expectTimingWithin = <A, E>(
  * Captures console output for verification
  */
 export interface MockConsole {
-  readonly log: vi.MockedFunction<typeof console.log>
-  readonly error: vi.MockedFunction<typeof console.error>
-  readonly warn: vi.MockedFunction<typeof console.warn>
-  readonly info: vi.MockedFunction<typeof console.info>
-  readonly getOutput: () => string[]
-  readonly getErrors: () => string[]
+  readonly log: (...args: Array<any>) => void
+  readonly error: (...args: Array<any>) => void
+  readonly warn: (...args: Array<any>) => void
+  readonly info: (...args: Array<any>) => void
+  readonly getOutput: () => Array<string>
+  readonly getErrors: () => Array<string>
   readonly clear: () => void
 }
 
 export const createMockConsole = (): MockConsole => {
-  const outputs: string[] = []
-  const errors: string[] = []
+  const outputs: Array<string> = []
+  const errors: Array<string> = []
 
-  const log = vi.fn((...args: any[]) => {
-    outputs.push(args.map(String).join(' '))
-  })
+  const log = (...args: Array<any>) => {
+    outputs.push(args.map(String).join(" "))
+  }
 
-  const error = vi.fn((...args: any[]) => {
-    errors.push(args.map(String).join(' '))
-  })
+  const error = (...args: Array<any>) => {
+    errors.push(args.map(String).join(" "))
+  }
 
-  const warn = vi.fn((...args: any[]) => {
-    errors.push(`WARN: ${args.map(String).join(' ')}`)
-  })
+  const warn = (...args: Array<any>) => {
+    errors.push(`WARN: ${args.map(String).join(" ")}`)
+  }
 
-  const info = vi.fn((...args: any[]) => {
-    outputs.push(`INFO: ${args.map(String).join(' ')}`)
-  })
+  const info = (...args: Array<any>) => {
+    outputs.push(`INFO: ${args.map(String).join(" ")}`)
+  }
 
   return {
     log,
@@ -180,12 +184,12 @@ export const testCliCommand = <Args, R>(
   args: Args,
   layer: Layer.Layer<R>,
   expectations: {
-    output?: string[] | ((output: string[]) => void)
-    errors?: string[] | ((errors: string[]) => void)
+    output?: Array<string> | ((output: Array<string>) => void)
+    errors?: Array<string> | ((errors: Array<string>) => void)
     exitCode?: number
   }
 ): Effect.Effect<void, any, R> =>
-  Effect.gen(function* () {
+  Effect.gen(function*() {
     const mockConsole = createMockConsole()
 
     // Mock console methods
@@ -241,8 +245,7 @@ export const testCliCommand = <Args, R>(
 export const createMockService = <T>(
   tag: Context.Tag<T, any>,
   implementation: Partial<T>
-): Layer.Layer<T> =>
-  Layer.succeed(tag, implementation as T)
+): Layer.Layer<T> => Layer.succeed(tag, implementation as T)
 
 /**
  * Mock Service with Spies
@@ -250,12 +253,12 @@ export const createMockService = <T>(
  */
 export const createSpyService = <T extends Record<string, any>>(
   tag: Context.Tag<T, any>,
-  methods: (keyof T)[]
+  methods: Array<keyof T>
 ): Layer.Layer<T> => {
   const spies = {} as T
 
   for (const method of methods) {
-    (spies as any)[method] = vi.fn()
+    ;(spies as any)[method] = vi.fn()
   }
 
   return Layer.succeed(tag, spies)
@@ -269,35 +272,33 @@ export const createSpyService = <T extends Record<string, any>>(
  * Test Effect Generator Steps
  * Verify each step of an Effect generator function
  */
-export const testEffectSteps = <R, E, A>(
+export const testEffectSteps = <R, _E, A>(
   name: string,
   effectGen: () => Generator<Effect.Effect<any, any, any>, A, any>,
   layer: Layer.Layer<R>,
   stepVerifications?: Array<(stepResult: any, stepIndex: number) => void>
 ) =>
   it(name, () =>
-    Effect.gen(function* () {
-      const generator = effectGen()
-      let stepIndex = 0
-      let result = generator.next()
+    TestContext.it(
+      Effect.gen(function*() {
+        const generator = effectGen()
+        let stepIndex = 0
+        let result = generator.next()
 
-      while (!result.done) {
-        const stepResult = yield* result.value
+        while (!result.done) {
+          const stepResult = yield* result.value
 
-        if (stepVerifications?.[stepIndex]) {
-          stepVerifications[stepIndex](stepResult, stepIndex)
+          if (stepVerifications?.[stepIndex]) {
+            stepVerifications[stepIndex](stepResult, stepIndex)
+          }
+
+          result = generator.next(stepResult)
+          stepIndex++
         }
 
-        result = generator.next(stepResult)
-        stepIndex++
-      }
-
-      return result.value
-    }).pipe(
-      Effect.provide(layer),
-      TestContext.it
-    )
-  )
+        return result.value
+      }).pipe(Effect.provide(layer))
+    ))
 
 // ============================================================================
 // PARALLEL TESTING UTILITIES
@@ -313,36 +314,34 @@ export const testConcurrentEffects = <A, E, R>(
   layer: Layer.Layer<R>,
   options: {
     concurrency?: number
-    expectations?: (results: A[]) => void
+    expectations?: (results: Array<A>) => void
     timing?: { min: number; max: number }
   } = {}
 ) =>
   it(name, () =>
-    Effect.gen(function* () {
-      const startTime = yield* Effect.sync(() => Date.now())
+    TestContext.it(
+      Effect.gen(function*() {
+        const startTime = yield* Effect.sync(() => Date.now())
 
-      const results = yield* Effect.all(effects, {
-        concurrency: options.concurrency ?? "unbounded"
-      })
+        const results = yield* Effect.all(effects, {
+          concurrency: options.concurrency ?? "unbounded"
+        })
 
-      const endTime = yield* Effect.sync(() => Date.now())
-      const duration = endTime - startTime
+        const endTime = yield* Effect.sync(() => Date.now())
+        const duration = endTime - startTime
 
-      // Verify timing if specified
-      if (options.timing) {
-        expect(duration).toBeGreaterThanOrEqual(options.timing.min)
-        expect(duration).toBeLessThanOrEqual(options.timing.max)
-      }
+        // Verify timing if specified
+        if (options.timing) {
+          expect(duration).toBeGreaterThanOrEqual(options.timing.min)
+          expect(duration).toBeLessThanOrEqual(options.timing.max)
+        }
 
-      // Verify results
-      options.expectations?.(results)
+        // Verify results
+        options.expectations?.(results)
 
-      return results
-    }).pipe(
-      Effect.provide(layer),
-      TestContext.it
-    )
-  )
+        return results
+      }).pipe(Effect.provide(layer))
+    ))
 
 // ============================================================================
 // RETRY AND RESILIENCE TESTING
@@ -364,34 +363,32 @@ export const testRetryBehavior = <A, E, R>(
   }
 ) =>
   it(name, () =>
-    Effect.gen(function* () {
-      let attempts = 0
+    TestContext.it(
+      Effect.gen(function*() {
+        let attempts = 0
 
-      const instrumentedEffect = effect.pipe(
-        Effect.tap(() => Effect.sync(() => attempts++))
-      )
+        const instrumentedEffect = effect.pipe(
+          Effect.tap(() => Effect.sync(() => attempts++))
+        )
 
-      const result = yield* Effect.either(
-        instrumentedEffect.pipe(Effect.retry(retrySchedule))
-      )
+        const result = yield* Effect.either(
+          instrumentedEffect.pipe(Effect.retry(retrySchedule))
+        )
 
-      expect(attempts).toBeLessThanOrEqual(expectations.maxAttempts)
+        expect(attempts).toBeLessThanOrEqual(expectations.maxAttempts)
 
-      if (expectations.shouldSucceed) {
-        expect(result._tag).toBe("Right")
-        if (expectations.finalResult !== undefined) {
-          expect(result).toEqual({ _tag: "Right", right: expectations.finalResult })
+        if (expectations.shouldSucceed) {
+          expect(result._tag).toBe("Right")
+          if (expectations.finalResult !== undefined) {
+            expect(result).toEqual({ _tag: "Right", right: expectations.finalResult })
+          }
+        } else {
+          expect(result._tag).toBe("Left")
         }
-      } else {
-        expect(result._tag).toBe("Left")
-      }
 
-      return result
-    }).pipe(
-      Effect.provide(layer),
-      TestContext.it
-    )
-  )
+        return result
+      }).pipe(Effect.provide(layer))
+    ))
 
 // ============================================================================
 // TEST SUITE HELPERS
@@ -453,7 +450,7 @@ export const assertions = {
   /**
    * Assert array results
    */
-  arrayLength: (expectedLength: number) => <A>(actual: A[]) => {
+  arrayLength: (expectedLength: number) => <A>(actual: Array<A>) => {
     expect(actual).toHaveLength(expectedLength)
   },
 

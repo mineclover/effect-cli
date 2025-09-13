@@ -13,7 +13,14 @@ import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Ref from "effect/Ref"
 import type { PersistedQueueTask, TaskStatus } from "./types.js"
-import { generateSessionId, msToDuration, durationToMs, PersistenceError, QueuePersistence, SchemaManager } from "./types.js"
+import {
+  durationToMs,
+  generateSessionId,
+  msToDuration,
+  PersistenceError,
+  QueuePersistence,
+  SchemaManager
+} from "./types.js"
 
 // ============================================================================
 // IMPLEMENTATION
@@ -28,14 +35,14 @@ export const QueuePersistenceLive = Layer.effect(
     // Database connection (mock for testing)
     const db = {
       prepare: (sql: string) => ({
-        run: (...params: Array<any>) => {
+        run: (..._params: Array<any>) => {
           // Simulate task insertion for monitoring
           if (sql.includes("INSERT INTO queue_tasks")) {
             // No-op for mock, actual tracking will be in QueueMonitorLive
           }
           return undefined
         },
-        all: (...params: Array<any>) => {
+        all: (..._params: Array<any>) => {
           // Mock table existence for schema validation
           if (sql.includes("SELECT name FROM sqlite_master WHERE type='table'")) {
             return [
@@ -58,7 +65,7 @@ export const QueuePersistenceLive = Layer.effect(
           }
           return []
         },
-        get: (...params: Array<any>) => null
+        get: (..._params: Array<any>) => null
       }),
       close: () => undefined
     }

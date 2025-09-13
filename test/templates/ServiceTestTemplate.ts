@@ -8,20 +8,18 @@
  * @created 2025-09-13
  */
 
+import * as TestContext from "@effect/vitest"
+import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
-import * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
-import { describe, it, expect, beforeEach, afterEach } from "vitest"
-import * as TestContext from "@effect/vitest"
+import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 // Import test utilities
 import {
-  expectSuccess,
-  expectFailure,
-  expectTimingWithin,
   createMockService,
-  createSpyService,
+  expectFailure,
+  expectSuccess,
+  expectTimingWithin,
   testConcurrentEffects
 } from "../utils/effectTestUtils.js"
 
@@ -45,7 +43,7 @@ describe("MyService", () => {
         path.includes("error")
           ? Effect.fail(new Error(`File not found: ${path}`))
           : Effect.succeed(`Content of ${path}`),
-      writeFile: (path: string, content: string) => Effect.succeed(void 0),
+      writeFile: (_path: string, _content: string) => Effect.succeed(void 0),
       exists: (path: string) => Effect.succeed(!path.includes("missing"))
     }
   )
@@ -57,7 +55,7 @@ describe("MyService", () => {
         url.includes("error")
           ? Effect.fail(new Error(`Network error: ${url}`))
           : Effect.succeed({ status: 200, data: `Response from ${url}` }),
-      post: (url: string, data: any) => Effect.succeed({ status: 201, data: "Created" })
+      post: (_url: string, _data: any) => Effect.succeed({ status: 201, data: "Created" })
     }
   )
 
@@ -84,7 +82,7 @@ describe("MyService", () => {
 
   describe("Service Initialization", () => {
     it("should initialize service successfully", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
         // expect(service).toBeDefined()
         //
@@ -97,11 +95,10 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle initialization dependencies", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Verify all required dependencies are available
         // const fileSystem = yield* FileSystem
         // const networkClient = yield* NetworkClient
@@ -113,12 +110,11 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should fail gracefully if dependencies are unavailable", () =>
       expectFailure(
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           // Test with missing dependencies
           // const service = yield* MyService
           yield* Effect.fail(new Error("Dependency not available"))
@@ -127,8 +123,7 @@ describe("MyService", () => {
       ).pipe(
         // Don't provide required dependencies
         TestContext.it
-      )
-    )
+      ))
   })
 
   // ==========================================================================
@@ -138,21 +133,15 @@ describe("MyService", () => {
   describe("Core Functionality", () => {
     it("should perform basic operations successfully", () =>
       expectSuccess(
-        Effect.gen(function* () {
-          // const service = yield* MyService
-          // const result = yield* service.performOperation("test-input")
-          // return result
-          return "mock-result"
-        }),
+        Effect.sync(() => "mock-result"),
         "mock-result"
       ).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle different input types", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
 
         const testCases = [
@@ -162,18 +151,18 @@ describe("MyService", () => {
           { input: null, expected: "null-result" }
         ]
 
-        for (const testCase of testCases) {
+        for (const _testCase of testCases) {
           // const result = yield* service.processInput(testCase.input)
           // expect(result).toBe(testCase.expected)
         }
+        yield* Effect.void
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should maintain internal state correctly", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
 
         // Test state changes
@@ -187,8 +176,7 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
   })
 
   // ==========================================================================
@@ -197,7 +185,7 @@ describe("MyService", () => {
 
   describe("Dependency Interactions", () => {
     it("should interact with file system correctly", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
         // const fileSystem = yield* FileSystem
 
@@ -209,11 +197,10 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle network operations", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
         // const networkClient = yield* NetworkClient
 
@@ -226,11 +213,10 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle dependency failures gracefully", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Create failing dependency
         const FailingFileSystem = createMockService(
           {} as any, // Replace with actual FileSystem tag
@@ -246,7 +232,7 @@ describe("MyService", () => {
         )
 
         const result = yield* Effect.either(
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // const service = yield* MyService
             // yield* service.processFile("/test/file.txt")
           }).pipe(Effect.provide(FailingLayer))
@@ -254,8 +240,7 @@ describe("MyService", () => {
 
         expect(result._tag).toBe("Left")
         // Verify service handles dependency failure appropriately
-      }).pipe(TestContext.it)
-    )
+      }).pipe(TestContext.it))
   })
 
   // ==========================================================================
@@ -265,7 +250,7 @@ describe("MyService", () => {
   describe("Error Handling", () => {
     it("should validate input parameters", () =>
       expectFailure(
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           // const service = yield* MyService
           // yield* service.performOperation("") // Invalid input
           yield* Effect.fail(new Error("Invalid input"))
@@ -274,12 +259,11 @@ describe("MyService", () => {
       ).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should provide meaningful error messages", () =>
       expectFailure(
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           // const service = yield* MyService
           // yield* service.processFile("/nonexistent/file.txt")
           yield* Effect.fail(new Error("File not found: /nonexistent/file.txt"))
@@ -292,20 +276,14 @@ describe("MyService", () => {
       ).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle resource exhaustion", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
 
         // Simulate resource exhaustion
-        const operations = Array.from({ length: 1000 }, (_, i) =>
-          Effect.gen(function* () {
-            // yield* service.heavyOperation(i)
-            return `result-${i}`
-          })
-        )
+        const operations = Array.from({ length: 1000 }, (_, i) => Effect.sync(() => `result-${i}`))
 
         const result = yield* Effect.either(
           Effect.all(operations, { concurrency: 100 })
@@ -318,8 +296,7 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
   })
 
   // ==========================================================================
@@ -329,43 +306,35 @@ describe("MyService", () => {
   describe("Performance", () => {
     it("should complete operations within time bounds", () =>
       expectTimingWithin(
-        Effect.gen(function* () {
+        Effect.gen(function*() {
           // const service = yield* MyService
           // yield* service.performOperation("performance-test")
           yield* Effect.sleep(Duration.millis(50)) // Mock operation
         }),
         200, // max 200ms
-        0    // min 0ms
+        0 // min 0ms
       ).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle concurrent operations efficiently", () =>
       testConcurrentEffects(
         "concurrent service operations",
-        Array.from({ length: 10 }, (_, i) =>
-          Effect.gen(function* () {
-            // const service = yield* MyService
-            // return yield* service.performOperation(`concurrent-${i}`)
-            return `result-${i}`
-          })
-        ),
+        Array.from({ length: 10 }, (_, i) => Effect.sync(() => `result-${i}`)),
         TestLayer,
         {
           concurrency: 5,
           timing: { min: 50, max: 1000 },
           expectations: (results) => {
             expect(results).toHaveLength(10)
-            expect(results.every(r => r.includes("result-"))).toBe(true)
+            expect(results.every((r) => r.includes("result-"))).toBe(true)
           }
         }
-      )
-    )
+      ))
 
     it("should optimize resource usage", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         const initialMemory = process.memoryUsage().heapUsed
 
         // const service = yield* MyService
@@ -374,6 +343,8 @@ describe("MyService", () => {
         for (let i = 0; i < 100; i++) {
           // yield* service.performOperation(`operation-${i}`)
         }
+
+        yield* Effect.void
 
         // Force garbage collection if available
         if (global.gc) global.gc()
@@ -386,8 +357,7 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
   })
 
   // ==========================================================================
@@ -396,17 +366,11 @@ describe("MyService", () => {
 
   describe("Concurrency", () => {
     it("should handle concurrent state modifications safely", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
 
         // Concurrent state modifications
-        const operations = Array.from({ length: 20 }, (_, i) =>
-          Effect.gen(function* () {
-            // yield* service.updateState({ counter: i })
-            // return yield* service.getState()
-            return { counter: i }
-          })
-        )
+        const operations = Array.from({ length: 20 }, (_, i) => Effect.sync(() => ({ counter: i })))
 
         const results = yield* Effect.all(operations, { concurrency: 5 })
 
@@ -416,32 +380,29 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle resource contention", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
 
         // Create contention for shared resources
         const contentionOps = Array.from({ length: 10 }, () =>
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // yield* service.acquireResource()
             yield* Effect.sleep(Duration.millis(10))
             // yield* service.releaseResource()
             return "success"
-          })
-        )
+          }))
 
         const results = yield* Effect.all(contentionOps, { concurrency: 10 })
 
         expect(results).toHaveLength(10)
-        expect(results.every(r => r === "success")).toBe(true)
+        expect(results.every((r) => r === "success")).toBe(true)
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
   })
 
   // ==========================================================================
@@ -450,7 +411,7 @@ describe("MyService", () => {
 
   describe("Service Integration", () => {
     it("should integrate with multiple services correctly", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const myService = yield* MyService
         // const fileSystem = yield* FileSystem
         // const networkClient = yield* NetworkClient
@@ -470,19 +431,17 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle service dependency chains", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Test cascading service calls
         // Service A calls Service B which calls Service C
         // Verify the entire chain works correctly
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
   })
 
   // ==========================================================================
@@ -491,7 +450,7 @@ describe("MyService", () => {
 
   describe("Configuration", () => {
     it("should respect configuration parameters", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Test with different configurations
         const configs = [
           { timeout: 1000, retries: 3 },
@@ -499,30 +458,30 @@ describe("MyService", () => {
           { timeout: 500, retries: 5 }
         ]
 
-        for (const config of configs) {
+        for (const _config of configs) {
           // const configuredService = yield* MyService.configure(config)
           // Test behavior with this configuration
         }
+        yield* Effect.void
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle environment-specific behavior", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Test behavior in different environments
         const environments = ["development", "testing", "production"]
 
-        for (const env of environments) {
+        for (const _env of environments) {
           // Mock environment
           // Test environment-specific behavior
         }
+        yield* Effect.void
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
   })
 
   // ==========================================================================
@@ -531,7 +490,7 @@ describe("MyService", () => {
 
   describe("Resource Management", () => {
     it("should properly clean up resources", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // const service = yield* MyService
 
         // Acquire resources
@@ -549,14 +508,13 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
 
     it("should handle cleanup during failures", () =>
-      Effect.gen(function* () {
+      Effect.gen(function*() {
         // Test that resources are cleaned up even when operations fail
         const result = yield* Effect.either(
-          Effect.gen(function* () {
+          Effect.gen(function*() {
             // const service = yield* MyService
             // yield* service.acquireResources()
             // yield* Effect.fail(new Error("Simulated failure"))
@@ -571,8 +529,7 @@ describe("MyService", () => {
       }).pipe(
         Effect.provide(TestLayer),
         TestContext.it
-      )
-    )
+      ))
   })
 })
 
@@ -580,20 +537,20 @@ describe("MyService", () => {
 // SERVICE-SPECIFIC HELPER FUNCTIONS
 // ============================================================================
 
-const createTestData = () => {
-  return {
-    // Service-specific test data
-    validInput: { key: "value" },
-    invalidInput: null,
-    largeInput: { data: "x".repeat(10000) }
-  }
-}
+// const createTestData = () => {
+//   return {
+//     // Service-specific test data
+//     validInput: { key: "value" },
+//     invalidInput: null,
+//     largeInput: { data: "x".repeat(10000) }
+//   }
+// }
 
-const verifyServiceState = (state: any) => {
-  expect(state).toBeDefined()
-  expect(state).toHaveProperty("initialized")
-  // Add more specific state validations
-}
+// const verifyServiceState = (state: any) => {
+//   expect(state).toBeDefined()
+//   expect(state).toHaveProperty("initialized")
+//   // Add more specific state validations
+// }
 
 // ============================================================================
 // USAGE NOTES

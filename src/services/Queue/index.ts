@@ -19,12 +19,12 @@ import * as Schedule from "effect/Schedule"
 // LAYER COMPOSITIONS
 // ============================================================================
 
-import { InternalQueueLive } from "./InternalQueueLive.js"
+import { AdaptiveThrottlerLive } from "./AdaptiveThrottlerLive.js"
+import { CircuitBreakerLive } from "./CircuitBreakerLive.js"
+import { createTask, InternalQueueLive } from "./InternalQueueLive.js"
 import { QueueMonitorLive } from "./QueueMonitorLive.js"
 import { QueuePersistenceLive } from "./QueuePersistenceLive.js"
 import { SchemaManagerLive } from "./SchemaManager.js"
-import { CircuitBreakerLive } from "./CircuitBreakerLive.js"
-import { AdaptiveThrottlerLive } from "./AdaptiveThrottlerLive.js"
 import { StabilityMonitorLive } from "./StabilityMonitorLive.js"
 import { TransparentQueueAdapterLive } from "./TransparentQueueAdapter.js"
 
@@ -33,7 +33,8 @@ import { TransparentQueueAdapterLive } from "./TransparentQueueAdapter.js"
 // ============================================================================
 
 import type { OperationType, ResourceGroup } from "./types.js"
-import { generateSessionId, InternalQueue, QueueMonitor, QueuePersistence, SchemaManager } from "./types.js"
+import { generateSessionId, InternalQueue, QueueMonitor, QueuePersistence, StabilityMonitor } from "./types.js"
+// import { SchemaManager } from "./types.js" // Unused import
 
 // ============================================================================
 // CORE EXPORTS
@@ -43,38 +44,40 @@ import { generateSessionId, InternalQueue, QueueMonitor, QueuePersistence, Schem
 export * from "./types.js"
 
 // Service implementations
+export * from "./AdaptiveThrottlerLive.js"
+export * from "./CircuitBreakerLive.js"
 export * from "./InternalQueueLive.js"
 export * from "./QueueMonitorLive.js"
 export * from "./QueuePersistenceLive.js"
 export * from "./SchemaManager.js"
-export * from "./CircuitBreakerLive.js"
-export * from "./AdaptiveThrottlerLive.js"
 export * from "./StabilityMonitorLive.js"
 
 // Phase 3: CLI Integration modules
 export * from "./TransparentQueueAdapter.js"
 
 // Phase 4: Advanced optimization modules
-export * from "./PerformanceProfiler.js"
-export * from "./MemoryOptimizer.js"
 export * from "./AdvancedCache.js"
+export * from "./MemoryOptimizer.js"
+export * from "./PerformanceProfiler.js"
 
 // Re-export service tags for dependency injection
-export { InternalQueue, QueueMonitor, QueuePersistence, SchemaManager, CircuitBreaker, AdaptiveThrottler, StabilityMonitor } from "./types.js"
+export {
+  AdaptiveThrottler,
+  CircuitBreaker,
+  InternalQueue,
+  QueueMonitor,
+  QueuePersistence,
+  SchemaManager,
+  StabilityMonitor
+} from "./types.js"
 
 // Phase 3 service tags
 export { TransparentQueueAdapter } from "./TransparentQueueAdapter.js"
 
 // Phase 4 service tags
-export { PerformanceProfiler } from "./PerformanceProfiler.js"
-export { MemoryOptimizer } from "./MemoryOptimizer.js"  
 export { AdvancedCache } from "./AdvancedCache.js"
-
-// Import service tags for internal use
-import { AdaptiveThrottler, StabilityMonitor } from "./types.js"
-
-// Import createTask utility from InternalQueueLive
-import { createTask } from "./InternalQueueLive.js"
+export { MemoryOptimizer } from "./MemoryOptimizer.js"
+export { PerformanceProfiler } from "./PerformanceProfiler.js"
 
 /**
  * Basic Queue System Layer (Phase 1 Foundation)
@@ -390,10 +393,10 @@ export const checkQueueHealth = () =>
 export const getSystemHealth = () =>
   Effect.gen(function*() {
     const stabilityMonitor = yield* StabilityMonitor
-    
+
     const healthCheck = yield* stabilityMonitor.performHealthCheck()
     const heartbeat = yield* stabilityMonitor.getHeartbeat()
-    
+
     return {
       isHealthy: healthCheck.isHealthy,
       metrics: healthCheck.metrics,
@@ -458,7 +461,7 @@ export const QueueSystem = {
   // Status and monitoring
   getStatus: getQueueStatus,
   checkHealth: checkQueueHealth,
-  getSystemHealth: getSystemHealth, // Phase 2.3: Enhanced system health
+  getSystemHealth, // Phase 2.3: Enhanced system health
   exportMetrics: exportQueueMetrics,
 
   // Control

@@ -12,7 +12,8 @@ import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
 import * as Console from "effect/Console"
 import * as Effect from "effect/Effect"
-import { getQueueStatus, QueueMonitor, QueueSystem } from "../services/Queue/index.js"
+import * as Option from "effect/Option"
+import { BasicQueueSystemLayer, getQueueStatus, QueueMonitor, QueueSystem } from "../services/Queue/index.js"
 
 // ============================================================================
 // COMMAND OPTIONS
@@ -125,7 +126,7 @@ const displayCsvFormat = (status: any) =>
 
 const queueStatusAction = (options: {
   format: "table" | "json" | "csv"
-  session?: string
+  session: Option.Option<string>
 }) =>
   Effect.gen(function*() {
     yield* Console.log("🔍 Fetching Queue Status...")
@@ -134,9 +135,9 @@ const queueStatusAction = (options: {
     const status = yield* getQueueStatus()
 
     // If specific session requested, get metrics for that session
-    if (options.session) {
+    if (Option.isSome(options.session)) {
       const monitor = yield* QueueMonitor
-      const sessionMetrics = yield* monitor.getQueueStatus(options.session)
+      const sessionMetrics = yield* monitor.getQueueStatus(options.session.value)
       status.metrics = sessionMetrics
     }
 
@@ -176,7 +177,7 @@ export const queueStatusCommand = Command.make(
 // STANDALONE EXECUTION
 // ============================================================================
 
-const program = queueStatusAction({ format: "table" }).pipe(
+const program = queueStatusAction({ format: "table", session: Option.none() }).pipe(
   Effect.provide(QueueSystem.BasicLayer),
   Effect.catchAll((error) =>
     Effect.gen(function*() {
@@ -193,7 +194,7 @@ export { program as QueueStatusProgram }
 
 // Run if called directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  Effect.runPromise(program)
+  Effect.runPromise(program.pipe(Effect.provide(BasicQueueSystemLayer)))
     .then(() => {
       process.exit(0)
     })

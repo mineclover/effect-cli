@@ -15,7 +15,7 @@ import * as Fiber from "effect/Fiber"
 import * as Layer from "effect/Layer"
 import * as Ref from "effect/Ref"
 import type { ResourceGroup, SystemLoadMetrics, ThrottleLimits } from "./types.js"
-import { AdaptiveThrottler, ThrottleError, QueuePersistence } from "./types.js"
+import { AdaptiveThrottler, QueuePersistence, ThrottleError } from "./types.js"
 
 // ============================================================================
 // INTERNAL TYPES
@@ -66,13 +66,15 @@ export const AdaptiveThrottlerLive = Layer.effect(
       const network = yield* Effect.makeSemaphore(initialConfig.network.current)
       const computation = yield* Effect.makeSemaphore(initialConfig.computation.current)
       const memoryIntensive = yield* Effect.makeSemaphore(initialConfig["memory-intensive"].current)
-      
-      return new Map([
-        ["filesystem" as const, filesystem],
-        ["network" as const, network],
-        ["computation" as const, computation],
-        ["memory-intensive" as const, memoryIntensive]
-      ] as const)
+
+      return new Map(
+        [
+          ["filesystem" as const, filesystem],
+          ["network" as const, network],
+          ["computation" as const, computation],
+          ["memory-intensive" as const, memoryIntensive]
+        ] as const
+      )
     })
 
     yield* Effect.log("Adaptive throttler service initialized")
@@ -88,16 +90,16 @@ export const AdaptiveThrottlerLive = Layer.effect(
       Effect.gen(function*() {
         // Get CPU usage (simplified - in real implementation would use OS metrics)
         const cpuUsage = Math.random() * 0.3 // Simulate low CPU usage for demo
-        
+
         // Get memory usage from Node.js process
         const memUsage = process.memoryUsage()
         const memoryUsage = Math.min(memUsage.heapUsed / (500 * 1024 * 1024), 1.0) // Cap at 500MB
-        
+
         // Get queue backlog
         const sessionId = yield* persistence.getCurrentSession()
         const pendingTasks = yield* persistence.loadPendingTasks(sessionId)
         const queueBacklog = pendingTasks.length
-        
+
         return {
           cpuUsage,
           memoryUsage,
@@ -112,12 +114,12 @@ export const AdaptiveThrottlerLive = Layer.effect(
       Effect.gen(function*() {
         const currentLimits = yield* Ref.get(throttleLimits)
         const load = yield* Ref.get(systemLoad)
-        
+
         // Calculate adjustment factor based on system load
         const loadFactor = Math.max(load.cpuUsage, load.memoryUsage)
         const backlogFactor = Math.min(load.queueBacklog / 100, 1.0)
         const adjustmentFactor = 1.0 - (loadFactor * 0.3 + backlogFactor * 0.2)
-        
+
         // Apply adjustment to all resource groups
         const newLimits: ThrottleConfig = {
           filesystem: adjustLimit(currentLimits.filesystem, adjustmentFactor),
@@ -125,15 +127,15 @@ export const AdaptiveThrottlerLive = Layer.effect(
           computation: adjustLimit(currentLimits.computation, adjustmentFactor),
           "memory-intensive": adjustLimit(currentLimits["memory-intensive"], adjustmentFactor)
         }
-        
+
         yield* Ref.set(throttleLimits, newLimits)
-        
+
         // Log significant adjustments
         if (Math.abs(adjustmentFactor - 1.0) > 0.1) {
           yield* Effect.log(
             `Throttle limits adjusted: factor=${adjustmentFactor.toFixed(2)}, ` +
-            `cpu=${load.cpuUsage.toFixed(2)}, memory=${load.memoryUsage.toFixed(2)}, ` +
-            `backlog=${load.queueBacklog}`
+              `cpu=${load.cpuUsage.toFixed(2)}, memory=${load.memoryUsage.toFixed(2)}, ` +
+              `backlog=${load.queueBacklog}`
           )
         }
       })
@@ -153,7 +155,7 @@ export const AdaptiveThrottlerLive = Layer.effect(
     const loadMonitoringFiber = yield* Effect.gen(function*() {
       while (true) {
         const metrics = yield* collectSystemMetrics().pipe(
-          Effect.catchAll((error) => 
+          Effect.catchAll((error) =>
             Effect.gen(function*() {
               yield* Effect.log(`Load monitoring error: ${error}`)
               return {
@@ -164,7 +166,7 @@ export const AdaptiveThrottlerLive = Layer.effect(
             })
           )
         )
-        
+
         yield* Ref.set(systemLoad, metrics)
         yield* Effect.sleep(Duration.seconds(10))
       }
@@ -176,7 +178,7 @@ export const AdaptiveThrottlerLive = Layer.effect(
     const adjustmentFiber = yield* Effect.gen(function*() {
       while (true) {
         yield* adjustThresholds().pipe(
-          Effect.catchAll((error) => 
+          Effect.catchAll((error) =>
             Effect.gen(function*() {
               yield* Effect.log(`Threshold adjustment error: ${error}`)
             })
@@ -208,7 +210,7 @@ export const AdaptiveThrottlerLive = Layer.effect(
 
         // Apply semaphore-based throttling
         const result = yield* semaphore.withPermits(1)(operation).pipe(
-          Effect.catchTag("Interrupt", () => 
+          Effect.catchAll(() =>
             Effect.fail(
               new ThrottleError(
                 `Resource throttled: ${resourceGroup} (limit: ${currentLimit})`,
@@ -267,17 +269,19 @@ export const AdaptiveThrottlerTest = Layer.succeed(
   AdaptiveThrottler,
   AdaptiveThrottler.of({
     throttle: (_, operation) => operation,
-    getCurrentLimits: () => Effect.succeed({
-      filesystem: { current: 5, min: 2, max: 10 },
-      network: { current: 10, min: 5, max: 20 },
-      computation: { current: 3, min: 1, max: 6 },
-      "memory-intensive": { current: 2, min: 1, max: 4 }
-    } as Record<ResourceGroup, ThrottleLimits>),
-    getSystemLoad: () => Effect.succeed({
-      cpu: 0.3,
-      memory: 0.4,
-      queueBacklog: 5
-    }),
+    getCurrentLimits: () =>
+      Effect.succeed({
+        filesystem: { current: 5, min: 2, max: 10 },
+        network: { current: 10, min: 5, max: 20 },
+        computation: { current: 3, min: 1, max: 6 },
+        "memory-intensive": { current: 2, min: 1, max: 4 }
+      } as Record<ResourceGroup, ThrottleLimits>),
+    getSystemLoad: () =>
+      Effect.succeed({
+        cpu: 0.3,
+        memory: 0.4,
+        queueBacklog: 5
+      }),
     cleanup: () => Effect.void
   })
 )

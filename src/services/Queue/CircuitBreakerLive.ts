@@ -3,20 +3,21 @@
  *
  * Implements the Circuit Breaker pattern for the Effect CLI Queue System.
  * Provides fault tolerance and automatic recovery from service failures.
- * 
+ *
  * States: Closed → Open → Half-Open → Closed
  *
  * @version 1.0.0
  * @created 2025-01-12
  */
 
-import * as Duration from "effect/Duration"
+// import * as Duration from "effect/Duration" // Unused import
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Ref from "effect/Ref"
 import type { CircuitBreakerState, ResourceGroup } from "./types.js"
-import { CircuitBreaker, CircuitBreakerError, PersistenceError, QueuePersistence } from "./types.js"
+import { CircuitBreaker, QueuePersistence } from "./types.js"
+// import { CircuitBreakerError, PersistenceError } from "./types.js" // Unused imports
 
 // ============================================================================
 // INTERNAL TYPES
@@ -49,10 +50,10 @@ export const CircuitBreakerLive = Layer.effect(
 
     // Configuration
     const config: CircuitBreakerConfig = {
-      failureThreshold: 5,        // 5회 연속 실패 시 Open
-      successThreshold: 3,        // Half-Open에서 3회 성공 시 Closed
-      timeoutMs: 30000,          // 30초 후 Half-Open 전환
-      volumeThreshold: 10        // 최소 호출 수 (통계적 유의성)
+      failureThreshold: 5, // 5회 연속 실패 시 Open
+      successThreshold: 3, // Half-Open에서 3회 성공 시 Closed
+      timeoutMs: 30000, // 30초 후 Half-Open 전환
+      volumeThreshold: 10 // 최소 호출 수 (통계적 유의성)
     }
 
     // State management for each resource group
@@ -81,8 +82,6 @@ export const CircuitBreakerLive = Layer.effect(
       }
     }
 
-
-
     /**
      * Update state for a resource group
      */
@@ -108,14 +107,14 @@ export const CircuitBreakerLive = Layer.effect(
       Effect.gen(function*() {
         const states = yield* Ref.get(resourceStates)
         const currentState = states.get(resourceGroup)
-        
+
         if (!currentState) return
 
         const now = new Date()
 
         if (currentState.state === "half-open") {
           const newSuccessCount = currentState.successCount + 1
-          
+
           if (newSuccessCount >= config.successThreshold) {
             // Transition back to CLOSED
             yield* updateState(resourceGroup, {
@@ -146,7 +145,7 @@ export const CircuitBreakerLive = Layer.effect(
       Effect.gen(function*() {
         const states = yield* Ref.get(resourceStates)
         const currentState = states.get(resourceGroup)
-        
+
         if (!currentState) return
 
         const now = new Date()
@@ -186,7 +185,7 @@ export const CircuitBreakerLive = Layer.effect(
       Effect.gen(function*() {
         const states = yield* Ref.get(resourceStates)
         const currentState = states.get(resourceGroup)
-        
+
         if (!currentState) return
 
         yield* updateState(resourceGroup, {
@@ -201,7 +200,7 @@ export const CircuitBreakerLive = Layer.effect(
       Effect.gen(function*() {
         const states = yield* Ref.get(resourceStates)
         const currentState = states.get(resourceGroup)
-        
+
         if (!currentState) return
 
         yield* updateState(resourceGroup, {
@@ -219,7 +218,7 @@ export const CircuitBreakerLive = Layer.effect(
         const states = yield* Ref.get(resourceStates)
         const state = states.get(resourceGroup)
         const sessionId = yield* persistence.getCurrentSession()
-        
+
         if (!state) {
           return {
             resourceGroup,
@@ -231,9 +230,15 @@ export const CircuitBreakerLive = Layer.effect(
             lastSuccessTime: Option.none(),
             stateChangedAt: new Date(),
             failureThreshold: config.failureThreshold,
-            recoveryTimeoutMs: config.timeoutMs
+            recoveryTimeoutMs: config.timeoutMs,
+            totalRequests: 0,
+            totalFailures: 0,
+            failureRate: 0
           }
         }
+
+        const totalRequests = state.failureCount + state.successCount
+        const failureRate = totalRequests > 0 ? state.failureCount / totalRequests : 0
 
         return {
           resourceGroup,
@@ -245,7 +250,10 @@ export const CircuitBreakerLive = Layer.effect(
           lastSuccessTime: Option.none(), // We don't track success time in our current implementation
           stateChangedAt: state.lastStateChange,
           failureThreshold: config.failureThreshold,
-          recoveryTimeoutMs: config.timeoutMs
+          recoveryTimeoutMs: config.timeoutMs,
+          totalRequests,
+          totalFailures: state.failureCount,
+          failureRate
         }
       })
 
@@ -283,18 +291,22 @@ export const CircuitBreakerTest = Layer.succeed(
     recordFailure: () => Effect.succeed(void 0),
     forceOpen: () => Effect.succeed(void 0),
     forceClose: () => Effect.succeed(void 0),
-    getInfo: () => Effect.succeed({
-      resourceGroup: "filesystem" as ResourceGroup,
-      sessionId: "test-session",
-      state: "closed" as CircuitBreakerState,
-      failureCount: 0,
-      successCount: 0,
-      lastFailureTime: Option.none(),
-      lastSuccessTime: Option.none(),
-      stateChangedAt: new Date(),
-      failureThreshold: 5,
-      recoveryTimeoutMs: 30000
-    }),
+    getInfo: () =>
+      Effect.succeed({
+        resourceGroup: "filesystem" as ResourceGroup,
+        sessionId: "test-session",
+        state: "closed" as CircuitBreakerState,
+        failureCount: 0,
+        successCount: 0,
+        lastFailureTime: Option.none(),
+        lastSuccessTime: Option.none(),
+        stateChangedAt: new Date(),
+        failureThreshold: 5,
+        recoveryTimeoutMs: 30000,
+        totalRequests: 0,
+        totalFailures: 0,
+        failureRate: 0
+      }),
     resetStats: () => Effect.succeed(void 0)
   })
 )
