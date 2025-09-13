@@ -7,6 +7,9 @@ import { simpleListCommand } from "./examples/SimpleListCommand.js"
 import { simpleQueueCommand } from "./examples/SimpleQueueCommand.js"
 import { simpleSampleCommand } from "./examples/SimpleSampleCommand.js"
 
+// Production commands
+import { productionCommands } from "./commands/index.js"
+
 // Example commands (configurable via examples/config.ts)
 import { advancedCommand, catCommand, findCommand, listCommand, sampleCommand } from "./examples/index.js"
 
@@ -29,7 +32,8 @@ const command = mainCommand.pipe(
   Command.withSubcommands([
     simpleListCommand,
     simpleQueueCommand,
-    simpleSampleCommand
+    simpleSampleCommand,
+    ...productionCommands
   ])
 )
 

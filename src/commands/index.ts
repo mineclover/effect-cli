@@ -6,7 +6,7 @@
  */
 
 // Import your production commands here:
-// import { myCommand } from "./MyCommand.js"
+import { greetCommand } from "./GreetCommand.js"
 // import { deployCommand } from "./DeployCommand.js"
 
 /**
@@ -15,7 +15,7 @@
  */
 export const productionCommands = [
   // Add your production commands here:
-  // myCommand,
+  greetCommand,
   // deployCommand,
 ]
 
@@ -23,7 +23,7 @@ export const productionCommands = [
  * Individual command exports
  * Export your commands individually for selective use
  */
-// export { myCommand, deployCommand }
+export { greetCommand }
 
 /**
  * Usage in Cli.ts:
