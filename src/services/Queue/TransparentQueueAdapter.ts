@@ -20,7 +20,6 @@ import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
 
 import type { OperationType, ResourceGroup } from "./types.js"
-// PersistenceError and QueueError are no longer needed in the interfaces
 
 import { createTask } from "./InternalQueueLive.js"
 import { InternalQueue } from "./types.js"

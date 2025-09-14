@@ -22,7 +22,6 @@ import type { Layer } from "effect/Layer"
 
 import { InternalQueue } from "../Queue/index.js"
 import type { QueueMetrics } from "../Queue/types.js"
-// QueueStatus unused
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -218,7 +217,6 @@ class LiveProgressTracker implements ProgressTracker {
 
     return display
   }
-
 
   private formatDuration(ms: number): string {
     const seconds = Math.floor(ms / 1000)
