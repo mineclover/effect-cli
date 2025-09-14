@@ -12,10 +12,11 @@ import type * as Context from "effect/Context"
 import { millis, toMillis } from "effect/Duration"
 import type { Duration } from "effect/Duration"
 import * as Effect from "effect/Effect"
-import { isFailure, isSuccess } from "effect/Exit"
 import type { Either } from "effect/Either"
+import { isFailure, isSuccess } from "effect/Exit"
 import { succeed } from "effect/Layer"
 import type { Layer } from "effect/Layer"
+import type { Schedule } from "effect/Schedule"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 // ============================================================================
@@ -278,7 +279,7 @@ export const testEffectSteps = <R, _E, A>(
   name: string,
   effectGen: () => Generator<Effect.Effect<any, any, any>, A, any>,
   layer: Layer<R>,
-  stepVerifications?: Array<(stepResult: any, stepIndex: number) => void>
+  stepVerifications?: Array<(stepResult: unknown, stepIndex: number) => void>
 ) =>
   it(name, () =>
     Effect.runPromise(
@@ -356,7 +357,7 @@ export const testConcurrentEffects = <A, E, R>(
 export const testRetryBehavior = <A, E, R>(
   name: string,
   effect: Effect.Effect<A, E, R>,
-  retrySchedule: any,
+  retrySchedule: Schedule<unknown, E, unknown>,
   layer: Layer<R>,
   expectations: {
     maxAttempts: number

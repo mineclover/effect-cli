@@ -400,7 +400,7 @@ const exportCommand = Command.make("export", {
       const heartbeat = systemHealth.heartbeat
       const healthMetrics = systemHealth.metrics
 
-      let exportData: any = {}
+      let exportData: Record<string, unknown> = {}
 
       // Build export data based on include level
       if (include === "basic" || include === "detailed" || include === "full") {
@@ -463,9 +463,9 @@ const exportCommand = Command.make("export", {
         formattedData = JSON.stringify(exportData, null, 2)
       } else { // csv
         // Convert to CSV format
-        const flattenObject = (obj: any, prefix = ""): Record<string, any> => {
-          const flattened: Record<string, any> = {}
-          for (const [key, value] of Object.entries(obj)) {
+        const flattenObject = (obj: unknown, prefix = ""): Record<string, unknown> => {
+          const flattened: Record<string, unknown> = {}
+          for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
             const newKey = prefix ? `${prefix}_${key}` : key
             if (value && typeof value === "object" && !Array.isArray(value)) {
               Object.assign(flattened, flattenObject(value, newKey))

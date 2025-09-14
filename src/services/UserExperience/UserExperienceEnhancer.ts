@@ -122,7 +122,7 @@ export type PatternType =
  */
 class LiveProgressTracker implements ProgressTracker {
   private currentProgress = 0 // Store for progress tracking
-  private steps: Array<string> = []
+  private _steps: Array<string> = []
   private startTime = Date.now()
 
   constructor(
@@ -131,60 +131,46 @@ class LiveProgressTracker implements ProgressTracker {
     private options: ProgressOptions = {}
   ) {}
 
-  update = (progress: number, message?: string): Effect.Effect<void, never, never> => {
-    const self = this
-    return Effect.gen(function*() {
-      self.currentProgress = Math.max(0, Math.min(100, progress))
-      const elapsed = Date.now() - self.startTime
+  update = (progress: number, message?: string): Effect.Effect<void> => {
+    return Effect.sync(() => {
+      const currentProgress = Math.max(0, Math.min(100, progress))
+      const elapsed = Date.now() - this.startTime
 
       // Build progress display
-      let display = self.buildProgressDisplay(progress, elapsed, message)
-
-      // Show queue position if requested and available
-      if (self.options.showQueuePosition) {
-        display += yield* self.addQueuePositionInfo()
-      }
+      const display = this._buildProgressDisplay(progress, elapsed, message)
 
       // Update console with progress
       process.stdout.write(`\r${display}`)
+
+      this.currentProgress = currentProgress
     }).pipe(
       Effect.catchAll(() => Effect.void)
     )
   }
 
   complete = (message?: string): Effect.Effect<void> => {
-    const self = this
-    return Effect.gen(function*() {
-      const elapsed = Date.now() - self.startTime
-      const successMessage = message || `${self.operation} completed`
+    return Effect.sync(() => {
+      const elapsed = Date.now() - this.startTime
+      const successMessage = message || `${this.operation} completed`
 
-      process.stdout.write(`\r✅ ${successMessage} (${self.formatDuration(elapsed)})\n`)
-
-      if (self.options.showSteps && self.steps.length > 0) {
-        yield* Effect.log(`Completed steps: ${self.steps.join(" → ")}`)
-      }
+      process.stdout.write(`\r✅ ${successMessage} (${this.formatDuration(elapsed)})\n`)
     })
   }
 
   fail = (error: string): Effect.Effect<void> => {
-    const self = this
     return Effect.sync(() => {
-      const elapsed = Date.now() - self.startTime
-      process.stdout.write(`\r❌ ${self.operation} failed: ${error} (${self.formatDuration(elapsed)})\n`)
+      const elapsed = Date.now() - this.startTime
+      process.stdout.write(`\r❌ ${this.operation} failed: ${error} (${this.formatDuration(elapsed)})\n`)
     })
   }
 
   addStep = (step: string): Effect.Effect<void> => {
-    const self = this
-    return Effect.gen(function*() {
-      self.steps.push(step)
-      if (self.options.showSteps) {
-        yield* Effect.log(`Step: ${step}`)
-      }
+    return Effect.sync(() => {
+      this._steps.push(step)
     })
   }
 
-  private buildProgressDisplay(progress: number, elapsed: number, message?: string): string {
+  private _buildProgressDisplay(progress: number, elapsed: number, message?: string): string {
     const style = this.options.style || "bar"
     let display = ""
 
@@ -233,10 +219,6 @@ class LiveProgressTracker implements ProgressTracker {
     return display
   }
 
-  private addQueuePositionInfo = (): Effect.Effect<string> =>
-    Effect.succeed("").pipe(
-      Effect.catchAll(() => Effect.succeed(""))
-    )
 
   private formatDuration(ms: number): string {
     const seconds = Math.floor(ms / 1000)

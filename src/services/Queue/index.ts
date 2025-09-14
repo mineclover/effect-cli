@@ -15,8 +15,6 @@ import { fromNullable, getOrElse, map } from "effect/Option"
 import * as Effect from "effect/Effect"
 import { mergeAll, provide } from "effect/Layer"
 
-import { addDelay, recurWhile } from "effect/Schedule"
-
 // ============================================================================
 // LAYER COMPOSITIONS
 // ============================================================================
@@ -313,33 +311,27 @@ export const getQueueStatus = () =>
 /**
  * Wait for a specific task to complete
  */
-export const waitForTask = (taskId: string, timeoutMs: number = 60000) =>
+export const waitForTask = (taskId: string, _timeoutMs: number = 60000) =>
   Effect.gen(function*() {
     const persistence = yield* QueuePersistence
 
     // Poll for task completion
-    const checkTask = Effect.gen(function*() {
-      const task = yield* persistence.getTaskById(taskId)
+    const checkTask = () =>
+      Effect.gen(function*() {
+        const taskOption = yield* persistence.getTaskById(taskId)
 
-      return task.pipe(
-        Effect.succeed,
-        Effect.map((taskOpt) =>
-          taskOpt.pipe(
-            map((t) => ({ status: t.status, task: t })),
-            getOrElse(() => ({ status: "not-found" as const, task: null }))
-          )
+        return taskOption.pipe(
+          map((t) => ({ status: t.status, task: t })),
+          getOrElse(() => ({ status: "not-found" as const, task: null }))
         )
-      )
-    })
+      })
 
-    const result = yield* checkTask.pipe(
-      Effect.repeat(
-        recurWhile(
-          (result: any) => result.status === "pending" || result.status === "running"
-        ).pipe(addDelay(() => millis(100)))
-      ),
-      Effect.timeout(millis(timeoutMs))
-    )
+    let result = yield* checkTask()
+
+    while (result.status === "pending" || result.status === "running") {
+      yield* Effect.sleep(millis(100))
+      result = yield* checkTask()
+    }
 
     return fromNullable(result?.task)
   })

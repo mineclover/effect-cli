@@ -128,12 +128,17 @@ export const InternalQueueLive = effect(
             // Update task status to running
             yield* persistence.updateTaskStatus(task.id, "running")
 
+            // Start the actual operation
+            const operationFiber = yield* task.operation.pipe(
+              Effect.timeout(seconds(300)), // 5 minute timeout
+              Effect.fork
+            )
+
             // Record running task
-            const currentFiber = yield* Effect.descriptor
             const runningTask: RunningTask = {
               task,
               startedAt: new Date(),
-              fiber: currentFiber as any
+              fiber: operationFiber
             }
 
             yield* update(runningTasks, (map) => {
@@ -142,9 +147,8 @@ export const InternalQueueLive = effect(
               return newMap
             })
 
-            // Execute the actual operation
-            const result = yield* task.operation.pipe(
-              Effect.timeout(seconds(300)), // 5 minute timeout
+            // Wait for the operation to complete
+            const result = yield* operationFiber.pipe(
               Effect.catchAll((error) =>
                 Effect.gen(function*() {
                   // Handle task failure
@@ -253,7 +257,11 @@ export const InternalQueueLive = effect(
           lastError: none(),
           errorStack: none(),
           filePath: task.operationData.pipe(
-            map((data: any) => data.filePath as string | undefined),
+            map((data: unknown) =>
+              typeof data === "object" && data !== null && "filePath" in data
+                ? (data as { filePath?: string }).filePath
+                : undefined
+            ),
             filter((path): path is string => typeof path === "string")
           ),
           fileSize: none(),
@@ -476,7 +484,12 @@ export const InternalQueueTest = succeed(
     enqueue: () => Effect.succeed(void 0),
     getStatus: () =>
       Effect.succeed({
-        queues: {} as any,
+        queues: {
+          filesystem: { size: 0, isProcessing: false, lastProcessed: none() },
+          network: { size: 0, isProcessing: false, lastProcessed: none() },
+          computation: { size: 0, isProcessing: false, lastProcessed: none() },
+          "memory-intensive": { size: 0, isProcessing: false, lastProcessed: none() }
+        },
         totalPending: 0,
         totalRunning: 0,
         processingFibers: []

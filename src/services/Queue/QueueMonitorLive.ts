@@ -127,9 +127,18 @@ export const QueueMonitorLive = effect(
     /**
      * Execute query with error handling
      */
+    /**
+     * SQLite statement interface
+     */
+    interface Statement {
+      all(...params: Array<unknown>): Array<unknown>
+      get(...params: Array<unknown>): unknown
+      run(...params: Array<unknown>): unknown
+    }
+
     const executeQuery = <T>(
-      stmt: any,
-      params: Array<any>,
+      stmt: Statement,
+      params: Array<unknown>,
       operation: string
     ): Effect.Effect<Array<T>, PersistenceError> =>
       Effect.try(() => stmt.all(...params) as Array<T>)
@@ -141,8 +150,8 @@ export const QueueMonitorLive = effect(
      * Execute single query with error handling
      */
     const executeQueryOne = <T>(
-      stmt: any,
-      params: Array<any>,
+      stmt: Statement,
+      params: Array<unknown>,
       operation: string
     ): Effect.Effect<T | null, PersistenceError> =>
       Effect.try(() => stmt.get(...params) as T | null)
@@ -154,8 +163,8 @@ export const QueueMonitorLive = effect(
      * Execute statement with error handling
      */
     const executeStatement = (
-      stmt: any,
-      params: Array<any>,
+      stmt: Statement,
+      params: Array<unknown>,
       operation: string
     ): Effect.Effect<void, PersistenceError> =>
       Effect.try(() => {
@@ -237,7 +246,15 @@ export const QueueMonitorLive = effect(
           "memory-intensive": createEmptyResourceGroupStats()
         }
 
-        resourceGroupResults.forEach((row: any) => {
+        interface ResourceGroupRow {
+          readonly resource_group: string
+          readonly total_tasks?: number
+          readonly completed?: number
+          readonly failed?: number
+          readonly avg_duration_ms?: number
+        }
+
+        resourceGroupResults.forEach((row: ResourceGroupRow) => {
           const resourceGroup = row.resource_group as ResourceGroup
           if (resourceGroup in resourceGroupStats) {
             resourceGroupStats[resourceGroup] = {
@@ -487,7 +504,7 @@ export const QueueMonitorTest = succeed(
         successRate: 0,
         averageProcessingTime: 0,
         throughputPerMinute: 0,
-        resourceGroupStats: {} as any,
+        resourceGroupStats: {} as Record<ResourceGroup, ResourceGroupStats>,
         memoryUsageMb: 0,
         queueDepth: 0
       }),

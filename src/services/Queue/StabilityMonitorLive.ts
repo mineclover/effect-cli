@@ -103,16 +103,16 @@ export const StabilityMonitorLive: Layer<
             connected: false,
             schemaValid: false,
             responseTime: null,
-            error: (error as any) instanceof Error ? (error as Error).message : String(error)
+            error: error instanceof Error ? error.message : String(error)
           }
         }
       }).pipe(
-        Effect.catchAll((error) =>
+        Effect.catchAll((error: unknown) =>
           Effect.succeed({
             connected: false,
             schemaValid: false,
             responseTime: null,
-            error: (error as any) instanceof Error ? (error as Error).message : String(error)
+            error: error instanceof Error ? error.message : String(error)
           })
         )
       )
@@ -335,7 +335,7 @@ export const StabilityMonitorLive: Layer<
       }).pipe(
         Effect.catchAll((error) =>
           Effect.log(
-            `Recovery action failed: ${(error as any) instanceof Error ? (error as Error).message : String(error)}`
+            `Recovery action failed: ${(error as unknown) instanceof Error ? (error as Error).message : String(error)}`
           )
         )
       )
@@ -389,7 +389,7 @@ export const StabilityMonitorLive: Layer<
       Effect.catchAll((error) =>
         Effect.gen(function*() {
           yield* Effect.log(
-            `Heartbeat fiber failed: ${(error as any) instanceof Error ? (error as Error).message : String(error)}`
+            `Heartbeat fiber failed: ${(error as unknown) instanceof Error ? (error as Error).message : String(error)}`
           )
           return yield* never
         })

@@ -17,6 +17,7 @@ import * as Options from "@effect/cli/Options"
 import * as Effect from "effect/Effect"
 
 import { BasicQueueSystemLayer, getQueueStatus, QueueMonitor, QueueSystem } from "../services/Queue/index.js"
+import type { QueueMetrics, QueueStatus } from "../services/Queue/types.js"
 
 // ============================================================================
 // COMMAND OPTIONS
@@ -32,7 +33,7 @@ const sessionOption = Options.text("session")
 // STATUS DISPLAY FUNCTIONS
 // ============================================================================
 
-const displayTableFormat = (status: any) =>
+const displayTableFormat = (status: { queue: QueueStatus; metrics: QueueMetrics }) =>
   Effect.gen(function*() {
     yield* log("Queue System Status")
     yield* log("==================")
@@ -74,7 +75,7 @@ const displayTableFormat = (status: any) =>
     yield* log(`Active Fibers:     ${status.queue.processingFibers.length}`)
   })
 
-const displayJsonFormat = (status: any) =>
+const displayJsonFormat = (status: { queue: QueueStatus; metrics: QueueMetrics }) =>
   Effect.gen(function*() {
     const output = JSON.stringify(
       {
@@ -87,7 +88,7 @@ const displayJsonFormat = (status: any) =>
     yield* log(output)
   })
 
-const displayCsvFormat = (status: any) =>
+const displayCsvFormat = (status: { queue: QueueStatus; metrics: QueueMetrics }) =>
   Effect.gen(function*() {
     const headers = [
       "sessionId",
@@ -135,13 +136,13 @@ const queueStatusAction = (options: {
     yield* log("🔍 Fetching Queue Status...")
 
     // Get queue status
-    const status = yield* getQueueStatus()
+    let status = yield* getQueueStatus()
 
     // If specific session requested, get metrics for that session
     if (isSome(options.session)) {
       const monitor = yield* QueueMonitor
       const sessionMetrics = yield* monitor.getQueueStatus(options.session.value)
-      status.metrics = sessionMetrics
+      status = { ...status, metrics: sessionMetrics }
     }
 
     yield* log("")

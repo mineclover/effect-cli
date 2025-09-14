@@ -219,7 +219,7 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
     /**
      * Calculate entry size (simplified)
      */
-    const calculateEntrySize = (value: any): number => {
+    const calculateEntrySize = (value: unknown): number => {
       const jsonString = JSON.stringify(value)
       return Buffer.byteLength(jsonString, "utf8")
     }

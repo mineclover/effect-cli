@@ -54,7 +54,7 @@ describe("MyService", () => {
         url.includes("error")
           ? Effect.fail(new Error(`Network error: ${url}`))
           : Effect.succeed({ status: 200, data: `Response from ${url}` }),
-      post: (_url: string, _data: any) => Effect.succeed({ status: 201, data: "Created" })
+      post: (_url: string, _data: unknown) => Effect.succeed({ status: 201, data: "Created" })
     }
   )
 

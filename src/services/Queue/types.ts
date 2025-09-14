@@ -630,26 +630,26 @@ export const msToDuration = (ms: number): Duration => {
  * Type guard for checking if error is QueueError
  */
 export const isQueueError = (error: unknown): error is QueueError => {
-  return error instanceof Error && (error as any)._tag === "QueueError"
+  return error instanceof Error && "_tag" in error && error._tag === "QueueError"
 }
 
 /**
  * Type guard for checking if error is PersistenceError
  */
 export const isPersistenceError = (error: unknown): error is PersistenceError => {
-  return error instanceof Error && (error as any)._tag === "PersistenceError"
+  return error instanceof Error && "_tag" in error && error._tag === "PersistenceError"
 }
 
 /**
  * Type guard for checking if error is CircuitBreakerError
  */
 export const isCircuitBreakerError = (error: unknown): error is CircuitBreakerError => {
-  return error instanceof Error && (error as any)._tag === "CircuitBreakerError"
+  return error instanceof Error && "_tag" in error && error._tag === "CircuitBreakerError"
 }
 
 /**
  * Type guard for checking if error is ThrottleError
  */
 export const isThrottleError = (error: unknown): error is ThrottleError => {
-  return error instanceof Error && (error as any)._tag === "ThrottleError"
+  return error instanceof Error && "_tag" in error && error._tag === "ThrottleError"
 }

@@ -14,7 +14,7 @@ import { fail, log } from "effect/Effect"
 import { effect, succeed } from "effect/Layer"
 
 import { get, make, set } from "effect/Ref"
-import type { PersistedQueueTask, TaskStatus } from "./types.js"
+import type { OperationType, PersistedQueueTask, ResourceGroup, TaskStatus } from "./types.js"
 import {
   durationToMs,
   generateSessionId,
@@ -142,40 +142,78 @@ export const QueuePersistenceLive = effect(
     // ========================================================================
 
     /**
+     * Database row type from SQLite
+     */
+    interface DatabaseRow {
+      readonly id: string
+      readonly session_id: string
+      readonly type: string
+      readonly resource_group: string
+      readonly priority: number
+      readonly status: string
+      readonly max_retries: number
+      readonly estimated_duration_ms: number
+      readonly operation_data: string
+      readonly created_at: string
+      readonly updated_at: string
+      readonly started_at: string | null
+      readonly completed_at: string | null
+      readonly actual_duration_ms: number | null
+      readonly retry_count: number
+      readonly last_error: string | null
+      readonly error_stack: string | null
+      readonly file_path: string | null
+      readonly file_size: number | null
+      readonly file_hash: string | null
+      readonly result_data: string | null
+      readonly memory_usage_kb: number | null
+      readonly cpu_time_ms: number | null
+    }
+
+    /**
      * Convert database row to PersistedQueueTask
      */
-    const rowToPersistedTask = (row: any): PersistedQueueTask => ({
+    const rowToPersistedTask = (row: DatabaseRow): PersistedQueueTask => ({
       id: row.id,
       sessionId: row.session_id,
-      type: row.type,
-      resourceGroup: row.resource_group,
-      operation: Effect.succeed(null) as any, // Will be reconstructed from operationData
+      type: row.type as OperationType,
+      resourceGroup: row.resource_group as ResourceGroup,
+      operation: Effect.succeed(null), // Will be reconstructed from operationData
       priority: row.priority,
-      status: row.status,
+      status: row.status as TaskStatus,
       createdAt: new Date(row.created_at),
       startedAt: row.started_at ? some(new Date(row.started_at)) : none(),
       completedAt: row.completed_at ? some(new Date(row.completed_at)) : none(),
-      estimatedDuration: msToDuration(row.estimated_duration || 0),
-      actualDuration: row.actual_duration ? some(msToDuration(row.actual_duration)) : none(),
+      estimatedDuration: msToDuration(row.estimated_duration_ms || 0),
+      actualDuration: row.actual_duration_ms ? some(msToDuration(row.actual_duration_ms)) : none(),
       retryCount: row.retry_count || 0,
       maxRetries: row.max_retries || 3,
       lastError: row.last_error ? some(row.last_error) : none(),
-      errorStack: none(), // Not stored in this schema version
+      errorStack: row.error_stack ? some(row.error_stack) : none(),
       filePath: row.file_path ? some(row.file_path) : none(),
       fileSize: row.file_size ? some(row.file_size) : none(),
-      fileHash: none(), // Not implemented yet
+      fileHash: row.file_hash ? some(row.file_hash) : none(),
       operationData: row.operation_data ? some(row.operation_data) : none(),
-      resultData: none(), // Not implemented yet
-      memoryUsageKb: none(), // Not implemented yet
-      cpuTimeMs: none() // Not implemented yet
+      resultData: row.result_data ? some(row.result_data) : none(),
+      memoryUsageKb: row.memory_usage_kb ? some(row.memory_usage_kb) : none(),
+      cpuTimeMs: row.cpu_time_ms ? some(row.cpu_time_ms) : none()
     })
+
+    /**
+     * SQLite statement interface
+     */
+    interface Statement {
+      run(...params: Array<unknown>): unknown
+      get(...params: Array<unknown>): unknown
+      all(...params: Array<unknown>): Array<unknown>
+    }
 
     /**
      * Execute database operation with error handling
      */
     const executeStatement = <T>(
-      stmt: any,
-      params: Array<any>,
+      stmt: Statement,
+      params: Array<unknown>,
       operation: string
     ): Effect.Effect<T, PersistenceError> =>
       Effect.try(() => stmt.run(...params) as T)
@@ -187,8 +225,8 @@ export const QueuePersistenceLive = effect(
      * Query database with error handling
      */
     const queryStatement = <T>(
-      stmt: any,
-      params: Array<any>,
+      stmt: Statement,
+      params: Array<unknown>,
       operation: string
     ): Effect.Effect<Array<T>, PersistenceError> =>
       Effect.try(() => stmt.all(...params) as Array<T>)
@@ -272,7 +310,7 @@ export const QueuePersistenceLive = effect(
           "Load pending tasks"
         )
 
-        const tasks = rows.map(rowToPersistedTask)
+        const tasks = (rows as Array<DatabaseRow>).map(rowToPersistedTask)
 
         yield* log(`Loaded ${tasks.length} pending tasks for session ${sessionId}`)
         return tasks
@@ -357,7 +395,7 @@ export const QueuePersistenceLive = effect(
           return none()
         }
 
-        return some(rowToPersistedTask(rows[0]))
+        return some(rowToPersistedTask(rows[0] as DatabaseRow))
       })
 
     const deleteTask = (taskId: string) =>
