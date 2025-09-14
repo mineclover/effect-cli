@@ -6,8 +6,8 @@
  */
 
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
-import * as TestContext from "effect/TestContext"
+import { mergeAll, provide } from "effect/Layer"
+import { TestContext } from "effect/TestContext"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import {
   CircuitBreaker,
@@ -16,10 +16,10 @@ import {
   SchemaManagerLive
 } from "../../src/services/Queue/index.js"
 
-const testLayer = Layer.mergeAll(
+const testLayer = mergeAll(
   SchemaManagerLive,
-  QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive)),
-  CircuitBreakerLive.pipe(Layer.provide(QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive))))
+  QueuePersistenceLive.pipe(provide(SchemaManagerLive)),
+  CircuitBreakerLive.pipe(provide(QueuePersistenceLive.pipe(provide(SchemaManagerLive))))
 )
 
 describe("Circuit Breaker", () => {
@@ -39,7 +39,7 @@ describe("Circuit Breaker", () => {
         return state
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -59,7 +59,7 @@ describe("Circuit Breaker", () => {
         return state
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -75,7 +75,7 @@ describe("Circuit Breaker", () => {
         return state
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -97,7 +97,7 @@ describe("Circuit Breaker", () => {
         return state
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -118,7 +118,7 @@ describe("Circuit Breaker", () => {
         return info
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -149,7 +149,7 @@ describe("Circuit Breaker", () => {
         return info
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -177,7 +177,7 @@ describe("Circuit Breaker", () => {
         return info
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 

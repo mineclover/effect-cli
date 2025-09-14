@@ -1,4 +1,4 @@
-import { Effect } from "effect"
+import type { Effect } from "effect"
 
 /**
  * Represents a named import in a TypeScript file
@@ -44,7 +44,7 @@ export interface ParseResult {
   /** Error message if parsing failed */
   readonly error?: string
   /** Extracted named imports if requested */
-  readonly namedImports?: readonly NamedImport[]
+  readonly namedImports?: ReadonlyArray<NamedImport>
   /** Raw syntax tree (for debugging) */
   readonly syntaxTree?: unknown
 }
@@ -68,9 +68,9 @@ export interface ICodeParser {
    * @returns Effect that resolves to array of parse results
    */
   readonly parseMany: (
-    filePaths: readonly string[],
+    filePaths: ReadonlyArray<string>,
     config: ParseConfig
-  ) => Effect.Effect<readonly ParseResult[], Error>
+  ) => Effect.Effect<ReadonlyArray<ParseResult>, Error>
 
   /**
    * Extract named imports from source code string
@@ -78,7 +78,10 @@ export interface ICodeParser {
    * @param filePath Optional file path for context
    * @returns Effect that resolves to named imports
    */
-  readonly extractNamedImports: (sourceCode: string, filePath?: string) => Effect.Effect<readonly NamedImport[], Error>
+  readonly extractNamedImports: (
+    sourceCode: string,
+    filePath?: string
+  ) => Effect.Effect<ReadonlyArray<NamedImport>, Error>
 }
 
 // Interface tag is handled in CodeParser.ts to avoid circular imports

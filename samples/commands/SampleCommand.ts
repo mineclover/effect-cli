@@ -1,9 +1,9 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Console from "effect/Console"
+import { log } from "effect/Console"
 import * as Effect from "effect/Effect"
-import * as Option from "effect/Option"
+import { isSome } from "effect/Option"
 import { FileSystem } from "../services/FileSystem.js"
 
 // ============================================
@@ -95,19 +95,19 @@ export const sampleCommand = Command.make("sample", {
       }
 
       // 2. Optional 처리
-      const maxResults = Option.isSome(limit) ? limit.value : 100
-      if (verbose && Option.isSome(limit)) {
-        yield* Console.log(`Limiting results to ${maxResults}`)
+      const maxResults = isSome(limit) ? limit.value : 100
+      if (verbose && isSome(limit)) {
+        yield* log(`Limiting results to ${maxResults}`)
       }
 
       // 3. 배열 옵션 처리 (exclude)
       const excludePatterns = exclude.length > 0 ? exclude : []
       if (verbose && excludePatterns.length > 0) {
-        yield* Console.log(`Excluding patterns: ${excludePatterns.join(", ")}`)
+        yield* log(`Excluding patterns: ${excludePatterns.join(", ")}`)
       }
 
       // 4. 핵심 로직 실행
-      yield* Console.log("\n=== Processing Started ===")
+      yield* log("\n=== Processing Started ===")
 
       // 4-1. 파일 내용 읽기
       const fileContent = yield* fs.readFileContent(file).pipe(
@@ -135,11 +135,11 @@ export const sampleCommand = Command.make("sample", {
       )
 
       // 5. 결과 출력 (format에 따라)
-      yield* Console.log(`\n=== Results (${format} format) ===`)
+      yield* log(`\n=== Results (${format} format) ===`)
 
       switch (format) {
         case "json":
-          yield* Console.log(JSON.stringify(
+          yield* log(JSON.stringify(
             {
               file: {
                 path: file,
@@ -159,14 +159,14 @@ export const sampleCommand = Command.make("sample", {
 
         case "table":
           // 테이블 헤더
-          yield* Console.log("Type      Size        Name")
-          yield* Console.log("--------- ----------- --------------------")
+          yield* log("Type      Size        Name")
+          yield* log("--------- ----------- --------------------")
 
           // 테이블 데이터
           yield* Effect.forEach(searchResults, (result) => {
             const type = result.isDirectory ? "DIR" : "FILE"
             const size = formatBytes(result.size)
-            return Console.log(
+            return log(
               `${type.padEnd(9)} ${size.padStart(11)} ${result.name}`
             )
           })
@@ -175,34 +175,34 @@ export const sampleCommand = Command.make("sample", {
         case "text":
         default:
           // 파일 정보
-          yield* Console.log(`\nFile: ${file}`)
-          yield* Console.log(`Lines: ${fileContent.split("\n").length}`)
+          yield* log(`\nFile: ${file}`)
+          yield* log(`Lines: ${fileContent.split("\n").length}`)
 
           // 검색 결과
-          yield* Console.log(`\nSearch results for pattern "${pattern}":`)
+          yield* log(`\nSearch results for pattern "${pattern}":`)
           if (searchResults.length === 0) {
-            yield* Console.log("No results found")
+            yield* log("No results found")
           } else {
             yield* Effect.forEach(searchResults, (result) => {
               const icon = result.isDirectory ? "📁" : "📄"
-              return Console.log(`${icon} ${result.path}`)
+              return log(`${icon} ${result.path}`)
             })
           }
           break
       }
 
       // 6. 요약 정보
-      yield* Console.log("\n=== Summary ===")
+      yield* log("\n=== Summary ===")
       const dirCount = searchResults.filter((r) => r.isDirectory).length
       const fileCount = searchResults.length - dirCount
-      yield* Console.log(`Total: ${fileCount} files, ${dirCount} directories`)
+      yield* log(`Total: ${fileCount} files, ${dirCount} directories`)
 
       if (excludePatterns.length > 0) {
-        yield* Console.log(`Excluded patterns: ${excludePatterns.length}`)
+        yield* log(`Excluded patterns: ${excludePatterns.length}`)
       }
 
-      if (Option.isSome(limit) && searchResults.length === maxResults) {
-        yield* Console.log(`Results limited to ${maxResults}`)
+      if (isSome(limit) && searchResults.length === maxResults) {
+        yield* log(`Results limited to ${maxResults}`)
       }
 
       // 7. 완료 로그
@@ -250,7 +250,7 @@ const infoSubcommand = Command.make("info", {
   Command.withDescription("Show information about target"),
   Command.withHandler(({ target }) =>
     Effect.gen(function*() {
-      yield* Console.log(`Information about: ${target}`)
+      yield* log(`Information about: ${target}`)
       // 구현...
     })
   )
@@ -263,9 +263,9 @@ const processSubcommand = Command.make("process", {
   Command.withDescription("Process input file"),
   Command.withHandler(({ input, output }) =>
     Effect.gen(function*() {
-      yield* Console.log(`Processing: ${input}`)
-      if (Option.isSome(output)) {
-        yield* Console.log(`Output to: ${output.value}`)
+      yield* log(`Processing: ${input}`)
+      if (isSome(output)) {
+        yield* log(`Output to: ${output.value}`)
       }
       // 구현...
     })

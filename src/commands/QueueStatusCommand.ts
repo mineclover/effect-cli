@@ -1,6 +1,6 @@
+import { log } from "effect/Console"
 import { isSome, none } from "effect/Option"
 import type { Option } from "effect/Option"
-import { log } from "effect/Console"
 /**
  * Queue Status Command
  *

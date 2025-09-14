@@ -1,4 +1,4 @@
-import { Effect } from "effect"
+import type { Effect } from "effect"
 import type { NamedImport } from "./ICodeParser.js"
 import { RegexNamedImportExtractor } from "./RegexNamedImportExtractor.js"
 
@@ -28,7 +28,7 @@ export class NamedImportExtractor {
    * @param filePath Optional file path for context
    * @returns Effect containing array of named imports
    */
-  extractFromSource(sourceCode: string, filePath?: string): Effect.Effect<readonly NamedImport[], Error> {
+  extractFromSource(sourceCode: string, filePath?: string): Effect.Effect<ReadonlyArray<NamedImport>, Error> {
     // For now, always use the fallback regex implementation
     return this.fallbackExtractor.extractFromSource(sourceCode, filePath)
   }

@@ -9,7 +9,7 @@
  */
 
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { empty, succeed } from "effect/Layer"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 // Import test utilities
@@ -34,7 +34,7 @@ import {
 
 describe("MyCommand", () => {
   // Define test layer with all required dependencies
-  const TestLayer = Layer.empty // Add your service layers here with Layer.mergeAll when needed
+  const TestLayer = empty // Add your service layers here with mergeAll when needed
   // MockFileSystemLayer,
   // MockQueueSystemLayer,
   // MockConsoleLayer
@@ -168,7 +168,7 @@ describe("MyCommand", () => {
     it("should handle service failures gracefully", () =>
       Effect.gen(function*() {
         // Mock service failure
-        const FailingServiceLayer = Layer.succeed(
+        const FailingServiceLayer = succeed(
           {} as any, // Replace with actual service tag
           {
             someMethod: () => Effect.fail(new Error("Service unavailable"))

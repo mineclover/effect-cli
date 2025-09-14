@@ -12,12 +12,12 @@
  * @created 2025-01-12
  */
 
-import * as Duration from "effect/Duration"
+import { millis } from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
-// import * as Option from "effect/Option" // Unused
-import * as TestClock from "effect/TestClock"
-import * as TestContext from "effect/TestContext"
+import { mergeAll, provide } from "effect/Layer"
+//  // Unused
+import { adjust } from "effect/TestClock"
+import { TestContext } from "effect/TestContext"
 import { describe, expect, it } from "vitest"
 
 // import type { HealthMetrics, HeartbeatState } from "../../src/services/Queue/types.js"
@@ -38,17 +38,17 @@ import { StabilityMonitorLive } from "../../src/services/Queue/StabilityMonitorL
 /**
  * Complete test layer with all StabilityMonitor dependencies
  */
-const StabilityTestLayer = Layer.mergeAll(
+const StabilityTestLayer = mergeAll(
   SchemaManagerLive,
-  QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive)),
-  CircuitBreakerLive.pipe(Layer.provide(QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive)))),
-  AdaptiveThrottlerLive.pipe(Layer.provide(QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive)))),
+  QueuePersistenceLive.pipe(provide(SchemaManagerLive)),
+  CircuitBreakerLive.pipe(provide(QueuePersistenceLive.pipe(provide(SchemaManagerLive)))),
+  AdaptiveThrottlerLive.pipe(provide(QueuePersistenceLive.pipe(provide(SchemaManagerLive)))),
   StabilityMonitorLive.pipe(
-    Layer.provide(
-      Layer.mergeAll(
-        QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive)),
-        CircuitBreakerLive.pipe(Layer.provide(QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive)))),
-        AdaptiveThrottlerLive.pipe(Layer.provide(QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive))))
+    provide(
+      mergeAll(
+        QueuePersistenceLive.pipe(provide(SchemaManagerLive)),
+        CircuitBreakerLive.pipe(provide(QueuePersistenceLive.pipe(provide(SchemaManagerLive)))),
+        AdaptiveThrottlerLive.pipe(provide(QueuePersistenceLive.pipe(provide(SchemaManagerLive))))
       )
     )
   )
@@ -71,7 +71,7 @@ describe("StabilityMonitor - Heartbeat Monitoring", () => {
       expect(heartbeat.uptimeStart).toBeInstanceOf(Date)
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -89,7 +89,7 @@ describe("StabilityMonitor - Heartbeat Monitoring", () => {
       expect(heartbeat.consecutiveFailures).toBe(0)
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -100,7 +100,7 @@ describe("StabilityMonitor - Heartbeat Monitoring", () => {
       const initialHeartbeat = yield* monitor.getHeartbeat()
 
       // Advance test clock by 10 milliseconds
-      yield* TestClock.adjust(Duration.millis(10))
+      yield* adjust(millis(10))
 
       // Perform health check
       yield* monitor.performHealthCheck()
@@ -113,7 +113,7 @@ describe("StabilityMonitor - Heartbeat Monitoring", () => {
       )
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 })
@@ -143,7 +143,7 @@ describe("StabilityMonitor - Health Metrics Collection", () => {
       expect(now - metricsTime).toBeLessThan(1000) // Within 1 second
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -165,7 +165,7 @@ describe("StabilityMonitor - Health Metrics Collection", () => {
       }
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -189,7 +189,7 @@ describe("StabilityMonitor - Health Metrics Collection", () => {
       expect(queueHealth.avgProcessingTime).toBeGreaterThanOrEqual(0)
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -221,7 +221,7 @@ describe("StabilityMonitor - Health Metrics Collection", () => {
       expect(typeof warnings.highExternal).toBe("boolean")
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -244,7 +244,7 @@ describe("StabilityMonitor - Health Metrics Collection", () => {
       expect(systemLoad.queueBacklog).toBeGreaterThanOrEqual(0)
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -258,7 +258,7 @@ describe("StabilityMonitor - Health Metrics Collection", () => {
       expect(["closed", "open", "half-open"]).toContain(breakerState)
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 })
@@ -287,7 +287,7 @@ describe("StabilityMonitor - Health Check and Recovery", () => {
       expect(metrics).toHaveProperty("memory")
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -308,7 +308,7 @@ describe("StabilityMonitor - Health Check and Recovery", () => {
       }
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -325,7 +325,7 @@ describe("StabilityMonitor - Health Check and Recovery", () => {
       expect(typeof result.isHealthy).toBe("boolean")
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -341,7 +341,7 @@ describe("StabilityMonitor - Health Check and Recovery", () => {
       expect(heartbeat).toHaveProperty("isHealthy")
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 })
@@ -367,7 +367,7 @@ describe("StabilityMonitor - Memory Monitoring", () => {
       expect(memory.external).toBeGreaterThanOrEqual(0)
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -385,7 +385,7 @@ describe("StabilityMonitor - Memory Monitoring", () => {
       expect(typeof warnings.highExternal).toBe("boolean")
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -395,7 +395,7 @@ describe("StabilityMonitor - Memory Monitoring", () => {
 
       const metrics1 = yield* monitor.getHealthMetrics()
       // Advance test clock by 50 milliseconds instead of sleeping
-      yield* TestClock.adjust(Duration.millis(50))
+      yield* adjust(millis(50))
       const metrics2 = yield* monitor.getHealthMetrics()
 
       const mem1 = metrics1.memory
@@ -411,7 +411,7 @@ describe("StabilityMonitor - Memory Monitoring", () => {
       expect(heapDiff).toBeLessThan(mem1.heapUsed * 0.5) // Less than 50% change
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 })
@@ -439,7 +439,7 @@ describe("StabilityMonitor - Integration Tests", () => {
       }
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -459,7 +459,7 @@ describe("StabilityMonitor - Integration Tests", () => {
       expect(typeof result.isHealthy).toBe("boolean")
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -492,7 +492,7 @@ describe("StabilityMonitor - Integration Tests", () => {
       expect(Math.abs(time3 - time1)).toBeLessThan(100) // Within 100ms
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 })
@@ -516,7 +516,7 @@ describe("StabilityMonitor - Performance Tests", () => {
       expect(duration).toBeLessThan(100)
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -534,7 +534,7 @@ describe("StabilityMonitor - Performance Tests", () => {
       expect(duration).toBeLessThan(200)
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 
@@ -557,7 +557,7 @@ describe("StabilityMonitor - Performance Tests", () => {
       })
     }).pipe(
       Effect.provide(StabilityTestLayer),
-      Effect.provide(TestContext.TestContext),
+      Effect.provide(TestContext),
       Effect.runPromise
     ))
 })

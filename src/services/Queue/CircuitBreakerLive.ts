@@ -1,4 +1,4 @@
-import { none, fromNullable } from "effect/Option"
+import { fromNullable, none } from "effect/Option"
 /**
  * Circuit Breaker Service Implementation
  *
@@ -11,7 +11,7 @@ import { none, fromNullable } from "effect/Option"
  * @created 2025-01-12
  */
 
-// import * as Duration from "effect/Duration" // Unused import
+//  // Unused import
 import * as Effect from "effect/Effect"
 import { effect, succeed } from "effect/Layer"
 

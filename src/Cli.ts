@@ -6,7 +6,6 @@ import { log } from "effect/Console"
  */
 import * as Command from "@effect/cli/Command"
 
-
 // Main commands (core functionality + templates)
 import { greetCommand, queueCommand, queueStatusCommand, simpleQueueCommand } from "./commands/index.js"
 

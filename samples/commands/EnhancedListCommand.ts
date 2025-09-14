@@ -14,8 +14,8 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Array from "effect/Array"
-import * as Console from "effect/Console"
+import { filter } from "effect/Array"
+import { log, error } from "effect/Console"
 import * as Effect from "effect/Effect"
 
 import { TransparentQueueAdapter, type FileInfo } from "../services/Queue/TransparentQueueAdapter.js"
@@ -133,35 +133,35 @@ export const enhancedListCommand = Command.make("ls", {
         // Filter hidden files if not showing all
         const filteredFiles = all
           ? files
-          : Array.filter(files, (file) => !file.name.startsWith("."))
+          : filter(files, (file) => !file.name.startsWith("."))
 
         if (filteredFiles.length === 0) {
-          yield* Console.log("📂 Empty directory")
+          yield* log("📂 Empty directory")
           return
         }
 
         // Display header for long format
         if (long) {
-          yield* Console.log("Type Size     Modified   Permissions Name")
-          yield* Console.log("---- -------- ---------- ---------- ----")
+          yield* log("Type Size     Modified   Permissions Name")
+          yield* log("---- -------- ---------- ---------- ----")
         }
 
         // Display files
         yield* Effect.forEach(filteredFiles, (file) => 
-          Console.log(formatFileInfo(file, long))
+          log(formatFileInfo(file, long))
         )
 
         // Summary statistics
-        const dirCount = Array.filter(filteredFiles, (f) => f.isDirectory).length
+        const dirCount = filter(filteredFiles, (f) => f.isDirectory).length
         const fileCount = filteredFiles.length - dirCount
         
-        yield* Console.log("")
-        yield* Console.log(`📊 Total: ${fileCount} files, ${dirCount} directories`)
+        yield* log("")
+        yield* log(`📊 Total: ${fileCount} files, ${dirCount} directories`)
 
         // Enhanced information in long mode
         if (long) {
           const totalSize = filteredFiles.reduce((sum, file) => sum + file.size, 0)
-          yield* Console.log(`💾 Total size: ${formatFileSize(totalSize)}`)
+          yield* log(`💾 Total size: ${formatFileSize(totalSize)}`)
         }
 
         yield* Effect.log("✅ Directory listing completed")
@@ -171,18 +171,18 @@ export const enhancedListCommand = Command.make("ls", {
         
         // Enhanced error handling with queue context
         if (error instanceof Error) {
-          yield* Console.error(`❌ Failed to list directory: ${error.message}`)
+          yield* error(`❌ Failed to list directory: ${error.message}`)
           
           // Provide helpful suggestions
           if (error.message.includes("permission")) {
-            yield* Console.error("💡 Try running with appropriate permissions or choose a different directory")
+            yield* error("💡 Try running with appropriate permissions or choose a different directory")
           } else if (error.message.includes("not found")) {
-            yield* Console.error("💡 Check if the directory path exists and is accessible")
+            yield* error("💡 Check if the directory path exists and is accessible")
           } else {
-            yield* Console.error("💡 Use 'queue status' to check if the system is experiencing issues")
+            yield* error("💡 Use 'queue status' to check if the system is experiencing issues")
           }
         } else {
-          yield* Console.error(`❌ Unexpected error: ${String(error)}`)
+          yield* error(`❌ Unexpected error: ${String(error)}`)
         }
         
         yield* Effect.log(`❌ Directory listing failed for: ${path}`)

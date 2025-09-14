@@ -1,4 +1,4 @@
-import { toMillis, millis } from "effect/Duration"
+import { millis, toMillis } from "effect/Duration"
 import type { Duration } from "effect/Duration"
 /**
  * Effect CLI Queue System - Type Definitions

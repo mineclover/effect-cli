@@ -17,7 +17,7 @@ import { GenericTag } from "effect/Context"
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
-// import * as Option from "effect/Option" // Unused import
+//  // Unused import
 
 import type { OperationType, ResourceGroup } from "./types.js"
 
@@ -470,9 +470,7 @@ export const PerformanceProfilerLive: Layer<PerformanceProfiler> = effect(
         const removedCount = beforeCount - operationMetrics.length
 
         yield* Effect.log(
-          `🧹 Cleared ${removedCount} profiling records older than ${
-            olderThan ? toMillis(olderThan) : "all"
-          }ms`
+          `🧹 Cleared ${removedCount} profiling records older than ${olderThan ? toMillis(olderThan) : "all"}ms`
         )
 
         return removedCount

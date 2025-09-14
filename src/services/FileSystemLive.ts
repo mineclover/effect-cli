@@ -2,6 +2,7 @@ import { FileSystem } from "@effect/platform/FileSystem"
 import * as Path from "@effect/platform/Path"
 import { sort } from "effect/Array"
 import * as Effect from "effect/Effect"
+import { succeed } from "effect/Effect"
 import { effect } from "effect/Layer"
 import { make } from "effect/Order"
 
@@ -58,14 +59,14 @@ export const FileSystemLive = effect(
         const searchRecursive = (currentPath: string): Effect.Effect<void> =>
           Effect.gen(function*() {
             const entries = yield* fs.readDirectory(currentPath).pipe(
-              Effect.catchAll(() => Effect.succeed([]))
+              Effect.catchAll(() => succeed([]))
             )
 
             yield* Effect.forEach(entries, (entry) =>
               Effect.gen(function*() {
                 const fullPath = path.join(currentPath, entry)
                 const stat = yield* fs.stat(fullPath).pipe(
-                  Effect.catchAll(() => Effect.succeed(null))
+                  Effect.catchAll(() => succeed(null))
                 )
 
                 if (!stat) return

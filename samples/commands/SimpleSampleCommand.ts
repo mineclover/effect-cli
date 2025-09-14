@@ -7,9 +7,9 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Console from "effect/Console"
+import { log, error } from "effect/Console"
 import * as Effect from "effect/Effect"
-import * as Option from "effect/Option"
+import { isSome } from "effect/Option"
 import { FileSystem } from "@effect/platform/FileSystem"
 import * as Path from "@effect/platform/Path"
 
@@ -80,34 +80,34 @@ export const simpleSampleCommand = Command.make("sample", {
 
       // 1. 시작 로그
       if (verbose) {
-        yield* Console.log("🚀 Simple Sample Command Started")
-        yield* Console.log(`📄 File: ${file}`)
-        yield* Console.log(`📁 Path: ${path}`)
-        yield* Console.log(`🔍 Pattern: ${pattern}`)
-        yield* Console.log(`📊 Format: ${format}`)
+        yield* log("🚀 Simple Sample Command Started")
+        yield* log(`📄 File: ${file}`)
+        yield* log(`📁 Path: ${path}`)
+        yield* log(`🔍 Pattern: ${pattern}`)
+        yield* log(`📊 Format: ${format}`)
       }
 
       // 2. 파일 읽기
-      yield* Console.log("\n=== File Content Analysis ===")
+      yield* log("\n=== File Content Analysis ===")
       const fileContent = yield* fs.readFileString(file).pipe(
         Effect.catchAll((error) => {
-          return Console.error(`❌ Cannot read file: ${error}`)
+          return error(`❌ Cannot read file: ${error}`)
             .pipe(Effect.as(""))
         })
       )
 
       if (fileContent) {
         const lines = fileContent.split("\n")
-        yield* Console.log(`📄 File: ${file}`)
-        yield* Console.log(`📝 Lines: ${lines.length}`)
+        yield* log(`📄 File: ${file}`)
+        yield* log(`📝 Lines: ${lines.length}`)
         
         // 처음 3줄 미리보기
         const preview = lines.slice(0, 3).join("\\n")
-        yield* Console.log(`👀 Preview: ${preview}${lines.length > 3 ? "..." : ""}`)
+        yield* log(`👀 Preview: ${preview}${lines.length > 3 ? "..." : ""}`)
       }
 
       // 3. 디렉토리 검색
-      yield* Console.log("\n=== Directory Search ===")
+      yield* log("\n=== Directory Search ===")
       const entries = yield* fs.readDirectory(path).pipe(
         Effect.catchAll(() => Effect.succeed([]))
       )
@@ -118,21 +118,21 @@ export const simpleSampleCommand = Command.make("sample", {
       )
 
       // limit 적용
-      const maxResults = Option.isSome(limit) ? limit.value : filteredEntries.length
+      const maxResults = isSome(limit) ? limit.value : filteredEntries.length
       const results = filteredEntries.slice(0, maxResults)
 
       if (verbose) {
-        yield* Console.log(`🔍 Found ${filteredEntries.length} entries matching "${pattern}"`)
-        if (Option.isSome(limit)) {
-          yield* Console.log(`📊 Showing first ${maxResults} results`)
+        yield* log(`🔍 Found ${filteredEntries.length} entries matching "${pattern}"`)
+        if (isSome(limit)) {
+          yield* log(`📊 Showing first ${maxResults} results`)
         }
       }
 
       // 4. 결과 출력 (format에 따라)
-      yield* Console.log(`\n=== Results (${format} format) ===`)
+      yield* log(`\n=== Results (${format} format) ===`)
 
       if (results.length === 0) {
-        yield* Console.log("📭 No matching files found")
+        yield* log("📭 No matching files found")
         return
       }
 
@@ -163,12 +163,12 @@ export const simpleSampleCommand = Command.make("sample", {
               )
             }
           }
-          yield* Console.log(JSON.stringify(jsonData, null, 2))
+          yield* log(JSON.stringify(jsonData, null, 2))
           break
 
         case "table":
-          yield* Console.log("Type      Size        Name")
-          yield* Console.log("--------- ----------- --------------------")
+          yield* log("Type      Size        Name")
+          yield* log("--------- ----------- --------------------")
           
           yield* Effect.forEach(results, (entry) =>
             Effect.gen(function*() {
@@ -180,7 +180,7 @@ export const simpleSampleCommand = Command.make("sample", {
               const type = stat?.type === "Directory" ? "DIR" : "FILE"
               const size = stat ? formatBytes(stat.size) : "0 B"
               
-              yield* Console.log(`${type.padEnd(9)} ${size.padStart(11)} ${entry}`)
+              yield* log(`${type.padEnd(9)} ${size.padStart(11)} ${entry}`)
             })
           )
           break
@@ -195,22 +195,22 @@ export const simpleSampleCommand = Command.make("sample", {
               )
               
               const icon = stat?.type === "Directory" ? "📁" : "📄"
-              yield* Console.log(`${icon} ${entry}`)
+              yield* log(`${icon} ${entry}`)
             })
           )
           break
       }
 
       // 5. 요약
-      yield* Console.log("\n=== Summary ===")
-      yield* Console.log(`✅ Found ${results.length} matching entries`)
+      yield* log("\n=== Summary ===")
+      yield* log(`✅ Found ${results.length} matching entries`)
       
-      if (Option.isSome(limit) && filteredEntries.length > maxResults) {
-        yield* Console.log(`⚠️  Results limited to ${maxResults}`)
+      if (isSome(limit) && filteredEntries.length > maxResults) {
+        yield* log(`⚠️  Results limited to ${maxResults}`)
       }
 
       if (verbose) {
-        yield* Console.log("🏁 Simple Sample Command Completed")
+        yield* log("🏁 Simple Sample Command Completed")
       }
     })
   )

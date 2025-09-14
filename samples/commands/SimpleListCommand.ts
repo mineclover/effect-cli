@@ -7,7 +7,7 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Console from "effect/Console"
+import { log } from "effect/Console"
 import * as Effect from "effect/Effect"
 import { FileSystem } from "@effect/platform/FileSystem"
 import * as Path from "@effect/platform/Path"
@@ -32,12 +32,12 @@ export const simpleListCommand = Command.make(
       const fs = yield* FileSystem
       const path = yield* Path.Path
       
-      yield* Console.log(`📁 Listing directory: ${args.path}`)
+      yield* log(`📁 Listing directory: ${args.path}`)
       
       const entries = yield* fs.readDirectory(args.path)
       
       if (entries.length === 0) {
-        yield* Console.log("  (empty directory)")
+        yield* log("  (empty directory)")
         return
       }
       
@@ -51,12 +51,12 @@ export const simpleListCommand = Command.make(
           if (stat) {
             const type = stat.type === "Directory" ? "📁" : "📄"
             const size = stat.type === "Directory" ? "<DIR>" : `${stat.size}B`
-            yield* Console.log(`  ${type} ${entry.padEnd(30)} ${size}`)
+            yield* log(`  ${type} ${entry.padEnd(30)} ${size}`)
           } else {
-            yield* Console.log(`  ❓ ${entry} (stat failed)`)
+            yield* log(`  ❓ ${entry} (stat failed)`)
           }
         } else {
-          yield* Console.log(`  ${entry}`)
+          yield* log(`  ${entry}`)
         }
       }
     })

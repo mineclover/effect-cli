@@ -8,7 +8,7 @@
  * @created 2025-01-12
  */
 
-import * as Duration from "effect/Duration"
+import { millis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import { describe, expect, it } from "vitest"
 import {
@@ -29,7 +29,7 @@ import {
  */
 const mockFileRead = (filename: string) =>
   Effect.gen(function*() {
-    yield* Effect.sleep(Duration.millis(10)) // Simulate brief I/O
+    yield* Effect.sleep(millis(10)) // Simulate brief I/O
     return `Mock content of ${filename}`
   })
 
@@ -38,7 +38,7 @@ const mockFileRead = (filename: string) =>
  */
 const mockComputation = (value: number) =>
   Effect.gen(function*() {
-    yield* Effect.sleep(Duration.millis(5)) // Simulate brief computation
+    yield* Effect.sleep(millis(5)) // Simulate brief computation
     return value * 2
   })
 
@@ -47,7 +47,7 @@ const mockComputation = (value: number) =>
  */
 const mockFailingOperation = (errorMessage: string) =>
   Effect.gen(function*() {
-    yield* Effect.sleep(Duration.millis(5))
+    yield* Effect.sleep(millis(5))
     return yield* Effect.fail(new Error(errorMessage))
   })
 
@@ -206,7 +206,7 @@ describe("Queue System", () => {
           })
 
           // Give tasks time to process
-          yield* Effect.sleep(Duration.millis(100))
+          yield* Effect.sleep(millis(100))
 
           const status = yield* getQueueStatus()
           yield* shutdownQueueSystem()
@@ -284,7 +284,7 @@ describe("Queue System", () => {
             )
 
             // Give it time to process and fail
-            yield* Effect.sleep(Duration.millis(100))
+            yield* Effect.sleep(millis(100))
 
             const status = yield* getQueueStatus()
             yield* shutdownQueueSystem()
@@ -328,7 +328,7 @@ describe("Queue System Integration", () => {
         const initialStatus = yield* getQueueStatus()
 
         // Wait for processing
-        yield* Effect.sleep(Duration.millis(200))
+        yield* Effect.sleep(millis(200))
 
         // Check final status
         const finalStatus = yield* getQueueStatus()

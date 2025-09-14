@@ -5,12 +5,12 @@
  * in the Effect CLI Queue System Phase 2.2.
  */
 
-// import * as Duration from "effect/Duration" // Unused
+//  // Unused
 import * as Effect from "effect/Effect"
-// import * as Fiber from "effect/Fiber" // Unused
-import * as Layer from "effect/Layer"
-// import * as TestClock from "effect/TestClock" // Unused
-import * as TestContext from "effect/TestContext"
+//  // Unused
+import { mergeAll, provide } from "effect/Layer"
+//  // Unused
+import { TestContext } from "effect/TestContext"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 import {
   AdaptiveThrottler,
@@ -19,10 +19,10 @@ import {
   SchemaManagerLive
 } from "../../src/services/Queue/index.js"
 
-const testLayer = Layer.mergeAll(
+const testLayer = mergeAll(
   SchemaManagerLive,
-  QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive)),
-  AdaptiveThrottlerLive.pipe(Layer.provide(QueuePersistenceLive.pipe(Layer.provide(SchemaManagerLive))))
+  QueuePersistenceLive.pipe(provide(SchemaManagerLive)),
+  AdaptiveThrottlerLive.pipe(provide(QueuePersistenceLive.pipe(provide(SchemaManagerLive))))
 )
 
 describe("Adaptive Throttler", () => {
@@ -42,7 +42,7 @@ describe("Adaptive Throttler", () => {
         return limits
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -67,7 +67,7 @@ describe("Adaptive Throttler", () => {
         return metrics
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -90,7 +90,7 @@ describe("Adaptive Throttler", () => {
         return result
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -107,7 +107,7 @@ describe("Adaptive Throttler", () => {
         return result
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -124,7 +124,7 @@ describe("Adaptive Throttler", () => {
         return result
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -141,7 +141,7 @@ describe("Adaptive Throttler", () => {
         return result
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -159,7 +159,7 @@ describe("Adaptive Throttler", () => {
           yield* throttler.throttle("unknown" as any, operation)
         }).pipe(
           Effect.provide(testLayer),
-          Effect.provide(TestContext.TestContext),
+          Effect.provide(TestContext),
           Effect.runPromise
         )
       ).rejects.toThrow()
@@ -182,7 +182,7 @@ describe("Adaptive Throttler", () => {
         return results
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -205,7 +205,7 @@ describe("Adaptive Throttler", () => {
         return results
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -232,7 +232,7 @@ describe("Adaptive Throttler", () => {
         return result
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -251,7 +251,7 @@ describe("Adaptive Throttler", () => {
         yield* throttler.cleanup()
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
     })
@@ -268,7 +268,7 @@ describe("Adaptive Throttler", () => {
         return { initial, updated }
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 
@@ -295,7 +295,7 @@ describe("Adaptive Throttler", () => {
         return results
       }).pipe(
         Effect.provide(testLayer),
-        Effect.provide(TestContext.TestContext),
+        Effect.provide(TestContext),
         Effect.runPromise
       )
 

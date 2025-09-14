@@ -12,10 +12,10 @@ export class RegexNamedImportExtractor {
    * @param filePath Optional file path for context
    * @returns Effect containing array of named imports
    */
-  extractFromSource(sourceCode: string, filePath?: string): Effect.Effect<readonly NamedImport[], Error> {
+  extractFromSource(sourceCode: string, filePath?: string): Effect.Effect<ReadonlyArray<NamedImport>, Error> {
     return Effect.try({
       try: () => {
-        const namedImports: NamedImport[] = []
+        const namedImports: Array<NamedImport> = []
         const lines = sourceCode.split("\n")
 
         lines.forEach((line, index) => {

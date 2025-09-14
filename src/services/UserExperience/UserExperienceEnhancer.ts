@@ -1,4 +1,4 @@
-import { toMillis, millis } from "effect/Duration"
+import { millis, toMillis } from "effect/Duration"
 import type { Duration } from "effect/Duration"
 import { fixed } from "effect/Schedule"
 /**
@@ -20,7 +20,6 @@ import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
 
-
 import { InternalQueue } from "../Queue/index.js"
 import type { QueueMetrics } from "../Queue/types.js"
 // QueueStatus unused
@@ -37,7 +36,11 @@ import type { QueueMetrics } from "../Queue/types.js"
  */
 export interface UserExperienceEnhancer {
   // Progress Tracking
-  readonly startProgress: (operation: string, estimatedDuration?: Duration, options?: ProgressOptions) => Effect.Effect<ProgressTracker>
+  readonly startProgress: (
+    operation: string,
+    estimatedDuration?: Duration,
+    options?: ProgressOptions
+  ) => Effect.Effect<ProgressTracker>
   readonly trackLongRunningOperation: <A, E>(
     operation: Effect.Effect<A, E>,
     description: string,
@@ -330,8 +333,7 @@ export const UserExperienceEnhancerLive: Layer<UserExperienceEnhancer, never, In
         // Resource group breakdown
         yield* Effect.log(`\n🔧 Resource Group Status:`)
         yield* Effect.forEach(Object.entries(status.queues), ([group, queueInfo]) =>
-          Effect.log(`  ${group}: ${queueInfo.size} queued, ${queueInfo.isProcessing ? "processing" : "idle"}`)
-        )
+          Effect.log(`  ${group}: ${queueInfo.size} queued, ${queueInfo.isProcessing ? "processing" : "idle"}`))
       })
 
     const suggestOptimizations = (): Effect.Effect<Array<string>> =>

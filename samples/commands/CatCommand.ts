@@ -1,7 +1,7 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Console from "effect/Console"
+import { log } from "effect/Console"
 import * as Effect from "effect/Effect"
 
 // TODO: Refactor to use FileSystem service
@@ -41,14 +41,14 @@ export const catCommand = Command.make("cat", {
         output = output.filter((line) => line.includes(search))
       }
 
-      yield* Console.log(output.join("\n"))
+      yield* log(output.join("\n"))
 
       if (search) {
         const matchingLines = output.length
         const totalLines = content.split("\n").length
         const percentage = totalLines > 0 ? (matchingLines / totalLines) * 100 : 0
 
-        yield* Console.log(
+        yield* log(
           `\nFound '${search}' in ${matchingLines}/${totalLines} lines (${percentage.toFixed(2)}%)`
         )
       }
@@ -56,19 +56,19 @@ export const catCommand = Command.make("cat", {
       const wordCount = content.split(/\s+/).filter(Boolean).length
       const charCount = content.length
 
-      yield* Console.log(
+      yield* log(
         `\nStatistics: ${wordCount} words, ${charCount} characters`
       )
 
       const reversedContent = content.split("").reverse().join("")
       const isPalindrome = content === reversedContent && content.length > 0
 
-      yield* Console.log(`Palindrome: ${isPalindrome ? "Yes" : "No"}`)
+      yield* log(`Palindrome: ${isPalindrome ? "Yes" : "No"}`)
 
       const mostFrequentWord = ""
       // Implement logic to find the most frequent word
 
-      yield* Console.log(`Most frequent word: ${mostFrequentWord}`)
+      yield* log(`Most frequent word: ${mostFrequentWord}`)
     })
   )
 )

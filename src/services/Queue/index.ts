@@ -1,7 +1,6 @@
-import { seconds, millis } from "effect/Duration"
+import { millis, seconds } from "effect/Duration"
 import type { Duration } from "effect/Duration"
-import { getOrElse, fromNullable } from "effect/Option"
-import { map } from "effect/Option"
+import { fromNullable, getOrElse, map } from "effect/Option"
 /**
  * Effect CLI Queue System - Main Export Module
  *
@@ -13,11 +12,10 @@ import { map } from "effect/Option"
  * @created 2025-01-12
  */
 
-
 import * as Effect from "effect/Effect"
-import { provide, mergeAll } from "effect/Layer"
+import { mergeAll, provide } from "effect/Layer"
 
-import * as Schedule from "effect/Schedule"
+import { addDelay, recurWhile } from "effect/Schedule"
 
 // ============================================================================
 // LAYER COMPOSITIONS
@@ -336,9 +334,9 @@ export const waitForTask = (taskId: string, timeoutMs: number = 60000) =>
 
     const result = yield* checkTask.pipe(
       Effect.repeat(
-        Schedule.recurWhile(
+        recurWhile(
           (result: any) => result.status === "pending" || result.status === "running"
-        ).pipe(Schedule.addDelay(() => millis(100)))
+        ).pipe(addDelay(() => millis(100)))
       ),
       Effect.timeout(millis(timeoutMs))
     )

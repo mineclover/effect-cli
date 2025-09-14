@@ -11,6 +11,7 @@
 
 import { seconds } from "effect/Duration"
 import * as Effect from "effect/Effect"
+import { fail, log } from "effect/Effect"
 import { interrupt } from "effect/Fiber"
 import { effect, succeed } from "effect/Layer"
 import { get, make, set } from "effect/Ref"
@@ -77,7 +78,7 @@ export const AdaptiveThrottlerLive = effect(
       )
     })
 
-    yield* Effect.log("Adaptive throttler service initialized")
+    yield* log("Adaptive throttler service initialized")
 
     // ========================================================================
     // HELPER FUNCTIONS
@@ -132,7 +133,7 @@ export const AdaptiveThrottlerLive = effect(
 
         // Log significant adjustments
         if (Math.abs(adjustmentFactor - 1.0) > 0.1) {
-          yield* Effect.log(
+          yield* log(
             `Throttle limits adjusted: factor=${adjustmentFactor.toFixed(2)}, ` +
               `cpu=${load.cpuUsage.toFixed(2)}, memory=${load.memoryUsage.toFixed(2)}, ` +
               `backlog=${load.queueBacklog}`
@@ -157,7 +158,7 @@ export const AdaptiveThrottlerLive = effect(
         const metrics = yield* collectSystemMetrics().pipe(
           Effect.catchAll((error) =>
             Effect.gen(function*() {
-              yield* Effect.log(`Load monitoring error: ${error}`)
+              yield* log(`Load monitoring error: ${error}`)
               return {
                 cpuUsage: 0.0,
                 memoryUsage: 0.0,
@@ -180,7 +181,7 @@ export const AdaptiveThrottlerLive = effect(
         yield* adjustThresholds().pipe(
           Effect.catchAll((error) =>
             Effect.gen(function*() {
-              yield* Effect.log(`Threshold adjustment error: ${error}`)
+              yield* log(`Threshold adjustment error: ${error}`)
             })
           )
         )
@@ -199,7 +200,7 @@ export const AdaptiveThrottlerLive = effect(
       Effect.gen(function*() {
         const semaphore = resourceSemaphores.get(resourceGroup)
         if (!semaphore) {
-          return yield* Effect.fail(
+          return yield* fail(
             new ThrottleError(`Unknown resource group: ${resourceGroup}`, resourceGroup, 0)
           )
         }
@@ -211,7 +212,7 @@ export const AdaptiveThrottlerLive = effect(
         // Apply semaphore-based throttling
         const result = yield* semaphore.withPermits(1)(operation).pipe(
           Effect.catchAll(() =>
-            Effect.fail(
+            fail(
               new ThrottleError(
                 `Resource throttled: ${resourceGroup} (limit: ${currentLimit})`,
                 resourceGroup,
@@ -242,10 +243,10 @@ export const AdaptiveThrottlerLive = effect(
 
     const cleanup = () =>
       Effect.gen(function*() {
-        yield* Effect.log("Starting adaptive throttler cleanup...")
+        yield* log("Starting adaptive throttler cleanup...")
         yield* interrupt(loadMonitoringFiber)
         yield* interrupt(adjustmentFiber)
-        yield* Effect.log("Adaptive throttler cleanup completed")
+        yield* log("Adaptive throttler cleanup completed")
       })
 
     // ========================================================================

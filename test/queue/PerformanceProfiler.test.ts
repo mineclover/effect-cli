@@ -4,7 +4,7 @@
  * Comprehensive tests for Phase 4.1 - Performance profiling and bottleneck identification
  */
 
-import * as Duration from "effect/Duration"
+import { millis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import { describe, expect, it } from "vitest"
 
@@ -31,7 +31,7 @@ describe("PerformanceProfiler", () => {
         expect(session.startTime).toBeGreaterThan(0)
 
         // Simulate some work
-        yield* Effect.sleep(Duration.millis(100))
+        yield* Effect.sleep(millis(100))
 
         // Complete the session
         const completedMetrics = yield* profiler.endProfiling(session, true)
@@ -54,7 +54,7 @@ describe("PerformanceProfiler", () => {
 
         // Start and fail a session
         const session = yield* profiler.startProfiling("failed-op", "network-request", "network")
-        yield* Effect.sleep(Duration.millis(50))
+        yield* Effect.sleep(millis(50))
 
         const metrics = yield* profiler.endProfiling(session, false, "timeout")
 
@@ -76,11 +76,11 @@ describe("PerformanceProfiler", () => {
 
         // Create some operations
         const session1 = yield* profiler.startProfiling("perf-1", "computation", "computation")
-        yield* Effect.sleep(Duration.millis(50))
+        yield* Effect.sleep(millis(50))
         yield* profiler.endProfiling(session1, true)
 
         const session2 = yield* profiler.startProfiling("perf-2", "file-read", "filesystem")
-        yield* Effect.sleep(Duration.millis(75))
+        yield* Effect.sleep(millis(75))
         yield* profiler.endProfiling(session2, true)
 
         // Get performance stats
@@ -107,7 +107,7 @@ describe("PerformanceProfiler", () => {
         // Create multiple operations to build up data
         for (let i = 0; i < 5; i++) {
           const session = yield* profiler.startProfiling(`op-${i}`, "computation", "computation")
-          yield* Effect.sleep(Duration.millis(100))
+          yield* Effect.sleep(millis(100))
           yield* profiler.endProfiling(session, true)
         }
 
@@ -134,7 +134,7 @@ describe("PerformanceProfiler", () => {
         const session1 = yield* profiler.startProfiling("fs-op", "file-read", "filesystem")
         const session2 = yield* profiler.startProfiling("net-op", "network-request", "network")
 
-        yield* Effect.sleep(Duration.millis(50))
+        yield* Effect.sleep(millis(50))
 
         yield* profiler.endProfiling(session1, true)
         yield* profiler.endProfiling(session2, true)
@@ -159,7 +159,7 @@ describe("PerformanceProfiler", () => {
 
         // Generate some data
         const session = yield* profiler.startProfiling("export-test", "computation", "computation")
-        yield* Effect.sleep(Duration.millis(25))
+        yield* Effect.sleep(millis(25))
         yield* profiler.endProfiling(session, true)
 
         // Export data
@@ -185,7 +185,7 @@ describe("PerformanceProfiler", () => {
 
         // Generate some data
         const session = yield* profiler.startProfiling("csv-test", "file-read", "filesystem")
-        yield* Effect.sleep(Duration.millis(30))
+        yield* Effect.sleep(millis(30))
         yield* profiler.endProfiling(session, true)
 
         // Export as CSV
@@ -210,7 +210,7 @@ describe("PerformanceProfiler", () => {
 
         // Create some data
         const session = yield* profiler.startProfiling("clear-test", "computation", "computation")
-        yield* Effect.sleep(Duration.millis(10))
+        yield* Effect.sleep(millis(10))
         yield* profiler.endProfiling(session, true)
 
         // Clear all data

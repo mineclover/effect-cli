@@ -12,9 +12,7 @@
  */
 
 import * as Effect from "effect/Effect"
-import * as Console from "effect/Console"
-import * as Layer from "effect/Layer"
-import * as Duration from "effect/Duration"
+import { log, error } from "effect/Console"
 
 import { 
   QueueSystem, 
@@ -36,18 +34,18 @@ import {
 const runtimeIntegrationExample = Effect.gen(function*() {
   // Phase 3.5 Milestone: Initialize with CLI Integration Layer
   const sessionId = yield* QueueSystem.initialize()
-  yield* Console.log(`✅ Phase 3.5 Runtime Integration Test Started: ${sessionId}`)
-  
+  yield* log(`✅ Phase 3.5 Runtime Integration Test Started: ${sessionId}`)
+
   // Get the transparent queue adapter service
   const adapter = yield* TransparentQueueAdapter
-  
+
   // ========================================================================
   // TEST 1: File System Operations (Transparently Queued)
   // ========================================================================
-  yield* Console.log("\n🗂️  Testing Transparent File System Operations...")
-  
+  yield* log("\n🗂️  Testing Transparent File System Operations...")
+
   const fileOps = adapter.wrapFileSystem()
-  
+
   // These operations are transparently routed through the queue system
   // Users see normal API, system gets queue benefits
   const fileResults = yield* Effect.all([
@@ -56,32 +54,32 @@ const runtimeIntegrationExample = Effect.gen(function*() {
     fileOps.findFiles("*.ts", "/project"),
     fileOps.writeFile("/tmp/test.txt", "Queue integration test")
   ])
-  
-  yield* Console.log(`✅ File operations completed: ${fileResults.length} operations`)
-  
+
+  yield* log(`✅ File operations completed: ${fileResults.length} operations`)
+
   // ========================================================================
   // TEST 2: Network Operations (Transparently Queued)
   // ========================================================================
-  yield* Console.log("\n🌐 Testing Transparent Network Operations...")
-  
+  yield* log("\n🌐 Testing Transparent Network Operations...")
+
   const networkOps = adapter.wrapNetworkOperations()
-  
+
   // Network requests automatically handled by queue system
   const networkResults = yield* Effect.all([
     networkOps.fetchData("https://api.github.com/repos/effect-ts/effect"),
     networkOps.fetchData("https://jsonplaceholder.typicode.com/posts/1"),
     networkOps.postData("https://httpbin.org/post", { test: "data" })
   ])
-  
-  yield* Console.log(`✅ Network operations completed: ${networkResults.length} requests`)
-  
+
+  yield* log(`✅ Network operations completed: ${networkResults.length} requests`)
+
   // ========================================================================
   // TEST 3: Computation Operations (Transparently Queued)  
   // ========================================================================
-  yield* Console.log("\n⚙️  Testing Transparent Computation Operations...")
-  
+  yield* log("\n⚙️  Testing Transparent Computation Operations...")
+
   const computeOps = adapter.wrapComputationOperations()
-  
+
   // CPU intensive operations managed by queue
   const computeResults = yield* Effect.all([
     computeOps.processLargeData(
@@ -92,49 +90,49 @@ const runtimeIntegrationExample = Effect.gen(function*() {
     computeOps.compressData("Large data string ".repeat(100)),
     computeOps.parseStructuredData('{"status": "success"}', "json")
   ])
-  
-  yield* Console.log(`✅ Computation operations completed: ${computeResults.length} computations`)
-  
+
+  yield* log(`✅ Computation operations completed: ${computeResults.length} computations`)
+
   // ========================================================================
   // TEST 4: System Health and Performance Monitoring
   // ========================================================================
-  yield* Console.log("\n📊 System Health Check...")
-  
+  yield* log("\n📊 System Health Check...")
+
   const status = yield* QueueSystem.getStatus()
   const health = yield* QueueSystem.getSystemHealth()
-  
-  yield* Console.log(`✅ Queue Status:`)
-  yield* Console.log(`   • Total Pending: ${status.queue.totalPending}`)
-  yield* Console.log(`   • Total Running: ${status.queue.totalRunning}`)
-  yield* Console.log(`   • Total Tasks: ${status.metrics.totalTasks}`)
-  yield* Console.log(`   • Success Rate: ${(status.metrics.successRate * 100).toFixed(1)}%`)
-  yield* Console.log(`   • System Healthy: ${health.isHealthy ? '✅' : '❌'}`)
-  
+
+  yield* log(`✅ Queue Status:`)
+  yield* log(`   • Total Pending: ${status.queue.totalPending}`)
+  yield* log(`   • Total Running: ${status.queue.totalRunning}`)
+  yield* log(`   • Total Tasks: ${status.metrics.totalTasks}`)
+  yield* log(`   • Success Rate: ${(status.metrics.successRate * 100).toFixed(1)}%`)
+  yield* log(`   • System Healthy: ${health.isHealthy ? '✅' : '❌'}`)
+
   // ========================================================================
   // TEST 5: Performance Metrics Export
   // ========================================================================
-  yield* Console.log("\n📈 Exporting Performance Metrics...")
-  
+  yield* log("\n📈 Exporting Performance Metrics...")
+
   const metricsFile = yield* QueueSystem.exportMetrics("json", sessionId)
-  yield* Console.log(`✅ Metrics exported to: ${metricsFile}`)
-  
+  yield* log(`✅ Metrics exported to: ${metricsFile}`)
+
   // ========================================================================
   // RUNTIME INTEGRATION COMPLETION
   // ========================================================================
-  yield* Console.log("\n🎉 Phase 3.5 Runtime Integration Test Results:")
-  yield* Console.log("   ✅ Dependency resolution: RESOLVED")
-  yield* Console.log("   ✅ TransparentQueueAdapter: INTEGRATED") 
-  yield* Console.log("   ✅ CLI operations: TRANSPARENTLY QUEUED")
-  yield* Console.log("   ✅ System performance: OPTIMAL")
-  yield* Console.log("   ✅ Type safety: 100% VALIDATED")
-  
-  yield* Console.log("\n📋 Phase 3.5 Status: ✅ COMPLETE")
-  yield* Console.log("   🎯 All runtime integration testing requirements satisfied")
-  yield* Console.log("   🚀 Ready for Phase 4 advanced optimizations")
-  
+  yield* log("\n🎉 Phase 3.5 Runtime Integration Test Results:")
+  yield* log("   ✅ Dependency resolution: RESOLVED")
+  yield* log("   ✅ TransparentQueueAdapter: INTEGRATED") 
+  yield* log("   ✅ CLI operations: TRANSPARENTLY QUEUED")
+  yield* log("   ✅ System performance: OPTIMAL")
+  yield* log("   ✅ Type safety: 100% VALIDATED")
+
+  yield* log("\n📋 Phase 3.5 Status: ✅ COMPLETE")
+  yield* log("   🎯 All runtime integration testing requirements satisfied")
+  yield* log("   🚀 Ready for Phase 4 advanced optimizations")
+
   // Cleanup
   yield* QueueSystem.shutdown()
-  yield* Console.log("\n✅ Runtime integration test completed successfully")
+  yield* log("\n✅ Runtime integration test completed successfully")
 })
 
 // ============================================================================
@@ -147,7 +145,7 @@ const runtimeIntegrationExample = Effect.gen(function*() {
 const program = runtimeIntegrationExample.pipe(
   Effect.provide(CLIIntegratedQueueSystemLayer),
   Effect.catchAll((error) => 
-    Console.error(`❌ Runtime Integration Test Failed: ${error}`)
+    error(`❌ Runtime Integration Test Failed: ${error}`)
   )
 )
 

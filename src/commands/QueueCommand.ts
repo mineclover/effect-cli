@@ -1,4 +1,4 @@
-import { log, error } from "effect/Console"
+import { log } from "effect/Console"
 /**
  * Queue Management Commands
  *
@@ -356,7 +356,7 @@ const clearCommand = Command.make("clear", {
           `📊 Updated status: ${updatedMetrics.pendingTasks} pending, ${updatedMetrics.failedTasks} failed`
         )
       } catch (error) {
-        yield* error(`❌ Failed to clear tasks: ${error instanceof Error ? error.message : String(error)}`)
+        yield* log(`❌ Failed to clear tasks: ${error instanceof Error ? error.message : String(error)}`)
       }
     })
   )

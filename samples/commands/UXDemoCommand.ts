@@ -13,8 +13,8 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Console from "effect/Console"
-import * as Duration from "effect/Duration"
+import { error } from "effect/Console"
+import { millis, toMillis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 
 import { UserExperienceEnhancer } from "../services/UserExperience/index.js"
@@ -66,7 +66,7 @@ const simulateSimpleOperation = (duration: number) =>
     
     // Simulate work with periodic updates
     for (let i = 0; i <= 100; i += 10) {
-      yield* Effect.sleep(Duration.millis(duration * 10))
+      yield* Effect.sleep(millis(duration * 10))
       yield* Effect.log(`Progress: ${i}% - Processing step ${i / 10 + 1}/11`)
     }
     
@@ -95,7 +95,7 @@ const simulateComplexOperation = (duration: number) =>
       
       // Simulate phase work
       for (let step = 0; step < 20; step++) {
-        yield* Effect.sleep(Duration.millis(duration * 2.5))
+        yield* Effect.sleep(millis(duration * 2.5))
         if (step % 5 === 0) {
           yield* Effect.log(`  ${phase}: ${(step / 20 * 100).toFixed(0)}%`)
         }
@@ -114,10 +114,10 @@ const simulateErrorOperation = (duration: number) =>
     yield* Effect.log("⚠️  Starting error-prone operation simulation...")
     
     // Simulate some progress
-    yield* Effect.sleep(Duration.millis(duration * 300))
+    yield* Effect.sleep(millis(duration * 300))
     yield* Effect.log("Progress: 30% - Processing...")
     
-    yield* Effect.sleep(Duration.millis(duration * 300))
+    yield* Effect.sleep(millis(duration * 300))
     yield* Effect.log("Progress: 60% - Encountering issues...")
     
     // Simulate an error
@@ -223,12 +223,12 @@ export const uxDemoCommand = Command.make("ux-demo", {
         }
         
         const endTime = new Date()
-        const operationDuration = Duration.millis(endTime.getTime() - startTime.getTime())
+        const operationDuration = millis(endTime.getTime() - startTime.getTime())
         
         yield* Effect.log("")
         yield* Effect.log("📈 Operation Analysis:")
         yield* Effect.log(`  Result: ${result}`)
-        yield* Effect.log(`  Total Duration: ${Duration.toMillis(operationDuration)}ms`)
+        yield* Effect.log(`  Total Duration: ${toMillis(operationDuration)}ms`)
         
         // Analyze user patterns
         const patterns = analyzeCommandUsage("ux-demo", { operation, style, level }, operationDuration)
@@ -269,7 +269,7 @@ export const uxDemoCommand = Command.make("ux-demo", {
         yield* Effect.log("Try different progress styles: bar, spinner, dots, minimal")
 
       } catch (error) {
-        yield* Console.error(`❌ Demo failed: ${error instanceof Error ? error.message : String(error)}`)
+        yield* error(`❌ Demo failed: ${error instanceof Error ? error.message : String(error)}`)
         yield* Effect.log("This error demonstrates the enhanced error handling with contextual feedback")
       }
     })

@@ -11,11 +11,13 @@
  * @created 2025-01-12
  */
 
-import * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
+import { GenericTag } from "effect/Context"
+import { millis, seconds, toMillis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
-import * as Option from "effect/Option"
+import { effect, mergeAll, provide } from "effect/Layer"
+import type { Layer } from "effect/Layer"
+import { some } from "effect/Option"
 
 import type { FileInfo } from "../../src/services/Queue/TransparentQueueAdapter.js"
 import type { OperationType, QueueMetrics, QueueTask } from "../../src/services/Queue/types.js"
@@ -49,13 +51,13 @@ export interface MockFileSystem {
   readonly exists: (path: string) => Effect.Effect<boolean, never>
 }
 
-export const MockFileSystem = Context.GenericTag<MockFileSystem>("@test/MockFileSystem")
+export const MockFileSystem = GenericTag<MockFileSystem>("@test/MockFileSystem")
 
 /**
  * Create a mock file system with predefined test data
  */
-export const createMockFileSystem = (): Layer.Layer<MockFileSystem> =>
-  Layer.effect(
+export const createMockFileSystem = (): Layer<MockFileSystem> =>
+  effect(
     MockFileSystem,
     Effect.gen(function*() {
       // In-memory file system state
@@ -86,7 +88,7 @@ export const createMockFileSystem = (): Layer.Layer<MockFileSystem> =>
 
       const listDirectory = (path: string): Effect.Effect<Array<MockFileInfo>, Error> =>
         Effect.gen(function*() {
-          yield* Effect.sleep(Duration.millis(10)) // Simulate I/O delay
+          yield* Effect.sleep(millis(10)) // Simulate I/O delay
 
           const directoryFiles: Array<MockFileInfo> = []
 
@@ -115,7 +117,7 @@ export const createMockFileSystem = (): Layer.Layer<MockFileSystem> =>
 
       const readFile = (path: string): Effect.Effect<string, Error> =>
         Effect.gen(function*() {
-          yield* Effect.sleep(Duration.millis(5)) // Simulate I/O delay
+          yield* Effect.sleep(millis(5)) // Simulate I/O delay
 
           const fileData = files.get(path)
           if (!fileData) {
@@ -131,7 +133,7 @@ export const createMockFileSystem = (): Layer.Layer<MockFileSystem> =>
 
       const writeFile = (path: string, content: string): Effect.Effect<void, Error> =>
         Effect.gen(function*() {
-          yield* Effect.sleep(Duration.millis(8)) // Simulate I/O delay
+          yield* Effect.sleep(millis(8)) // Simulate I/O delay
 
           files.set(path, { content, isDirectory: false })
           return void 0
@@ -156,7 +158,7 @@ export const createMockFileSystem = (): Layer.Layer<MockFileSystem> =>
  * Enhanced mock queue for testing with realistic behavior
  */
 export const createTestQueueLayer = () =>
-  Layer.mergeAll(
+  mergeAll(
     // Use the basic queue system for testing (lighter than full production)
     BasicQueueSystemLayer
   )
@@ -169,18 +171,18 @@ export const createTestQueueLayer = () =>
  * Create a complete test layer with all necessary services
  */
 export const createTestLayer = () =>
-  Layer.mergeAll(
+  mergeAll(
     // Mock file system
     createMockFileSystem(),
     // Queue system (basic version for testing)
     createTestQueueLayer(),
     // Transparent queue adapter
     TransparentQueueAdapterLive.pipe(
-      Layer.provide(createTestQueueLayer())
+      provide(createTestQueueLayer())
     ),
     // User experience enhancer
     UserExperienceEnhancerLive.pipe(
-      Layer.provide(createTestQueueLayer())
+      provide(createTestQueueLayer())
     )
   )
 
@@ -276,8 +278,8 @@ export const createMockQueueTask = (
   resourceGroup: resourceGroup as any,
   priority: 5,
   maxRetries: 3,
-  estimatedDuration: Duration.seconds(1),
-  operationData: Option.some({ test: true }),
+  estimatedDuration: seconds(1),
+  operationData: some({ test: true }),
   operation: Effect.succeed("Mock task result")
 })
 
@@ -286,12 +288,12 @@ export const createMockQueueTask = (
  */
 export const measureTime = <A, E>(
   effect: Effect.Effect<A, E>
-): Effect.Effect<{ result: A; duration: Duration.Duration }, E> =>
+): Effect.Effect<{ result: A; duration: Duration }, E> =>
   Effect.gen(function*() {
     const startTime = Date.now()
     const result = yield* effect
     const endTime = Date.now()
-    const duration = Duration.millis(endTime - startTime)
+    const duration = millis(endTime - startTime)
 
     return { result, duration }
   })
@@ -306,7 +308,7 @@ export const withTimeout = <A, E>(
   Effect.race(
     effect,
     Effect.gen(function*() {
-      yield* Effect.sleep(Duration.millis(timeoutMs))
+      yield* Effect.sleep(millis(timeoutMs))
       yield* Effect.fail(new Error(`Operation timed out after ${timeoutMs}ms`))
     })
   )
@@ -320,7 +322,7 @@ export const assertCompletesWithin = <A, E>(
 ) =>
   Effect.gen(function*() {
     const measured = yield* measureTime(effect)
-    const actualTimeMs = Duration.toMillis(measured.duration)
+    const actualTimeMs = toMillis(measured.duration)
 
     if (actualTimeMs > maxTimeMs) {
       yield* Effect.fail(
@@ -339,7 +341,7 @@ export const delayedEffect = <A>(
   delayMs: number
 ): Effect.Effect<A, never> =>
   Effect.gen(function*() {
-    yield* Effect.sleep(Duration.millis(delayMs))
+    yield* Effect.sleep(millis(delayMs))
     return value
   })
 

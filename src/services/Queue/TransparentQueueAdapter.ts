@@ -1,4 +1,4 @@
-import { toMillis, seconds, millis } from "effect/Duration"
+import { millis, seconds, toMillis } from "effect/Duration"
 import type { Duration } from "effect/Duration"
 /**
  * Transparent Queue Adapter
@@ -294,7 +294,8 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }
         ).pipe(
           Effect.mapError((error): FileSystemError =>
-            new FileSystemError(`File system operation failed: ${String(error)}`, path))
+            new FileSystemError(`File system operation failed: ${String(error)}`, path)
+          )
         ),
 
       readFile: (path: string) =>
@@ -317,7 +318,8 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }
         ).pipe(
           Effect.mapError((error): FileSystemError =>
-            new FileSystemError(`File system operation failed: ${String(error)}`, path))
+            new FileSystemError(`File system operation failed: ${String(error)}`, path)
+          )
         ),
 
       writeFile: (path: string, content: string) =>
@@ -341,7 +343,8 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }
         ).pipe(
           Effect.mapError((error): FileSystemError =>
-            new FileSystemError(`File system operation failed: ${String(error)}`, path))
+            new FileSystemError(`File system operation failed: ${String(error)}`, path)
+          )
         ),
 
       findFiles: (pattern: string, directory: string = ".") =>
@@ -372,7 +375,8 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }
         ).pipe(
           Effect.mapError((error): FileSystemError =>
-            new FileSystemError(`File system operation failed: ${String(error)}`, directory))
+            new FileSystemError(`File system operation failed: ${String(error)}`, directory)
+          )
         ),
 
       createDirectory: (path: string) =>
@@ -389,7 +393,8 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }
         ).pipe(
           Effect.mapError((error): FileSystemError =>
-            new FileSystemError(`File system operation failed: ${String(error)}`, path))
+            new FileSystemError(`File system operation failed: ${String(error)}`, path)
+          )
         ),
 
       deleteFile: (path: string) =>
@@ -406,7 +411,8 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }
         ).pipe(
           Effect.mapError((error): FileSystemError =>
-            new FileSystemError(`File system operation failed: ${String(error)}`, path))
+            new FileSystemError(`File system operation failed: ${String(error)}`, path)
+          )
         ),
 
       copyFile: (source: string, destination: string) =>
@@ -423,7 +429,8 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }
         ).pipe(
           Effect.mapError((error): FileSystemError =>
-            new FileSystemError(`File system operation failed: ${String(error)}`, source))
+            new FileSystemError(`File system operation failed: ${String(error)}`, source)
+          )
         ),
 
       moveFile: (source: string, destination: string) =>
@@ -440,7 +447,8 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }
         ).pipe(
           Effect.mapError((error): FileSystemError =>
-            new FileSystemError(`File system operation failed: ${String(error)}`, source))
+            new FileSystemError(`File system operation failed: ${String(error)}`, source)
+          )
         )
     })
 
@@ -471,8 +479,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
             operationData: { url, method: options.method || "GET" }
           }
         ).pipe(
-          Effect.mapError((error): NetworkError =>
-            new NetworkError(`Network operation failed: ${String(error)}`, url))
+          Effect.mapError((error): NetworkError => new NetworkError(`Network operation failed: ${String(error)}`, url))
         ),
 
       postData: (url: string, data: unknown, _options: RequestOptions = {}) =>
@@ -489,8 +496,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
             operationData: { url, method: "POST", hasData: true }
           }
         ).pipe(
-          Effect.mapError((error): NetworkError =>
-            new NetworkError(`Network operation failed: ${String(error)}`, url))
+          Effect.mapError((error): NetworkError => new NetworkError(`Network operation failed: ${String(error)}`, url))
         ),
 
       downloadFile: (url: string, destination: string) =>
@@ -506,8 +512,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
             operationData: { url, destination }
           }
         ).pipe(
-          Effect.mapError((error): NetworkError =>
-            new NetworkError(`Network operation failed: ${String(error)}`, url))
+          Effect.mapError((error): NetworkError => new NetworkError(`Network operation failed: ${String(error)}`, url))
         )
     })
 
@@ -621,8 +626,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
             operationData: { format, dataSize: data.length }
           }
         ).pipe(
-          Effect.mapError((error): ParseError =>
-            new ParseError(`Parse operation failed: ${String(error)}`, format))
+          Effect.mapError((error): ParseError => new ParseError(`Parse operation failed: ${String(error)}`, format))
         )
     })
 

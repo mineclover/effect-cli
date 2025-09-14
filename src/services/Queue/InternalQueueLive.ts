@@ -1,9 +1,8 @@
 import { millis, seconds } from "effect/Duration"
 import type { Duration } from "effect/Duration"
-import { none, some, isSome, getOrNull } from "effect/Option"
+import { filter, getOrNull, isSome, map, none, some } from "effect/Option"
 import type { Option } from "effect/Option"
-import { map, filter } from "effect/Option"
-import { bounded, take, offer, size } from "effect/Queue"
+import { bounded, offer, size, take } from "effect/Queue"
 import type { Queue } from "effect/Queue"
 import { forever } from "effect/Schedule"
 /**
@@ -17,12 +16,11 @@ import { forever } from "effect/Schedule"
  * @created 2025-01-12
  */
 
-
 import * as Effect from "effect/Effect"
+import { fail, log } from "effect/Effect"
 import { interrupt } from "effect/Fiber"
 import type { RuntimeFiber } from "effect/Fiber"
 import { effect, succeed } from "effect/Layer"
-
 
 import { get, make, set, update } from "effect/Ref"
 
@@ -67,7 +65,7 @@ export const InternalQueueLive = effect(
 
     const isShuttingDown = yield* make(false)
 
-    yield* Effect.log("Internal queue service initializing...")
+    yield* log("Internal queue service initializing...")
 
     // ========================================================================
     // RESOURCE GROUP SETUP
@@ -102,13 +100,13 @@ export const InternalQueueLive = effect(
      */
     const processQueue = (group: ResourceGroup): Effect.Effect<void, never, never> =>
       Effect.gen(function*() {
-        yield* Effect.log(`Starting queue processor for ${group}`)
+        yield* log(`Starting queue processor for ${group}`)
 
         while (true) {
           // Check if we should continue processing
           const shuttingDown = yield* get(isShuttingDown)
           if (shuttingDown) {
-            yield* Effect.log(`Shutting down processor for ${group}`)
+            yield* log(`Shutting down processor for ${group}`)
             break
           }
 
@@ -123,7 +121,7 @@ export const InternalQueueLive = effect(
           // Take next task from queue
           const task = yield* take(state.queue)
 
-          yield* Effect.log(`Processing task ${task.id} [${group}]`)
+          yield* log(`Processing task ${task.id} [${group}]`)
 
           // Execute task processing
           yield* Effect.gen(function*() {
@@ -152,15 +150,15 @@ export const InternalQueueLive = effect(
                   // Handle task failure
                   const errorMessage = error instanceof Error ? error.message : String(error)
                   yield* persistence.updateTaskStatus(task.id, "failed", errorMessage)
-                  yield* Effect.log(`Task failed: ${task.id} - ${errorMessage}`)
-                  return Effect.fail(error)
+                  yield* log(`Task failed: ${task.id} - ${errorMessage}`)
+                  return fail(error)
                 })
               ),
               Effect.tap(() =>
                 Effect.gen(function*() {
                   // Handle task success
                   yield* persistence.updateTaskStatus(task.id, "completed")
-                  yield* Effect.log(`Task completed: ${task.id}`)
+                  yield* log(`Task completed: ${task.id}`)
                 })
               ),
               Effect.ensuring(Effect.gen(function*() {
@@ -195,7 +193,7 @@ export const InternalQueueLive = effect(
       }).pipe(
         Effect.catchAll((error) =>
           Effect.gen(function*() {
-            yield* Effect.log(`Queue processor error for ${group}: ${error}`)
+            yield* log(`Queue processor error for ${group}: ${error}`)
             // Continue processing after error
             yield* Effect.sleep(seconds(1))
             return yield* processQueue(group)
@@ -232,7 +230,7 @@ export const InternalQueueLive = effect(
         )
 
         yield* set(processingStates, updatedStates)
-        yield* Effect.log("All queue processors started")
+        yield* log("All queue processors started")
       })
 
     // Start processing
@@ -277,14 +275,14 @@ export const InternalQueueLive = effect(
         const state = states.get(task.resourceGroup)
 
         if (!state) {
-          return yield* Effect.fail(
+          return yield* fail(
             new QueueError(`Unknown resource group: ${task.resourceGroup}`)
           )
         }
 
         yield* offer(state.queue, task)
 
-        yield* Effect.log(`Task enqueued: ${task.id} [${task.resourceGroup}] priority=${task.priority}`)
+        yield* log(`Task enqueued: ${task.id} [${task.resourceGroup}] priority=${task.priority}`)
       })
 
     const getStatus = () =>
@@ -342,7 +340,7 @@ export const InternalQueueLive = effect(
           return newStates
         })
 
-        yield* Effect.log(`Processing paused for ${resourceGroup}`)
+        yield* log(`Processing paused for ${resourceGroup}`)
       })
 
     const resumeProcessing = (resourceGroup: ResourceGroup) =>
@@ -359,7 +357,7 @@ export const InternalQueueLive = effect(
           return newStates
         })
 
-        yield* Effect.log(`Processing resumed for ${resourceGroup}`)
+        yield* log(`Processing resumed for ${resourceGroup}`)
       })
 
     const cancelTask = (taskId: string) =>
@@ -374,7 +372,7 @@ export const InternalQueueLive = effect(
           // Update task status
           yield* persistence.updateTaskStatus(taskId, "cancelled")
 
-          yield* Effect.log(`Task cancelled: ${taskId}`)
+          yield* log(`Task cancelled: ${taskId}`)
           return true
         }
 
@@ -382,7 +380,7 @@ export const InternalQueueLive = effect(
         yield* persistence.updateTaskStatus(taskId, "cancelled")
           .pipe(Effect.ignore) // Ignore if task doesn't exist
 
-        yield* Effect.log(`Task cancellation attempted: ${taskId}`)
+        yield* log(`Task cancellation attempted: ${taskId}`)
         return false
       })
 
@@ -394,7 +392,7 @@ export const InternalQueueLive = effect(
 
     const cleanup = () =>
       Effect.gen(function*() {
-        yield* Effect.log("Starting internal queue cleanup...")
+        yield* log("Starting internal queue cleanup...")
 
         // Signal shutdown
         yield* set(isShuttingDown, true)
@@ -419,7 +417,7 @@ export const InternalQueueLive = effect(
         // Wait a moment for graceful shutdown
         yield* Effect.sleep(millis(500))
 
-        yield* Effect.log("Internal queue cleanup completed")
+        yield* log("Internal queue cleanup completed")
       })
 
     // ========================================================================

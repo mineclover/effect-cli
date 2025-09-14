@@ -9,9 +9,9 @@
  */
 
 import * as TestContext from "@effect/vitest"
-import * as Duration from "effect/Duration"
+import { millis } from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { mergeAll } from "effect/Layer"
 import { afterEach, beforeEach, describe, expect, it } from "vitest"
 
 // Import test utilities
@@ -60,7 +60,7 @@ describe("MyService", () => {
   )
 
   // Test layer with all dependencies
-  const TestLayer = Layer.mergeAll(
+  const TestLayer = mergeAll(
     MockFileSystem,
     MockNetworkClient
     // Add your actual service implementation layer here
@@ -225,7 +225,7 @@ describe("MyService", () => {
           }
         )
 
-        const FailingLayer = Layer.mergeAll(
+        const FailingLayer = mergeAll(
           FailingFileSystem,
           MockNetworkClient
           // MyServiceLive
@@ -309,7 +309,7 @@ describe("MyService", () => {
         Effect.gen(function*() {
           // const service = yield* MyService
           // yield* service.performOperation("performance-test")
-          yield* Effect.sleep(Duration.millis(50)) // Mock operation
+          yield* Effect.sleep(millis(50)) // Mock operation
         }),
         200, // max 200ms
         0 // min 0ms
@@ -390,7 +390,7 @@ describe("MyService", () => {
         const contentionOps = Array.from({ length: 10 }, () =>
           Effect.gen(function*() {
             // yield* service.acquireResource()
-            yield* Effect.sleep(Duration.millis(10))
+            yield* Effect.sleep(millis(10))
             // yield* service.releaseResource()
             return "success"
           }))

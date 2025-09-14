@@ -17,7 +17,7 @@ import { GenericTag } from "effect/Context"
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
-// import * as Schedule from "effect/Schedule" // Unused import
+//  // Unused import
 // Array utilities from standard JS
 
 // import type { ResourceGroup } from "./types.js" // Unused import
@@ -234,7 +234,11 @@ export const MemoryOptimizerLive: Layer<MemoryOptimizer> = effect(
           if (stats.totalCreated < config.maxSize) {
             const currentMemory = getCurrentMemoryStats()
             if (currentMemory.rss > memoryLimit * 0.8) {
-              yield* Effect.log(`⚠️  Memory limit approaching (${(currentMemory.rss / memoryLimit * 100).toFixed(1)}%), refusing to create new item`)
+              yield* Effect.log(
+                `⚠️  Memory limit approaching (${
+                  (currentMemory.rss / memoryLimit * 100).toFixed(1)
+                }%), refusing to create new item`
+              )
               return factory() // Create temporary item instead
             }
             const newItem = factory()

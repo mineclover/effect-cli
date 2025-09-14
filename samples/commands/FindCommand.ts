@@ -1,7 +1,7 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Console from "effect/Console"
+import { log } from "effect/Console"
 import * as Effect from "effect/Effect"
 
 // TODO: Refactor to use FileSystem service
@@ -42,25 +42,25 @@ export const findCommand = Command.make("find", {
       const files: Array<any> = []
 
       if (files.length === 0) {
-        yield* Console.log("No files found.")
+        yield* log("No files found.")
         return
       }
 
-      yield* Console.log("Found files:")
+      yield* log("Found files:")
       for (const file of files) {
         const size = formatFileSize(file.size)
-        yield* Console.log(`${file.path} (${size})`)
+        yield* log(`${file.path} (${size})`)
       }
 
       const totalSize = files.reduce((sum, file) => sum + file.size, 0n)
-      yield* Console.log(`\nTotal size: ${formatFileSize(totalSize)}`)
+      yield* log(`\nTotal size: ${formatFileSize(totalSize)}`)
 
       const largestFile = files.reduce((largest, file) => file.size > largest.size ? file : largest)
-      yield* Console.log(`Largest file: ${largestFile.path} (${formatFileSize(largestFile.size)})`)
+      yield* log(`Largest file: ${largestFile.path} (${formatFileSize(largestFile.size)})`)
 
       const smallestFile = files.reduce((smallest, file) => file.size < smallest.size ? file : smallest)
 
-      yield* Console.log(`Smallest file: ${smallestFile.path} (${formatFileSize(smallestFile.size)})`)
+      yield* log(`Smallest file: ${smallestFile.path} (${formatFileSize(smallestFile.size)})`)
     })
   )
 )

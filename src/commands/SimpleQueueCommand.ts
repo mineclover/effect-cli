@@ -1,4 +1,3 @@
-import { log } from "effect/Console"
 /**
  * Simple Queue Command - Basic queue system demonstration
  *
@@ -6,7 +5,7 @@ import { log } from "effect/Console"
  */
 
 import * as Command from "@effect/cli/Command"
-
+import { log } from "effect/Console"
 import { millis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import {
@@ -33,7 +32,7 @@ export const simpleQueueCommand = Command.make(
       const task1 = queueComputationTask(
         Effect.gen(function*() {
           yield* Effect.sleep(millis(100))
-          yield* Effect.log("Task 1 completed")
+          yield* log("Task 1 completed")
           return "Result 1"
         }),
         { priority: 1 }
@@ -42,7 +41,7 @@ export const simpleQueueCommand = Command.make(
       const task2 = queueComputationTask(
         Effect.gen(function*() {
           yield* Effect.sleep(millis(200))
-          yield* Effect.log("Task 2 completed")
+          yield* log("Task 2 completed")
           return "Result 2"
         }),
         { priority: 2 }

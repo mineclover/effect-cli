@@ -1,4 +1,4 @@
-import { some, none, match, getOrNull } from "effect/Option"
+import { getOrNull, match, none, some } from "effect/Option"
 /**
  * Queue Persistence Service Implementation
  *
@@ -10,6 +10,7 @@ import { some, none, match, getOrNull } from "effect/Option"
  */
 
 import * as Effect from "effect/Effect"
+import { fail, log } from "effect/Effect"
 import { effect, succeed } from "effect/Layer"
 
 import { get, make, set } from "effect/Ref"
@@ -76,12 +77,12 @@ export const QueuePersistenceLive = effect(
     yield* schemaManager.initializeSchema()
     const isValid = yield* schemaManager.validateSchema()
     if (!isValid) {
-      return yield* Effect.fail(
+      return yield* fail(
         new PersistenceError("Database schema validation failed")
       )
     }
 
-    yield* Effect.log("Queue persistence layer initialized successfully")
+    yield* log("Queue persistence layer initialized successfully")
 
     // ========================================================================
     // PREPARED STATEMENTS (for performance)
@@ -148,7 +149,7 @@ export const QueuePersistenceLive = effect(
       sessionId: row.session_id,
       type: row.type,
       resourceGroup: row.resource_group,
-      operation: Effect.succeed(null) as any, // Will be reconstructed from operationData
+      operation: succeed(null) as any, // Will be reconstructed from operationData
       priority: row.priority,
       status: row.status,
       createdAt: new Date(row.created_at),
@@ -210,7 +211,7 @@ export const QueuePersistenceLive = effect(
           "Insert session"
         )
 
-        yield* Effect.log(`Session initialized: ${sessionId}`)
+        yield* log(`Session initialized: ${sessionId}`)
       })
 
     // ========================================================================
@@ -249,7 +250,7 @@ export const QueuePersistenceLive = effect(
           "Persist task"
         )
 
-        yield* Effect.log(`Task persisted: ${task.id} [${task.type}]`)
+        yield* log(`Task persisted: ${task.id} [${task.type}]`)
       })
 
     const updateTaskStatus = (taskId: string, status: TaskStatus, error?: string) =>
@@ -260,7 +261,7 @@ export const QueuePersistenceLive = effect(
           "Update task status"
         )
 
-        yield* Effect.log(`Task status updated: ${taskId} -> ${status}`)
+        yield* log(`Task status updated: ${taskId} -> ${status}`)
       })
 
     const loadPendingTasks = (sessionId: string) =>
@@ -273,7 +274,7 @@ export const QueuePersistenceLive = effect(
 
         const tasks = rows.map(rowToPersistedTask)
 
-        yield* Effect.log(`Loaded ${tasks.length} pending tasks for session ${sessionId}`)
+        yield* log(`Loaded ${tasks.length} pending tasks for session ${sessionId}`)
         return tasks
       })
 
@@ -300,7 +301,7 @@ export const QueuePersistenceLive = effect(
           "Clear previous session running tasks"
         )
 
-        yield* Effect.log(`Queue cleared for new session: ${sessionId}`)
+        yield* log(`Queue cleared for new session: ${sessionId}`)
       })
 
     const recoverFromCrash = (sessionId: string) =>
@@ -333,7 +334,7 @@ export const QueuePersistenceLive = effect(
             "Reset crashed tasks"
           )
 
-          yield* Effect.log(`Recovered from crash: ${runningTasks.length} tasks marked as failed`)
+          yield* log(`Recovered from crash: ${runningTasks.length} tasks marked as failed`)
         }
 
         // Return pending tasks that can be retried
@@ -367,7 +368,7 @@ export const QueuePersistenceLive = effect(
           "Delete task"
         )
 
-        yield* Effect.log(`Task deleted: ${taskId}`)
+        yield* log(`Task deleted: ${taskId}`)
       })
 
     const cleanup = () =>
@@ -376,7 +377,7 @@ export const QueuePersistenceLive = effect(
         yield* Effect.try(() => db.close())
           .pipe(Effect.ignore) // Don't fail on cleanup errors
 
-        yield* Effect.log("Queue persistence cleanup completed")
+        yield* log("Queue persistence cleanup completed")
       })
 
     // ========================================================================
@@ -441,7 +442,7 @@ export const recoverQueueFromCrash = (sessionId: string) =>
 
     const recoveredTasks = yield* persistence.recoverFromCrash(sessionId)
 
-    yield* Effect.log(`Queue recovery completed: ${recoveredTasks.length} tasks recovered`)
+    yield* log(`Queue recovery completed: ${recoveredTasks.length} tasks recovered`)
 
     return recoveredTasks
   })

@@ -1,6 +1,6 @@
-import { hours, millis, toMillis, seconds } from "effect/Duration"
+import { hours, millis, seconds, toMillis } from "effect/Duration"
 import type { Duration } from "effect/Duration"
-import { none, some, isNone, isSome } from "effect/Option"
+import { isNone, isSome, none, some } from "effect/Option"
 import type { Option } from "effect/Option"
 /**
  * Advanced Cache System for Effect CLI Queue System
@@ -20,7 +20,7 @@ import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
 
-// import * as HashMap from "effect/HashMap" // Unused import
+//  // Unused import
 import type * as Schedule from "effect/Schedule"
 
 // import type { ResourceGroup, OperationType } from "./types.js" // Unused import

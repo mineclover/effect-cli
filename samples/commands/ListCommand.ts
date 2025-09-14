@@ -1,8 +1,8 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Array from "effect/Array"
-import * as Console from "effect/Console"
+import { filter } from "effect/Array"
+import { log } from "effect/Console"
 import * as Effect from "effect/Effect"
 import { FileSystem } from "../services/FileSystem.js"
 
@@ -61,24 +61,24 @@ export const listCommand = Command.make("ls", {
 
       const filteredFiles = all
         ? files
-        : Array.filter(files, (file) => !file.name.startsWith("."))
+        : filter(files, (file) => !file.name.startsWith("."))
 
       if (filteredFiles.length === 0) {
-        yield* Console.log("Empty directory")
+        yield* log("Empty directory")
         return
       }
 
       if (long) {
-        yield* Console.log("Type Size     Name")
-        yield* Console.log("---- -------- ----")
+        yield* log("Type Size     Name")
+        yield* log("---- -------- ----")
       }
 
-      yield* Effect.forEach(filteredFiles, (file) => Console.log(formatFileInfo(file, long)))
+      yield* Effect.forEach(filteredFiles, (file) => log(formatFileInfo(file, long)))
 
-      const dirCount = Array.filter(filteredFiles, (f) => f.isDirectory).length
+      const dirCount = filter(filteredFiles, (f) => f.isDirectory).length
       const fileCount = filteredFiles.length - dirCount
 
-      yield* Console.log(`\nTotal: ${fileCount} files, ${dirCount} directories`)
+      yield* log(`\nTotal: ${fileCount} files, ${dirCount} directories`)
 
       yield* Effect.log("Directory listing completed")
     })

@@ -1,4 +1,4 @@
-import { some, none, match, getOrElse } from "effect/Option"
+import { getOrElse, match, none, some } from "effect/Option"
 import type { Option } from "effect/Option"
 /**
  * SQLite Schema Management Service for Effect CLI Queue System

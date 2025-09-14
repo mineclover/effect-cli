@@ -36,7 +36,7 @@ export class CodeParser implements ICodeParser {
       const sourceCode = sourceCodeResult.right
 
       // Extract named imports if requested
-      let namedImports: readonly NamedImport[] | undefined
+      let namedImports: ReadonlyArray<NamedImport> | undefined
       if (config.extractNamedImports) {
         const importResult = yield* extractor.extractFromSource(sourceCode, filePath).pipe(Effect.either)
         if (importResult._tag === "Left") {
@@ -60,7 +60,7 @@ export class CodeParser implements ICodeParser {
   /**
    * Parse multiple source files in parallel
    */
-  parseMany(filePaths: readonly string[], config: ParseConfig): Effect.Effect<readonly ParseResult[], Error> {
+  parseMany(filePaths: ReadonlyArray<string>, config: ParseConfig): Effect.Effect<ReadonlyArray<ParseResult>, Error> {
     const parseFile = this.parseFile.bind(this)
     return Effect.gen(function*() {
       // Process files in parallel with controlled concurrency
@@ -76,7 +76,7 @@ export class CodeParser implements ICodeParser {
   /**
    * Extract named imports from source code string
    */
-  extractNamedImports(sourceCode: string, filePath?: string): Effect.Effect<readonly NamedImport[], Error> {
+  extractNamedImports(sourceCode: string, filePath?: string): Effect.Effect<ReadonlyArray<NamedImport>, Error> {
     return this.extractor.extractFromSource(sourceCode, filePath)
   }
 

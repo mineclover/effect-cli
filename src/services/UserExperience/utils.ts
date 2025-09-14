@@ -12,7 +12,6 @@ import type { Duration } from "effect/Duration"
  * @created 2025-01-12
  */
 
-
 import * as Effect from "effect/Effect"
 
 import type {

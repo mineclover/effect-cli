@@ -10,14 +10,13 @@
  * @created 2025-01-12
  */
 
-import { never } from "effect/Fiber"
 import { minutes, seconds, toMillis } from "effect/Duration"
 import * as Effect from "effect/Effect"
-import { interrupt } from "effect/Fiber"
+import { interrupt, never } from "effect/Fiber"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
 import { isSome } from "effect/Option"
-import { make, update, get } from "effect/Ref"
+import { get, make, update } from "effect/Ref"
 
 import type {
   CircuitBreakerState,
@@ -49,7 +48,11 @@ import { AdaptiveThrottler, CircuitBreaker, QueuePersistence, StabilityMonitor }
  * - Database connectivity monitoring
  * - Queue processing health tracking
  */
-export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, QueuePersistence | CircuitBreaker | AdaptiveThrottler> = effect(
+export const StabilityMonitorLive: Layer<
+  StabilityMonitor,
+  PersistenceError,
+  QueuePersistence | CircuitBreaker | AdaptiveThrottler
+> = effect(
   StabilityMonitor,
   Effect.gen(function*() {
     const persistence = yield* QueuePersistence
@@ -125,7 +128,7 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
           // Load current task states
           const pendingTasks = yield* persistence.loadPendingTasks(sessionId)
           const allTasks = yield* persistence.loadPendingTasks(sessionId)
-          const runningTasks = allTasks.filter(task => task.status === "running")
+          const runningTasks = allTasks.filter((task) => task.status === "running")
 
           // Identify stuck tasks (running for more than 5 minutes)
           const now = Date.now()
@@ -173,7 +176,7 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
         try {
           const sessionId = yield* persistence.getCurrentSession()
           const allTasks = yield* persistence.loadPendingTasks(sessionId)
-          const completedTasks = allTasks.filter(task => task.status === "completed").slice(-10) // Last 10 tasks
+          const completedTasks = allTasks.filter((task) => task.status === "completed").slice(-10) // Last 10 tasks
 
           if (completedTasks.length === 0) {
             return 0
@@ -331,7 +334,9 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
         }
       }).pipe(
         Effect.catchAll((error) =>
-          Effect.log(`Recovery action failed: ${(error as any) instanceof Error ? (error as Error).message : String(error)}`)
+          Effect.log(
+            `Recovery action failed: ${(error as any) instanceof Error ? (error as Error).message : String(error)}`
+          )
         )
       )
 
@@ -383,7 +388,9 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
       Effect.fork,
       Effect.catchAll((error) =>
         Effect.gen(function*() {
-          yield* Effect.log(`Heartbeat fiber failed: ${(error as any) instanceof Error ? (error as Error).message : String(error)}`)
+          yield* Effect.log(
+            `Heartbeat fiber failed: ${(error as any) instanceof Error ? (error as Error).message : String(error)}`
+          )
           return yield* never
         })
       )

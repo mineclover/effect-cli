@@ -10,10 +10,12 @@
 
 import * as TestContext from "@effect/vitest"
 import type * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
+import { millis, toMillis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Exit from "effect/Exit"
-import * as Layer from "effect/Layer"
+import { isFailure, isSuccess } from "effect/Exit"
+import { succeed } from "effect/Layer"
+import type { Layer } from "effect/Layer"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 // ============================================================================
@@ -27,7 +29,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 export const testWithLayer = <R, E, A>(
   name: string,
   effect: Effect.Effect<A, E, R>,
-  layer: Layer.Layer<R>,
+  layer: Layer<R>,
   expectations?: (result: A) => void | Promise<void>
 ) =>
   it(name, () =>
@@ -49,7 +51,7 @@ export const expectSuccess = <A, E>(
   Effect.gen(function*() {
     const exit = yield* Effect.exit(effect)
 
-    if (Exit.isFailure(exit)) {
+    if (isFailure(exit)) {
       throw new Error(`Expected success but got failure: ${exit.cause}`)
     }
 
@@ -73,7 +75,7 @@ export const expectFailure = <A, E>(
   Effect.gen(function*() {
     const exit = yield* Effect.exit(effect)
 
-    if (Exit.isSuccess(exit)) {
+    if (isSuccess(exit)) {
       throw new Error(`Expected failure but got success: ${exit.value}`)
     }
 
@@ -94,14 +96,14 @@ export const expectTimingWithin = <A, E>(
   effect: Effect.Effect<A, E>,
   maxDurationMs: number,
   minDurationMs: number = 0
-): Effect.Effect<{ result: A; duration: Duration.Duration }, E> =>
+): Effect.Effect<{ result: A; duration: Duration }, E> =>
   Effect.gen(function*() {
     const startTime = yield* Effect.sync(() => Date.now())
     const result = yield* effect
     const endTime = yield* Effect.sync(() => Date.now())
 
-    const duration = Duration.millis(endTime - startTime)
-    const durationMs = Duration.toMillis(duration)
+    const duration = millis(endTime - startTime)
+    const durationMs = toMillis(duration)
 
     if (durationMs > maxDurationMs) {
       yield* Effect.fail(
@@ -182,7 +184,7 @@ export const createMockConsole = (): MockConsole => {
 export const testCliCommand = <Args, R>(
   commandHandler: (args: Args) => Effect.Effect<void, any, R>,
   args: Args,
-  layer: Layer.Layer<R>,
+  layer: Layer<R>,
   expectations: {
     output?: Array<string> | ((output: Array<string>) => void)
     errors?: Array<string> | ((errors: Array<string>) => void)
@@ -245,7 +247,7 @@ export const testCliCommand = <Args, R>(
 export const createMockService = <T>(
   tag: Context.Tag<T, any>,
   implementation: Partial<T>
-): Layer.Layer<T> => Layer.succeed(tag, implementation as T)
+): Layer<T> => succeed(tag, implementation as T)
 
 /**
  * Mock Service with Spies
@@ -254,14 +256,14 @@ export const createMockService = <T>(
 export const createSpyService = <T extends Record<string, any>>(
   tag: Context.Tag<T, any>,
   methods: Array<keyof T>
-): Layer.Layer<T> => {
+): Layer<T> => {
   const spies = {} as T
 
   for (const method of methods) {
     ;(spies as any)[method] = vi.fn()
   }
 
-  return Layer.succeed(tag, spies)
+  return succeed(tag, spies)
 }
 
 // ============================================================================
@@ -275,7 +277,7 @@ export const createSpyService = <T extends Record<string, any>>(
 export const testEffectSteps = <R, _E, A>(
   name: string,
   effectGen: () => Generator<Effect.Effect<any, any, any>, A, any>,
-  layer: Layer.Layer<R>,
+  layer: Layer<R>,
   stepVerifications?: Array<(stepResult: any, stepIndex: number) => void>
 ) =>
   it(name, () =>
@@ -311,7 +313,7 @@ export const testEffectSteps = <R, _E, A>(
 export const testConcurrentEffects = <A, E, R>(
   name: string,
   effects: Array<Effect.Effect<A, E, R>>,
-  layer: Layer.Layer<R>,
+  layer: Layer<R>,
   options: {
     concurrency?: number
     expectations?: (results: Array<A>) => void
@@ -355,7 +357,7 @@ export const testRetryBehavior = <A, E, R>(
   name: string,
   effect: Effect.Effect<A, E, R>,
   retrySchedule: any,
-  layer: Layer.Layer<R>,
+  layer: Layer<R>,
   expectations: {
     maxAttempts: number
     shouldSucceed?: boolean
@@ -401,7 +403,7 @@ export const testRetryBehavior = <A, E, R>(
 export const createTestSuite = (
   suiteName: string,
   setup: {
-    layer?: Layer.Layer<any>
+    layer?: Layer<any>
     beforeEach?: () => void | Promise<void>
     afterEach?: () => void | Promise<void>
   },
