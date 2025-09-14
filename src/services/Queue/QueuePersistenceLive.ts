@@ -9,9 +9,9 @@
  */
 
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect, succeed } from "effect/Layer"
 import * as Option from "effect/Option"
-import * as Ref from "effect/Ref"
+import { get, make, set } from "effect/Ref"
 import type { PersistedQueueTask, TaskStatus } from "./types.js"
 import {
   durationToMs,
@@ -26,7 +26,7 @@ import {
 // IMPLEMENTATION
 // ============================================================================
 
-export const QueuePersistenceLive = Layer.effect(
+export const QueuePersistenceLive = effect(
   QueuePersistence,
   Effect.gen(function*() {
     // Dependencies
@@ -69,7 +69,7 @@ export const QueuePersistenceLive = Layer.effect(
       }),
       close: () => undefined
     }
-    const currentSessionId = yield* Ref.make(generateSessionId())
+    const currentSessionId = yield* make(generateSessionId())
 
     // Initialize database
     yield* schemaManager.initializeSchema()
@@ -282,7 +282,7 @@ export const QueuePersistenceLive = Layer.effect(
         yield* initializeSession(sessionId)
 
         // Update current session reference
-        yield* Ref.set(currentSessionId, sessionId)
+        yield* set(currentSessionId, sessionId)
 
         // Mark any running tasks from previous sessions as failed
         const updateStmt = db.prepare(`
@@ -341,7 +341,7 @@ export const QueuePersistenceLive = Layer.effect(
         return pendingTasks
       })
 
-    const getCurrentSession = () => Ref.get(currentSessionId)
+    const getCurrentSession = () => get(currentSessionId)
 
     const getTaskById = (taskId: string) =>
       Effect.gen(function*() {
@@ -403,7 +403,7 @@ export const QueuePersistenceLive = Layer.effect(
 /**
  * Create a test instance of QueuePersistence for testing
  */
-export const QueuePersistenceTest = Layer.succeed(
+export const QueuePersistenceTest = succeed(
   QueuePersistence,
   QueuePersistence.of({
     persistTask: () => Effect.succeed(void 0),

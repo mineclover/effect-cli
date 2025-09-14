@@ -6,7 +6,7 @@
 
 import * as Command from "@effect/cli/Command"
 import * as Console from "effect/Console"
-import * as Duration from "effect/Duration"
+import { millis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import {
   BasicQueueSystemLayer,
@@ -31,7 +31,7 @@ export const simpleQueueCommand = Command.make(
 
       const task1 = queueComputationTask(
         Effect.gen(function*() {
-          yield* Effect.sleep(Duration.millis(100))
+          yield* Effect.sleep(millis(100))
           yield* Effect.log("Task 1 completed")
           return "Result 1"
         }),
@@ -40,7 +40,7 @@ export const simpleQueueCommand = Command.make(
 
       const task2 = queueComputationTask(
         Effect.gen(function*() {
-          yield* Effect.sleep(Duration.millis(200))
+          yield* Effect.sleep(millis(200))
           yield* Effect.log("Task 2 completed")
           return "Result 2"
         }),
@@ -59,7 +59,7 @@ export const simpleQueueCommand = Command.make(
       yield* Console.log(`  - Processing fibers: ${status.queue.processingFibers.length}`)
 
       // Wait a moment for tasks to process
-      yield* Effect.sleep(Duration.millis(500))
+      yield* Effect.sleep(millis(500))
 
       // Show final status
       const finalStatus = yield* getQueueStatus()

@@ -12,9 +12,9 @@
 
 // import * as Duration from "effect/Duration" // Unused import
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect, succeed } from "effect/Layer"
 import * as Option from "effect/Option"
-import * as Ref from "effect/Ref"
+import { get, make, update } from "effect/Ref"
 import type { CircuitBreakerState, ResourceGroup } from "./types.js"
 import { CircuitBreaker, QueuePersistence } from "./types.js"
 // import { CircuitBreakerError, PersistenceError } from "./types.js" // Unused imports
@@ -42,7 +42,7 @@ interface CircuitBreakerConfig {
 // IMPLEMENTATION
 // ============================================================================
 
-export const CircuitBreakerLive = Layer.effect(
+export const CircuitBreakerLive = effect(
   CircuitBreaker,
   Effect.gen(function*() {
     // Dependencies
@@ -57,7 +57,7 @@ export const CircuitBreakerLive = Layer.effect(
     }
 
     // State management for each resource group
-    const resourceStates = yield* Ref.make(
+    const resourceStates = yield* make(
       new Map<ResourceGroup, ResourceGroupState>([
         ["filesystem", createInitialState()],
         ["network", createInitialState()],
@@ -86,7 +86,7 @@ export const CircuitBreakerLive = Layer.effect(
      * Update state for a resource group
      */
     const updateState = (resourceGroup: ResourceGroup, newState: ResourceGroupState) =>
-      Ref.update(resourceStates, (states) => {
+      update(resourceStates, (states) => {
         const newStates = new Map(states)
         newStates.set(resourceGroup, newState)
         return newStates
@@ -98,14 +98,14 @@ export const CircuitBreakerLive = Layer.effect(
 
     const checkState = (resourceGroup: ResourceGroup) =>
       Effect.gen(function*() {
-        const states = yield* Ref.get(resourceStates)
+        const states = yield* get(resourceStates)
         const state = states.get(resourceGroup)
         return state?.state ?? "closed"
       })
 
     const recordSuccess = (resourceGroup: ResourceGroup) =>
       Effect.gen(function*() {
-        const states = yield* Ref.get(resourceStates)
+        const states = yield* get(resourceStates)
         const currentState = states.get(resourceGroup)
 
         if (!currentState) return
@@ -143,7 +143,7 @@ export const CircuitBreakerLive = Layer.effect(
 
     const recordFailure = (resourceGroup: ResourceGroup, _error: unknown) =>
       Effect.gen(function*() {
-        const states = yield* Ref.get(resourceStates)
+        const states = yield* get(resourceStates)
         const currentState = states.get(resourceGroup)
 
         if (!currentState) return
@@ -183,7 +183,7 @@ export const CircuitBreakerLive = Layer.effect(
 
     const forceOpen = (resourceGroup: ResourceGroup) =>
       Effect.gen(function*() {
-        const states = yield* Ref.get(resourceStates)
+        const states = yield* get(resourceStates)
         const currentState = states.get(resourceGroup)
 
         if (!currentState) return
@@ -198,7 +198,7 @@ export const CircuitBreakerLive = Layer.effect(
 
     const forceClose = (resourceGroup: ResourceGroup) =>
       Effect.gen(function*() {
-        const states = yield* Ref.get(resourceStates)
+        const states = yield* get(resourceStates)
         const currentState = states.get(resourceGroup)
 
         if (!currentState) return
@@ -215,7 +215,7 @@ export const CircuitBreakerLive = Layer.effect(
 
     const getInfo = (resourceGroup: ResourceGroup) =>
       Effect.gen(function*() {
-        const states = yield* Ref.get(resourceStates)
+        const states = yield* get(resourceStates)
         const state = states.get(resourceGroup)
         const sessionId = yield* persistence.getCurrentSession()
 
@@ -283,7 +283,7 @@ export const CircuitBreakerLive = Layer.effect(
 // TEST IMPLEMENTATION
 // ============================================================================
 
-export const CircuitBreakerTest = Layer.succeed(
+export const CircuitBreakerTest = succeed(
   CircuitBreaker,
   CircuitBreaker.of({
     checkState: () => Effect.succeed("closed" as CircuitBreakerState),

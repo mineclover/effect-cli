@@ -14,7 +14,8 @@
 import * as Context from "effect/Context"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect } from "effect/Layer"
+import type { Layer } from "effect/Layer"
 import * as Schedule from "effect/Schedule"
 
 import { InternalQueue } from "../Queue/index.js"
@@ -249,7 +250,7 @@ class LiveProgressTracker implements ProgressTracker {
 /**
  * Live implementation of UserExperienceEnhancer
  */
-export const UserExperienceEnhancerLive: Layer.Layer<UserExperienceEnhancer, never, InternalQueue> = Layer.effect(
+export const UserExperienceEnhancerLive: Layer<UserExperienceEnhancer, never, InternalQueue> = effect(
   UserExperienceEnhancer,
   Effect.gen(function*() {
     const queue = yield* InternalQueue

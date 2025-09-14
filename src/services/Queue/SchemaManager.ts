@@ -8,7 +8,7 @@
 import { createHash } from "crypto"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect } from "effect/Layer"
 import * as Option from "effect/Option"
 import { readFileSync } from "fs"
 import { dirname, join } from "path"
@@ -64,7 +64,7 @@ const MAIN_SCHEMA_FILE = join(SCHEMA_DIR, "schema.sql")
 // SCHEMA MANAGER IMPLEMENTATION
 // ============================================================================
 
-export const SchemaManagerLive = Layer.effect(
+export const SchemaManagerLive = effect(
   SchemaManager,
   Effect.gen(function*() {
     yield* Effect.void

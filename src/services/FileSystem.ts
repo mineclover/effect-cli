@@ -1,5 +1,5 @@
 import type { PlatformError } from "@effect/platform/Error"
-import * as Context from "effect/Context"
+import { Tag } from "effect/Context"
 import type * as Effect from "effect/Effect"
 
 export type FileInfo = {
@@ -9,7 +9,7 @@ export type FileInfo = {
   readonly size: bigint
 }
 
-export class FileSystem extends Context.Tag("FileSystem")<
+export class FileSystem extends Tag("FileSystem")<
   FileSystem,
   {
     readonly listDirectory: (path: string) => Effect.Effect<ReadonlyArray<FileInfo>, PlatformError>

@@ -13,7 +13,7 @@
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
 import * as Console from "effect/Console"
-import * as Duration from "effect/Duration"
+import { seconds } from "effect/Duration"
 import * as Effect from "effect/Effect"
 
 import { getQueueStatus, getSystemHealth, QueuePersistence } from "../services/Queue/index.js"
@@ -252,7 +252,7 @@ const statusCommand = Command.make("status", {
         yield* Effect.gen(function*() {
           while (true) {
             yield* displayStatus
-            yield* Effect.sleep(Duration.seconds(3))
+            yield* Effect.sleep(seconds(3))
           }
         })
       } else {

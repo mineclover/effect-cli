@@ -12,10 +12,10 @@
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Fiber from "effect/Fiber"
-import * as Layer from "effect/Layer"
+import { effect, succeed } from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Queue from "effect/Queue"
-import * as Ref from "effect/Ref"
+import { get, make, set, update } from "effect/Ref"
 import * as Schedule from "effect/Schedule"
 import type { QueueStatus, QueueTask, ResourceGroup, TaskStatus } from "./types.js"
 import { generateTaskId, InternalQueue, QueueError, QueuePersistence } from "./types.js"
@@ -41,22 +41,22 @@ interface RunningTask {
 // IMPLEMENTATION
 // ============================================================================
 
-export const InternalQueueLive = Layer.effect(
+export const InternalQueueLive = effect(
   InternalQueue,
   Effect.gen(function*() {
     // Dependencies
     const persistence = yield* QueuePersistence
 
     // State management
-    const processingStates = yield* Ref.make(
+    const processingStates = yield* make(
       new Map<ResourceGroup, ProcessingState>()
     )
 
-    const runningTasks = yield* Ref.make(
+    const runningTasks = yield* make(
       new Map<string, RunningTask>()
     )
 
-    const isShuttingDown = yield* Ref.make(false)
+    const isShuttingDown = yield* make(false)
 
     yield* Effect.log("Internal queue service initializing...")
 
@@ -82,7 +82,7 @@ export const InternalQueueLive = Layer.effect(
         })
     )
 
-    yield* Ref.update(processingStates, () => new Map(initialStates))
+    yield* update(processingStates, () => new Map(initialStates))
 
     // ========================================================================
     // QUEUE PROCESSING LOGIC
@@ -97,13 +97,13 @@ export const InternalQueueLive = Layer.effect(
 
         while (true) {
           // Check if we should continue processing
-          const shuttingDown = yield* Ref.get(isShuttingDown)
+          const shuttingDown = yield* get(isShuttingDown)
           if (shuttingDown) {
             yield* Effect.log(`Shutting down processor for ${group}`)
             break
           }
 
-          const states = yield* Ref.get(processingStates)
+          const states = yield* get(processingStates)
           const state = states.get(group)
 
           if (!state || state.isPaused) {
@@ -129,7 +129,7 @@ export const InternalQueueLive = Layer.effect(
               fiber: currentFiber as any
             }
 
-            yield* Ref.update(runningTasks, (map) => {
+            yield* update(runningTasks, (map) => {
               const newMap = new Map(map)
               newMap.set(task.id, runningTask)
               return newMap
@@ -156,14 +156,14 @@ export const InternalQueueLive = Layer.effect(
               ),
               Effect.ensuring(Effect.gen(function*() {
                 // Always clean up running task record
-                yield* Ref.update(runningTasks, (map) => {
+                yield* update(runningTasks, (map) => {
                   const newMap = new Map(map)
                   newMap.delete(task.id)
                   return newMap
                 })
 
                 // Update last processed time
-                yield* Ref.update(processingStates, (states) => {
+                yield* update(processingStates, (states) => {
                   const newStates = new Map(states)
                   const currentState = newStates.get(group)
                   if (currentState) {
@@ -200,7 +200,7 @@ export const InternalQueueLive = Layer.effect(
      */
     const startProcessing = () =>
       Effect.gen(function*() {
-        const states = yield* Ref.get(processingStates)
+        const states = yield* get(processingStates)
 
         const updatedStates = yield* Effect.reduce(
           resourceGroups,
@@ -222,7 +222,7 @@ export const InternalQueueLive = Layer.effect(
             })
         )
 
-        yield* Ref.set(processingStates, updatedStates)
+        yield* set(processingStates, updatedStates)
         yield* Effect.log("All queue processors started")
       })
 
@@ -264,7 +264,7 @@ export const InternalQueueLive = Layer.effect(
         yield* persistence.persistTask(persistedTask)
 
         // Add to in-memory queue
-        const states = yield* Ref.get(processingStates)
+        const states = yield* get(processingStates)
         const state = states.get(task.resourceGroup)
 
         if (!state) {
@@ -280,8 +280,8 @@ export const InternalQueueLive = Layer.effect(
 
     const getStatus = () =>
       Effect.gen(function*() {
-        const states = yield* Ref.get(processingStates)
-        const running = yield* Ref.get(runningTasks)
+        const states = yield* get(processingStates)
+        const running = yield* get(runningTasks)
 
         const queueSizes = yield* Effect.all(
           Object.fromEntries(
@@ -321,7 +321,7 @@ export const InternalQueueLive = Layer.effect(
 
     const pauseProcessing = (resourceGroup: ResourceGroup) =>
       Effect.gen(function*() {
-        yield* Ref.update(processingStates, (states) => {
+        yield* update(processingStates, (states) => {
           const newStates = new Map(states)
           const state = newStates.get(resourceGroup)
           if (state) {
@@ -338,7 +338,7 @@ export const InternalQueueLive = Layer.effect(
 
     const resumeProcessing = (resourceGroup: ResourceGroup) =>
       Effect.gen(function*() {
-        yield* Ref.update(processingStates, (states) => {
+        yield* update(processingStates, (states) => {
           const newStates = new Map(states)
           const state = newStates.get(resourceGroup)
           if (state) {
@@ -355,7 +355,7 @@ export const InternalQueueLive = Layer.effect(
 
     const cancelTask = (taskId: string) =>
       Effect.gen(function*() {
-        const running = yield* Ref.get(runningTasks)
+        const running = yield* get(runningTasks)
         const runningTask = running.get(taskId)
 
         if (runningTask) {
@@ -379,7 +379,7 @@ export const InternalQueueLive = Layer.effect(
 
     const getRunningTasks = () =>
       Effect.gen(function*() {
-        const running = yield* Ref.get(runningTasks)
+        const running = yield* get(runningTasks)
         return [...running.keys()]
       })
 
@@ -388,16 +388,16 @@ export const InternalQueueLive = Layer.effect(
         yield* Effect.log("Starting internal queue cleanup...")
 
         // Signal shutdown
-        yield* Ref.set(isShuttingDown, true)
+        yield* set(isShuttingDown, true)
 
         // Get all processing fibers
-        const states = yield* Ref.get(processingStates)
+        const states = yield* get(processingStates)
         const processingFibers = [...states.values()]
           .map((state) => Option.getOrNull(state.processingFiber))
           .filter(Boolean) as Array<Fiber.RuntimeFiber<never, never>>
 
         // Get all running task fibers
-        const running = yield* Ref.get(runningTasks)
+        const running = yield* get(runningTasks)
         const taskFibers = [...running.values()].map((rt) => rt.fiber)
 
         // Interrupt all fibers
@@ -463,7 +463,7 @@ export const createTask = <A, E>(
 /**
  * Test implementation
  */
-export const InternalQueueTest = Layer.succeed(
+export const InternalQueueTest = succeed(
   InternalQueue,
   InternalQueue.of({
     enqueue: () => Effect.succeed(void 0),

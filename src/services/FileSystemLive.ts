@@ -2,11 +2,11 @@ import { FileSystem } from "@effect/platform/FileSystem"
 import * as Path from "@effect/platform/Path"
 import * as Array from "effect/Array"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect } from "effect/Layer"
 import * as Order from "effect/Order"
 import { type FileInfo, FileSystem as AppFileSystem } from "./FileSystem.js"
 
-export const FileSystemLive = Layer.effect(
+export const FileSystemLive = effect(
   AppFileSystem,
   Effect.gen(function*() {
     const fs = yield* FileSystem

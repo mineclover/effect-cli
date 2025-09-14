@@ -211,7 +211,7 @@ describe("MyCommand", () => {
               : Effect.fail(new Error(`Operation ${i} failed`)))
 
           const results = yield* Effect.all(
-            operations.map(op => Effect.either(op))
+            operations.map((op) => Effect.either(op))
           )
 
           const successes = results.filter((r) => r._tag === "Right")

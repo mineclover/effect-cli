@@ -10,11 +10,12 @@
  * @created 2025-01-12
  */
 
-import * as Duration from "effect/Duration"
+import { minutes, seconds, toMillis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import * as Fiber from "effect/Fiber"
-import * as Layer from "effect/Layer"
-import * as Option from "effect/Option"
+import { effect } from "effect/Layer"
+import type { Layer } from "effect/Layer"
+import { isSome } from "effect/Option"
 import * as Ref from "effect/Ref"
 
 import type {
@@ -47,7 +48,7 @@ import { AdaptiveThrottler, CircuitBreaker, QueuePersistence, StabilityMonitor }
  * - Database connectivity monitoring
  * - Queue processing health tracking
  */
-export const StabilityMonitorLive: Layer.Layer<StabilityMonitor, PersistenceError, QueuePersistence | CircuitBreaker | AdaptiveThrottler> = Layer.effect(
+export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, QueuePersistence | CircuitBreaker | AdaptiveThrottler> = effect(
   StabilityMonitor,
   Effect.gen(function*() {
     const persistence = yield* QueuePersistence
@@ -128,8 +129,8 @@ export const StabilityMonitorLive: Layer.Layer<StabilityMonitor, PersistenceErro
           // Identify stuck tasks (running for more than 5 minutes)
           const now = Date.now()
           const stuckTasks = runningTasks.filter((task) => {
-            return Option.isSome(task.startedAt) &&
-              (now - task.startedAt.value.getTime()) > Duration.toMillis(Duration.minutes(5))
+            return isSome(task.startedAt) &&
+              (now - task.startedAt.value.getTime()) > toMillis(minutes(5))
           })
 
           // Calculate average processing time from completed tasks
@@ -178,8 +179,8 @@ export const StabilityMonitorLive: Layer.Layer<StabilityMonitor, PersistenceErro
           }
 
           const totalTime = completedTasks.reduce((sum, task) => {
-            return Option.isSome(task.actualDuration)
-              ? sum + Duration.toMillis(task.actualDuration.value)
+            return isSome(task.actualDuration)
+              ? sum + toMillis(task.actualDuration.value)
               : sum
           }, 0)
 
@@ -375,7 +376,7 @@ export const StabilityMonitorLive: Layer.Layer<StabilityMonitor, PersistenceErro
         }
 
         // Wait for next heartbeat interval
-        yield* Effect.sleep(Duration.seconds(15))
+        yield* Effect.sleep(seconds(15))
       }
     }).pipe(
       Effect.fork,

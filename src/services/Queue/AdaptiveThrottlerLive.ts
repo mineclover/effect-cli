@@ -9,11 +9,11 @@
  * @created 2025-01-12
  */
 
-import * as Duration from "effect/Duration"
+import { seconds } from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Fiber from "effect/Fiber"
-import * as Layer from "effect/Layer"
-import * as Ref from "effect/Ref"
+import { interrupt } from "effect/Fiber"
+import { effect, succeed } from "effect/Layer"
+import { get, make, set } from "effect/Ref"
 import type { ResourceGroup, SystemLoadMetrics, ThrottleLimits } from "./types.js"
 import { AdaptiveThrottler, QueuePersistence, ThrottleError } from "./types.js"
 
@@ -38,7 +38,7 @@ interface LoadMonitorState {
 // IMPLEMENTATION
 // ============================================================================
 
-export const AdaptiveThrottlerLive = Layer.effect(
+export const AdaptiveThrottlerLive = effect(
   AdaptiveThrottler,
   Effect.gen(function*() {
     // Dependencies
@@ -53,8 +53,8 @@ export const AdaptiveThrottlerLive = Layer.effect(
     }
 
     // State management
-    const throttleLimits = yield* Ref.make(initialConfig)
-    const systemLoad = yield* Ref.make<LoadMonitorState>({
+    const throttleLimits = yield* make(initialConfig)
+    const systemLoad = yield* make<LoadMonitorState>({
       cpuUsage: 0.0,
       memoryUsage: 0.0,
       queueBacklog: 0
@@ -112,8 +112,8 @@ export const AdaptiveThrottlerLive = Layer.effect(
      */
     const adjustThresholds = () =>
       Effect.gen(function*() {
-        const currentLimits = yield* Ref.get(throttleLimits)
-        const load = yield* Ref.get(systemLoad)
+        const currentLimits = yield* get(throttleLimits)
+        const load = yield* get(systemLoad)
 
         // Calculate adjustment factor based on system load
         const loadFactor = Math.max(load.cpuUsage, load.memoryUsage)
@@ -128,7 +128,7 @@ export const AdaptiveThrottlerLive = Layer.effect(
           "memory-intensive": adjustLimit(currentLimits["memory-intensive"], adjustmentFactor)
         }
 
-        yield* Ref.set(throttleLimits, newLimits)
+        yield* set(throttleLimits, newLimits)
 
         // Log significant adjustments
         if (Math.abs(adjustmentFactor - 1.0) > 0.1) {
@@ -167,8 +167,8 @@ export const AdaptiveThrottlerLive = Layer.effect(
           )
         )
 
-        yield* Ref.set(systemLoad, metrics)
-        yield* Effect.sleep(Duration.seconds(10))
+        yield* set(systemLoad, metrics)
+        yield* Effect.sleep(seconds(10))
       }
     }).pipe(Effect.fork)
 
@@ -184,7 +184,7 @@ export const AdaptiveThrottlerLive = Layer.effect(
             })
           )
         )
-        yield* Effect.sleep(Duration.seconds(30))
+        yield* Effect.sleep(seconds(30))
       }
     }).pipe(Effect.fork)
 
@@ -205,7 +205,7 @@ export const AdaptiveThrottlerLive = Layer.effect(
         }
 
         // Get current limit for error reporting
-        const limits = yield* Ref.get(throttleLimits)
+        const limits = yield* get(throttleLimits)
         const currentLimit = limits[resourceGroup].current
 
         // Apply semaphore-based throttling
@@ -226,13 +226,13 @@ export const AdaptiveThrottlerLive = Layer.effect(
 
     const getCurrentLimits = () =>
       Effect.gen(function*() {
-        const limits = yield* Ref.get(throttleLimits)
+        const limits = yield* get(throttleLimits)
         return limits as Record<ResourceGroup, ThrottleLimits>
       })
 
     const getSystemLoad = () =>
       Effect.gen(function*() {
-        const load = yield* Ref.get(systemLoad)
+        const load = yield* get(systemLoad)
         return {
           cpu: load.cpuUsage,
           memory: load.memoryUsage,
@@ -243,8 +243,8 @@ export const AdaptiveThrottlerLive = Layer.effect(
     const cleanup = () =>
       Effect.gen(function*() {
         yield* Effect.log("Starting adaptive throttler cleanup...")
-        yield* Fiber.interrupt(loadMonitoringFiber)
-        yield* Fiber.interrupt(adjustmentFiber)
+        yield* interrupt(loadMonitoringFiber)
+        yield* interrupt(adjustmentFiber)
         yield* Effect.log("Adaptive throttler cleanup completed")
       })
 
@@ -265,7 +265,7 @@ export const AdaptiveThrottlerLive = Layer.effect(
 // TEST IMPLEMENTATION
 // ============================================================================
 
-export const AdaptiveThrottlerTest = Layer.succeed(
+export const AdaptiveThrottlerTest = succeed(
   AdaptiveThrottler,
   AdaptiveThrottler.of({
     throttle: (_, operation) => operation,

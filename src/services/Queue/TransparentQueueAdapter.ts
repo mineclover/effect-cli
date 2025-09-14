@@ -14,7 +14,8 @@
 import * as Context from "effect/Context"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect } from "effect/Layer"
+import type { Layer } from "effect/Layer"
 
 import type { OperationType, ResourceGroup } from "./types.js"
 // PersistenceError and QueueError are no longer needed in the interfaces
@@ -172,7 +173,7 @@ export class ParseError extends Error {
  * Provides transparent queue integration by wrapping common operations
  * with automatic queue management while preserving original APIs.
  */
-export const TransparentQueueAdapterLive: Layer.Layer<TransparentQueueAdapter, never, InternalQueue> = Layer.effect(
+export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, InternalQueue> = effect(
   TransparentQueueAdapter,
   Effect.gen(function*() {
     const queue = yield* InternalQueue

@@ -13,7 +13,8 @@
 import * as Context from "effect/Context"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect } from "effect/Layer"
+import type { Layer } from "effect/Layer"
 import * as Option from "effect/Option"
 // import * as HashMap from "effect/HashMap" // Unused import
 import type * as Schedule from "effect/Schedule"
@@ -172,7 +173,7 @@ interface TierStats {
 /**
  * Live implementation of AdvancedCache
  */
-export const AdvancedCacheLive: Layer.Layer<AdvancedCache> = Layer.effect(
+export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
   AdvancedCache,
   Effect.gen(function*() {
     yield* Effect.void

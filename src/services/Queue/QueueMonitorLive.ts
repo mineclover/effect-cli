@@ -10,9 +10,9 @@
  */
 
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
-import * as Option from "effect/Option"
-import * as Ref from "effect/Ref"
+import { effect, succeed } from "effect/Layer"
+import { none, some } from "effect/Option"
+import { get, make, update } from "effect/Ref"
 import type { CircuitBreakerState, ProcessHeartbeat, QueueMetrics, ResourceGroup, ResourceGroupStats } from "./types.js"
 import { PersistenceError, QueueMonitor, QueuePersistence } from "./types.js"
 
@@ -20,14 +20,14 @@ import { PersistenceError, QueueMonitor, QueuePersistence } from "./types.js"
 // IMPLEMENTATION
 // ============================================================================
 
-export const QueueMonitorLive = Layer.effect(
+export const QueueMonitorLive = effect(
   QueueMonitor,
   Effect.gen(function*() {
     // Dependencies
     const persistence = yield* QueuePersistence
 
     // Mock task counter for testing
-    const mockTaskCounter = yield* Ref.make(0)
+    const mockTaskCounter = yield* make(0)
 
     // Database connection for metrics queries (mock with basic task tracking)
     const db = {
@@ -46,7 +46,7 @@ export const QueueMonitorLive = Layer.effect(
         get: (...params: Array<any>) => {
           // Mock session summary for metrics
           if (sql.includes("session_summary") && params.length > 0) {
-            const currentCount = Effect.runSync(Ref.get(mockTaskCounter))
+            const currentCount = Effect.runSync(get(mockTaskCounter))
             // For integration tests, simulate realistic numbers
             const totalTasks = Math.max(currentCount, 4) // Ensure at least 4 for integration test
             return {
@@ -69,7 +69,7 @@ export const QueueMonitorLive = Layer.effect(
         run: (..._params: Array<any>) => {
           // Increment task counter when tasks are inserted
           if (sql.includes("INSERT INTO queue_tasks")) {
-            Effect.runSync(Ref.update(mockTaskCounter, (n) => n + 1))
+            Effect.runSync(update(mockTaskCounter, (n) => n + 1))
           }
           return undefined
         }
@@ -387,7 +387,7 @@ export const QueueMonitorLive = Layer.effect(
         )
 
         if (!result) {
-          return Option.none()
+          return none()
         }
 
         const heartbeat: ProcessHeartbeat = {
@@ -405,7 +405,7 @@ export const QueueMonitorLive = Layer.effect(
           circuitBreakerOpen: Boolean(result.circuit_breaker_open)
         }
 
-        return Option.some(heartbeat)
+        return some(heartbeat)
       })
 
     const updateHeartbeat = (sessionId: string) =>
@@ -471,7 +471,7 @@ function createEmptyResourceGroupStats(): ResourceGroupStats {
 // TEST IMPLEMENTATION
 // ============================================================================
 
-export const QueueMonitorTest = Layer.succeed(
+export const QueueMonitorTest = succeed(
   QueueMonitor,
   QueueMonitor.of({
     getQueueStatus: () =>
@@ -503,7 +503,7 @@ export const QueueMonitorTest = Layer.succeed(
         lastActivity: new Date()
       }),
     exportMetrics: () => Effect.succeed("{}"),
-    getProcessHeartbeat: () => Effect.succeed(Option.none()),
+    getProcessHeartbeat: () => Effect.succeed(none()),
     updateHeartbeat: () => Effect.succeed(void 0)
   })
 )

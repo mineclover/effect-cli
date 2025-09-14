@@ -13,7 +13,8 @@
 import * as Context from "effect/Context"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect } from "effect/Layer"
+import type { Layer } from "effect/Layer"
 // import * as Schedule from "effect/Schedule" // Unused import
 // Array utilities from standard JS
 
@@ -135,7 +136,7 @@ export const MemoryOptimizer = Context.GenericTag<MemoryOptimizer>("@app/MemoryO
 /**
  * Live implementation of MemoryOptimizer
  */
-export const MemoryOptimizerLive: Layer.Layer<MemoryOptimizer> = Layer.effect(
+export const MemoryOptimizerLive: Layer<MemoryOptimizer> = effect(
   MemoryOptimizer,
   Effect.gen(function*() {
     yield* Effect.void

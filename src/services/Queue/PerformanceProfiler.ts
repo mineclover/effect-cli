@@ -13,7 +13,8 @@
 import * as Context from "effect/Context"
 import * as Duration from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { effect } from "effect/Layer"
+import type { Layer } from "effect/Layer"
 // import * as Option from "effect/Option" // Unused import
 
 import type { OperationType, ResourceGroup } from "./types.js"
@@ -127,7 +128,7 @@ export interface ProfilingSession {
 /**
  * Live implementation of PerformanceProfiler
  */
-export const PerformanceProfilerLive: Layer.Layer<PerformanceProfiler> = Layer.effect(
+export const PerformanceProfilerLive: Layer<PerformanceProfiler> = effect(
   PerformanceProfiler,
   Effect.gen(function*() {
     yield* Effect.void
