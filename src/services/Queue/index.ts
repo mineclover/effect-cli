@@ -15,7 +15,7 @@ import * as Option from "effect/Option"
 
 
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { provide, mergeAll } from "effect/Layer"
 
 import * as Schedule from "effect/Schedule"
 
@@ -89,17 +89,17 @@ export { PerformanceProfiler } from "./PerformanceProfiler.js"
  * Hierarchical service composition with proper dependency injection.
  */
 const persistenceLayer = QueuePersistenceLive.pipe(
-  Layer.provide(SchemaManagerLive)
+  provide(SchemaManagerLive)
 )
 
-const serviceLayer = Layer.mergeAll(
+const serviceLayer = mergeAll(
   InternalQueueLive,
   QueueMonitorLive
 ).pipe(
-  Layer.provide(persistenceLayer)
+  provide(persistenceLayer)
 )
 
-export const BasicQueueSystemLayer = Layer.mergeAll(
+export const BasicQueueSystemLayer = mergeAll(
   SchemaManagerLive,
   persistenceLayer,
   serviceLayer
@@ -110,21 +110,21 @@ export const BasicQueueSystemLayer = Layer.mergeAll(
  *
  * Includes Circuit Breaker, Adaptive Throttler and StabilityMonitor for comprehensive stability
  */
-const stabilityLayer = Layer.mergeAll(
-  CircuitBreakerLive.pipe(Layer.provide(persistenceLayer)),
-  AdaptiveThrottlerLive.pipe(Layer.provide(persistenceLayer)),
+const stabilityLayer = mergeAll(
+  CircuitBreakerLive.pipe(provide(persistenceLayer)),
+  AdaptiveThrottlerLive.pipe(provide(persistenceLayer)),
   StabilityMonitorLive.pipe(
-    Layer.provide(
-      Layer.mergeAll(
+    provide(
+      mergeAll(
         persistenceLayer,
-        CircuitBreakerLive.pipe(Layer.provide(persistenceLayer)),
-        AdaptiveThrottlerLive.pipe(Layer.provide(persistenceLayer))
+        CircuitBreakerLive.pipe(provide(persistenceLayer)),
+        AdaptiveThrottlerLive.pipe(provide(persistenceLayer))
       )
     )
   )
 )
 
-export const StabilityQueueSystemLayer = Layer.mergeAll(
+export const StabilityQueueSystemLayer = mergeAll(
   SchemaManagerLive,
   persistenceLayer,
   serviceLayer,
@@ -136,9 +136,9 @@ export const StabilityQueueSystemLayer = Layer.mergeAll(
  *
  * Includes transparent adapter for seamless CLI integration
  */
-export const CLIIntegratedQueueSystemLayer = Layer.mergeAll(
+export const CLIIntegratedQueueSystemLayer = mergeAll(
   StabilityQueueSystemLayer,
-  TransparentQueueAdapterLive.pipe(Layer.provide(StabilityQueueSystemLayer))
+  TransparentQueueAdapterLive.pipe(provide(StabilityQueueSystemLayer))
 )
 
 /**
@@ -154,7 +154,7 @@ export const QueueSystemLayer = CLIIntegratedQueueSystemLayer
  * Lightweight mock implementation for testing.
  * Does not require database or file system access.
  */
-export const TestQueueSystemLayer = Layer.mergeAll(
+export const TestQueueSystemLayer = mergeAll(
   // Import test implementations
   // These would be imported from test files when implemented
   SchemaManagerLive, // For now, use real implementations

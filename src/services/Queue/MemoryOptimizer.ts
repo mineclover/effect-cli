@@ -12,7 +12,7 @@ import type { Duration } from "effect/Duration"
  * @created 2025-01-12
  */
 
-import * as Context from "effect/Context"
+import { GenericTag } from "effect/Context"
 
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
@@ -129,7 +129,7 @@ export interface MemoryOptimizer {
   readonly scheduleMemoryMaintenance: (interval: Duration) => Effect.Effect<void>
 }
 
-export const MemoryOptimizer = Context.GenericTag<MemoryOptimizer>("@app/MemoryOptimizer")
+export const MemoryOptimizer = GenericTag<MemoryOptimizer>("@app/MemoryOptimizer")
 
 // ============================================================================
 // IMPLEMENTATION

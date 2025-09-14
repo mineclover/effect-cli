@@ -14,7 +14,7 @@ import { fixed } from "effect/Schedule"
  * @created 2025-01-12
  */
 
-import * as Context from "effect/Context"
+import { GenericTag } from "effect/Context"
 
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
@@ -55,7 +55,7 @@ export interface UserExperienceEnhancer {
   readonly adaptInterfaceForUser: (patterns: Array<UserPattern>) => Effect.Effect<void>
 }
 
-export const UserExperienceEnhancer = Context.GenericTag<UserExperienceEnhancer>("@app/UserExperienceEnhancer")
+export const UserExperienceEnhancer = GenericTag<UserExperienceEnhancer>("@app/UserExperienceEnhancer")
 
 /**
  * Progress tracking interface

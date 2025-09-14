@@ -12,7 +12,7 @@ import type { Duration } from "effect/Duration"
  * @created 2025-01-12
  */
 
-import * as Context from "effect/Context"
+import { GenericTag } from "effect/Context"
 
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
@@ -108,7 +108,7 @@ export interface PerformanceProfiler {
   readonly clearProfilingData: (olderThan?: Duration) => Effect.Effect<number>
 }
 
-export const PerformanceProfiler = Context.GenericTag<PerformanceProfiler>("@app/PerformanceProfiler")
+export const PerformanceProfiler = GenericTag<PerformanceProfiler>("@app/PerformanceProfiler")
 
 /**
  * Active profiling session

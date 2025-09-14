@@ -13,7 +13,7 @@ import type { Duration } from "effect/Duration"
  * @created 2025-01-12
  */
 
-import * as Context from "effect/Context"
+import { GenericTag } from "effect/Context"
 
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
@@ -56,7 +56,7 @@ export interface TransparentQueueAdapter {
   ) => Effect.Effect<A, E>
 }
 
-export const TransparentQueueAdapter = Context.GenericTag<TransparentQueueAdapter>("@app/TransparentQueueAdapter")
+export const TransparentQueueAdapter = GenericTag<TransparentQueueAdapter>("@app/TransparentQueueAdapter")
 
 /**
  * Configuration options for queued operations

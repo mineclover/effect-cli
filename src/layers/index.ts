@@ -13,7 +13,7 @@
 import * as NodeContext from "@effect/platform-node/NodeContext"
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
 import * as NodePath from "@effect/platform-node/NodePath"
-import * as Layer from "effect/Layer"
+import { mergeAll, provide } from "effect/Layer"
 
 // Queue System Layers (Phase 1 + Phase 2)
 import { BasicQueueSystemLayer, QueueSystemLayer, StabilityQueueSystemLayer } from "../services/Queue/index.js"
@@ -40,7 +40,7 @@ import { FileSystemLive } from "../services/FileSystemLive.js"
  * - Original services enhanced with queue functionality
  * - Node.js platform context
  */
-export const ProductionCliLayer = Layer.mergeAll(
+export const ProductionCliLayer = mergeAll(
   // Platform foundation
   NodeContext.layer,
   NodeFileSystem.layer,
@@ -49,7 +49,7 @@ export const ProductionCliLayer = Layer.mergeAll(
   QueueSystemLayer,
   // Transparent queue integration (Phase 3)
   TransparentQueueAdapterLive.pipe(
-    Layer.provide(QueueSystemLayer)
+    provide(QueueSystemLayer)
   ),
   // Original services (FileSystem remains available for non-queue operations if needed)
   FileSystemLive
@@ -61,11 +61,11 @@ export const ProductionCliLayer = Layer.mergeAll(
  * This is the recommended layer for production CLI usage.
  * Includes all queue features, stability monitoring, and user experience enhancements.
  */
-export const EnhancedProductionCliLayer = Layer.mergeAll(
+export const EnhancedProductionCliLayer = mergeAll(
   ProductionCliLayer,
   // User Experience Enhancement (Phase 3.4)
   UserExperienceEnhancerLive.pipe(
-    Layer.provide(QueueSystemLayer)
+    provide(QueueSystemLayer)
   )
 )
 
@@ -78,7 +78,7 @@ export const EnhancedProductionCliLayer = Layer.mergeAll(
  *
  * Uses lighter queue configuration and enables additional debugging features.
  */
-export const DevelopmentCliLayer = Layer.mergeAll(
+export const DevelopmentCliLayer = mergeAll(
   NodeContext.layer,
   NodeFileSystem.layer,
   NodePath.layer,
@@ -86,7 +86,7 @@ export const DevelopmentCliLayer = Layer.mergeAll(
   BasicQueueSystemLayer,
   // Queue integration
   TransparentQueueAdapterLive.pipe(
-    Layer.provide(BasicQueueSystemLayer)
+    provide(BasicQueueSystemLayer)
   ),
   // Original services
   FileSystemLive
@@ -97,13 +97,13 @@ export const DevelopmentCliLayer = Layer.mergeAll(
  *
  * Includes full stability features for testing Phase 2 functionality
  */
-export const StabilityTestingLayer = Layer.mergeAll(
+export const StabilityTestingLayer = mergeAll(
   NodeContext.layer,
   // Full stability queue system
   StabilityQueueSystemLayer,
   // Queue integration
   TransparentQueueAdapterLive.pipe(
-    Layer.provide(StabilityQueueSystemLayer)
+    provide(StabilityQueueSystemLayer)
   ),
   // Original services
   FileSystemLive
@@ -119,12 +119,12 @@ export const StabilityTestingLayer = Layer.mergeAll(
  * Lightweight layer for unit testing individual components.
  * Does not require database or file system access.
  */
-export const UnitTestLayer = Layer.mergeAll(
+export const UnitTestLayer = mergeAll(
   // Test queue system (would use mocked implementations)
   BasicQueueSystemLayer,
   // Queue integration
   TransparentQueueAdapterLive.pipe(
-    Layer.provide(BasicQueueSystemLayer)
+    provide(BasicQueueSystemLayer)
   )
   // Note: FileSystemLive would be replaced with FileSystemTest in actual testing
 )
@@ -134,13 +134,13 @@ export const UnitTestLayer = Layer.mergeAll(
  *
  * Full integration layer for end-to-end testing of CLI functionality.
  */
-export const IntegrationTestLayer = Layer.mergeAll(
+export const IntegrationTestLayer = mergeAll(
   NodeContext.layer,
   // Complete queue system
   QueueSystemLayer,
   // Queue integration
   TransparentQueueAdapterLive.pipe(
-    Layer.provide(QueueSystemLayer)
+    provide(QueueSystemLayer)
   ),
   // Real services for integration testing
   FileSystemLive
@@ -156,7 +156,7 @@ export const IntegrationTestLayer = Layer.mergeAll(
  * Just the queue system without CLI integration.
  * Useful for queue system testing and standalone queue operations.
  */
-export const QueueOnlyLayer = Layer.mergeAll(
+export const QueueOnlyLayer = mergeAll(
   NodeContext.layer,
   QueueSystemLayer
 )
@@ -167,7 +167,7 @@ export const QueueOnlyLayer = Layer.mergeAll(
  * CLI without queue integration - fallback for environments where
  * queue system cannot be initialized.
  */
-export const MinimalCliLayer = Layer.mergeAll(
+export const MinimalCliLayer = mergeAll(
   NodeContext.layer,
   NodeFileSystem.layer,
   NodePath.layer,
@@ -222,13 +222,13 @@ export const getLayerForFeatures = (features: Partial<LayerFeatures>) => {
   let layer = fullFeatures.stability ? StabilityQueueSystemLayer : BasicQueueSystemLayer
 
   if (fullFeatures.transparency) {
-    layer = Layer.mergeAll(
+    layer = mergeAll(
       layer,
-      TransparentQueueAdapterLive.pipe(Layer.provide(layer))
+      TransparentQueueAdapterLive.pipe(provide(layer))
     )
   }
 
-  return Layer.mergeAll(
+  return mergeAll(
     NodeContext.layer,
     layer,
     FileSystemLive

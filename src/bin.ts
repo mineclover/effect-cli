@@ -6,7 +6,7 @@ import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem"
 import * as NodePath from "@effect/platform-node/NodePath"
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime"
 import * as Effect from "effect/Effect"
-import * as Layer from "effect/Layer"
+import { mergeAll } from "effect/Layer"
 import { run } from "./Cli.js"
 import { BasicQueueSystemLayer } from "./services/Queue/index.js"
 
@@ -20,14 +20,14 @@ import { BasicQueueSystemLayer } from "./services/Queue/index.js"
 const DevToolsLive = DevTools.layer()
 
 // Absolute minimal layer - just platform services without complex queue dependencies
-const AppLayer = Layer.mergeAll(
+const AppLayer = mergeAll(
   NodeContext.layer,
   NodeFileSystem.layer,
   NodePath.layer
 )
 
 // Complete application layer with queue integration
-const FullAppLayer = Layer.mergeAll(
+const FullAppLayer = mergeAll(
   AppLayer,
   BasicQueueSystemLayer,
   DevToolsLive

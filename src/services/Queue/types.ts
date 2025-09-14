@@ -10,7 +10,7 @@ import type { Duration } from "effect/Duration"
  * @created 2025-01-12
  */
 
-import * as Context from "effect/Context"
+import { GenericTag } from "effect/Context"
 
 import type * as Effect from "effect/Effect"
 import type * as Fiber from "effect/Fiber"
@@ -310,7 +310,7 @@ export interface QueuePersistence {
   readonly cleanup: () => Effect.Effect<void, never>
 }
 
-export const QueuePersistence = Context.GenericTag<QueuePersistence>("@app/QueuePersistence")
+export const QueuePersistence = GenericTag<QueuePersistence>("@app/QueuePersistence")
 
 /**
  * In-memory queue management service
@@ -325,7 +325,7 @@ export interface InternalQueue {
   readonly cleanup: () => Effect.Effect<void, never>
 }
 
-export const InternalQueue = Context.GenericTag<InternalQueue>("@app/InternalQueue")
+export const InternalQueue = GenericTag<InternalQueue>("@app/InternalQueue")
 
 /**
  * Queue status information
@@ -359,7 +359,7 @@ export interface QueueMonitor {
   readonly updateHeartbeat: (sessionId: string) => Effect.Effect<void, PersistenceError>
 }
 
-export const QueueMonitor = Context.GenericTag<QueueMonitor>("@app/QueueMonitor")
+export const QueueMonitor = GenericTag<QueueMonitor>("@app/QueueMonitor")
 
 /**
  * Circuit breaker service for stability patterns
@@ -374,7 +374,7 @@ export interface CircuitBreaker {
   readonly resetStats: (resourceGroup: ResourceGroup) => Effect.Effect<void, never>
 }
 
-export const CircuitBreaker = Context.GenericTag<CircuitBreaker>("@app/CircuitBreaker")
+export const CircuitBreaker = GenericTag<CircuitBreaker>("@app/CircuitBreaker")
 
 /**
  * Adaptive throttler for dynamic concurrency control
@@ -389,7 +389,7 @@ export interface AdaptiveThrottler {
   readonly cleanup: () => Effect.Effect<void, never>
 }
 
-export const AdaptiveThrottler = Context.GenericTag<AdaptiveThrottler>("@app/AdaptiveThrottler")
+export const AdaptiveThrottler = GenericTag<AdaptiveThrottler>("@app/AdaptiveThrottler")
 
 /**
  * Throttle configuration for each resource group
@@ -419,7 +419,7 @@ export interface StabilityMonitor {
   readonly cleanup: () => Effect.Effect<void, never>
 }
 
-export const StabilityMonitor = Context.GenericTag<StabilityMonitor>("@app/StabilityMonitor")
+export const StabilityMonitor = GenericTag<StabilityMonitor>("@app/StabilityMonitor")
 
 /**
  * Heartbeat state for system health monitoring
@@ -503,7 +503,7 @@ export interface SessionManager {
   readonly cleanupOldSessions: (olderThanDays: number) => Effect.Effect<number, PersistenceError>
 }
 
-export const SessionManager = Context.GenericTag<SessionManager>("@app/SessionManager")
+export const SessionManager = GenericTag<SessionManager>("@app/SessionManager")
 
 // ============================================================================
 // UTILITY TYPES AND FUNCTIONS

@@ -14,7 +14,7 @@ import type { Option } from "effect/Option"
  * @created 2025-01-12
  */
 
-import * as Context from "effect/Context"
+import { GenericTag } from "effect/Context"
 
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
@@ -123,7 +123,7 @@ export interface AdvancedCache {
   readonly scheduleWarmup: (config: CacheWarmingConfig) => Effect.Effect<void>
 }
 
-export const AdvancedCache = Context.GenericTag<AdvancedCache>("@app/AdvancedCache")
+export const AdvancedCache = GenericTag<AdvancedCache>("@app/AdvancedCache")
 
 /**
  * Options for cache set operation

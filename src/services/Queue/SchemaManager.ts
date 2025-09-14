@@ -8,7 +8,7 @@ import type { Option } from "effect/Option"
  */
 
 import { createHash } from "crypto"
-import * as Context from "effect/Context"
+import { GenericTag } from "effect/Context"
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 
@@ -51,7 +51,7 @@ export interface SchemaManager {
   readonly cleanup: () => Effect.Effect<void, never>
 }
 
-export const SchemaManager = Context.GenericTag<SchemaManager>("@app/SchemaManager")
+export const SchemaManager = GenericTag<SchemaManager>("@app/SchemaManager")
 
 // ============================================================================
 // CONSTANTS
