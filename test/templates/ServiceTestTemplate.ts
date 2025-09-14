@@ -8,7 +8,6 @@
  * @created 2025-09-13
  */
 
-import * as TestContext from "@effect/vitest"
 import { millis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import { mergeAll } from "effect/Layer"
@@ -94,7 +93,7 @@ describe("MyService", () => {
         // })
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle initialization dependencies", () =>
@@ -109,7 +108,7 @@ describe("MyService", () => {
         // expect(myService).toBeDefined()
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should fail gracefully if dependencies are unavailable", () =>
@@ -122,7 +121,7 @@ describe("MyService", () => {
         (error) => error.message.includes("Dependency not available")
       ).pipe(
         // Don't provide required dependencies
-        TestContext.it
+        Effect.runPromise
       ))
   })
 
@@ -137,7 +136,7 @@ describe("MyService", () => {
         "mock-result"
       ).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle different input types", () =>
@@ -158,7 +157,7 @@ describe("MyService", () => {
         yield* Effect.void
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should maintain internal state correctly", () =>
@@ -175,7 +174,7 @@ describe("MyService", () => {
         // expect(state2.key).toBe("value2")
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
   })
 
@@ -196,7 +195,7 @@ describe("MyService", () => {
         // expect(fileSystem.readFile).toHaveBeenCalledWith("/test/input.txt")
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle network operations", () =>
@@ -212,7 +211,7 @@ describe("MyService", () => {
         // expect(result).toEqual({ status: 200, data: "Response from https://api.example.com/data" })
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle dependency failures gracefully", () =>
@@ -240,7 +239,10 @@ describe("MyService", () => {
 
         expect(result._tag).toBe("Left")
         // Verify service handles dependency failure appropriately
-      }).pipe(TestContext.it))
+      }).pipe(
+        Effect.provide(TestLayer),
+        Effect.runPromise
+      ))
   })
 
   // ==========================================================================
@@ -258,7 +260,7 @@ describe("MyService", () => {
         (error) => error.message.includes("Invalid input")
       ).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should provide meaningful error messages", () =>
@@ -275,7 +277,7 @@ describe("MyService", () => {
         }
       ).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle resource exhaustion", () =>
@@ -291,11 +293,11 @@ describe("MyService", () => {
 
         // Service should either succeed or fail gracefully
         if (result._tag === "Left") {
-          expect(result.left.message).toMatch(/(resource|limit|exhausted)/i)
+          expect((result.left as Error).message).toMatch(/(resource|limit|exhausted)/i)
         }
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
   })
 
@@ -315,7 +317,7 @@ describe("MyService", () => {
         0 // min 0ms
       ).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle concurrent operations efficiently", () =>
@@ -356,7 +358,7 @@ describe("MyService", () => {
         expect(memoryIncrease).toBeLessThan(5 * 1024 * 1024)
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
   })
 
@@ -379,7 +381,7 @@ describe("MyService", () => {
         // Add specific consistency checks based on service behavior
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle resource contention", () =>
@@ -401,7 +403,7 @@ describe("MyService", () => {
         expect(results.every((r) => r === "success")).toBe(true)
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
   })
 
@@ -430,7 +432,7 @@ describe("MyService", () => {
         // )
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle service dependency chains", () =>
@@ -440,7 +442,7 @@ describe("MyService", () => {
         // Verify the entire chain works correctly
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
   })
 
@@ -465,7 +467,7 @@ describe("MyService", () => {
         yield* Effect.void
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle environment-specific behavior", () =>
@@ -480,7 +482,7 @@ describe("MyService", () => {
         yield* Effect.void
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
   })
 
@@ -507,7 +509,7 @@ describe("MyService", () => {
         // expect(resourceStatus.acquired).toBe(0)
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle cleanup during failures", () =>
@@ -528,7 +530,7 @@ describe("MyService", () => {
         // expect(resourceStatus.acquired).toBe(0)
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
   })
 })

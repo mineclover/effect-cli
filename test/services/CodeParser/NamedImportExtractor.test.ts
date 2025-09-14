@@ -1,5 +1,5 @@
 import { Effect } from "effect"
-import { describe, expect, it } from "vitest"
+import { afterAll, describe, expect, it } from "vitest"
 import { NamedImportExtractor } from "../../../src/services/CodeParser/NamedImportExtractor.js"
 
 describe("NamedImportExtractor", () => {

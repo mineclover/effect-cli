@@ -140,7 +140,7 @@ describe("MyCommand", () => {
     })
 
     it("should handle boundary values", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           // Test with boundary values (empty strings, zero, negative numbers, etc.)
           const testCases = [
@@ -183,7 +183,10 @@ describe("MyCommand", () => {
 
         expect(result._tag).toBe("Left")
         // Add specific error assertions
-      }).pipe(TestContext.it))
+      }).pipe(
+        Effect.provide(TestLayer),
+        Effect.runPromise
+      ))
 
     it("should provide meaningful error messages", () =>
       expectFailure(
@@ -198,11 +201,11 @@ describe("MyCommand", () => {
         }
       ).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
 
     it("should handle concurrent operation failures", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           // Test behavior when multiple operations fail
           const operations = Array.from({ length: 5 }, (_, i) =>
@@ -231,7 +234,7 @@ describe("MyCommand", () => {
 
   describe("Service Integration", () => {
     it("should integrate with file system service", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           // Test file system integration
           // const fileService = yield* FileSystem
@@ -245,7 +248,7 @@ describe("MyCommand", () => {
       ))
 
     it("should integrate with queue system", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           // Test queue integration
           // const queue = yield* QueueSystem
@@ -259,7 +262,7 @@ describe("MyCommand", () => {
       ))
 
     it("should handle service dependencies correctly", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           // Test that all required services are available
           // const fileService = yield* FileSystem
@@ -283,7 +286,7 @@ describe("MyCommand", () => {
 
   describe("Performance", () => {
     it("should handle large inputs efficiently", () =>
-      TestContext.it(
+      Effect.runPromise(
         expectTimingWithin(
           Effect.gen(function*() {
             // Test with large input
@@ -300,7 +303,7 @@ describe("MyCommand", () => {
       ))
 
     it("should handle concurrent executions", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           // Test concurrent command executions
           const concurrentOps = Array.from({ length: 10 }, (_, i) => Effect.sync(() => `result-${i}`))
@@ -322,7 +325,7 @@ describe("MyCommand", () => {
       ))
 
     it("should not leak memory", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           const initialMemory = process.memoryUsage().heapUsed
 
@@ -352,7 +355,7 @@ describe("MyCommand", () => {
 
   describe("Edge Cases", () => {
     it("should handle empty inputs", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           // Test with empty/null inputs
           // const result = yield* myCommand.handler({})
@@ -364,7 +367,7 @@ describe("MyCommand", () => {
       ))
 
     it("should handle special characters in inputs", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           const specialChars = [
             "file with spaces.txt",
@@ -391,7 +394,7 @@ describe("MyCommand", () => {
         // Test graceful degradation
       }).pipe(
         Effect.provide(TestLayer),
-        TestContext.it
+        Effect.runPromise
       ))
   })
 
@@ -401,7 +404,7 @@ describe("MyCommand", () => {
 
   describe("Output Validation", () => {
     it("should produce well-formatted output", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           const mockConsole = createMockConsole()
 
@@ -420,7 +423,7 @@ describe("MyCommand", () => {
       ))
 
     it("should respect output format options", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           const formats = ["json", "table", "csv"]
 
@@ -440,7 +443,7 @@ describe("MyCommand", () => {
       ))
 
     it("should handle output redirection", () =>
-      TestContext.it(
+      Effect.runPromise(
         Effect.gen(function*() {
           // Test output to different targets (stdout, file, etc.)
           // yield* myCommand.handler({ output: "/tmp/test-output.txt" })

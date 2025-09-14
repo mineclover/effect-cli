@@ -149,7 +149,7 @@ export const QueuePersistenceLive = effect(
       sessionId: row.session_id,
       type: row.type,
       resourceGroup: row.resource_group,
-      operation: succeed(null) as any, // Will be reconstructed from operationData
+      operation: Effect.succeed(null) as any, // Will be reconstructed from operationData
       priority: row.priority,
       status: row.status,
       createdAt: new Date(row.created_at),

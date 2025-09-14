@@ -307,10 +307,9 @@ export const withTimeout = <A, E>(
 ): Effect.Effect<A, E | Error> =>
   Effect.race(
     effect,
-    Effect.gen(function*() {
-      yield* Effect.sleep(millis(timeoutMs))
-      yield* Effect.fail(new Error(`Operation timed out after ${timeoutMs}ms`))
-    })
+    Effect.sleep(millis(timeoutMs)).pipe(
+      Effect.flatMap(() => Effect.fail(new Error(`Operation timed out after ${timeoutMs}ms`)))
+    )
   )
 
 /**

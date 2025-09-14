@@ -52,7 +52,7 @@ export class CodeParser implements ICodeParser {
       return {
         filePath,
         success: true,
-        namedImports
+        namedImports: namedImports ?? undefined
       }
     })
   }
@@ -91,12 +91,9 @@ export class CodeParser implements ICodeParser {
 /**
  * Service tag for dependency injection
  */
-export const CodeParserTag = Context.Tag<ICodeParser>("@services/CodeParser")
+export const CodeParserTag = Context.GenericTag<ICodeParser>("@services/CodeParser")
 
 /**
  * Service implementation for dependency injection
  */
-export const CodeParserService = Layer.succeed(
-  CodeParserTag,
-  new CodeParser()
-)
+export const CodeParserService = Layer.succeed(CodeParserTag, new CodeParser())

@@ -8,18 +8,11 @@ import { RegexNamedImportExtractor } from "./RegexNamedImportExtractor.js"
  */
 export class NamedImportExtractor {
   private readonly fallbackExtractor: RegexNamedImportExtractor
-  private readonly useTreeSitter: boolean
-
   constructor() {
     this.fallbackExtractor = new RegexNamedImportExtractor()
 
-    // Try to use TreeSitter, fall back to regex if not available
-    try {
-      // Dynamically import TreeSitter to avoid build issues during testing
-      this.useTreeSitter = false // For now, always use regex fallback
-    } catch {
-      this.useTreeSitter = false
-    }
+    // For now, always use regex fallback
+    // TODO: Implement TreeSitter support in the future
   }
 
   /**

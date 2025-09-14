@@ -44,7 +44,7 @@ export interface ParseResult {
   /** Error message if parsing failed */
   readonly error?: string
   /** Extracted named imports if requested */
-  readonly namedImports?: ReadonlyArray<NamedImport>
+  readonly namedImports?: ReadonlyArray<NamedImport> | undefined
   /** Raw syntax tree (for debugging) */
   readonly syntaxTree?: unknown
 }

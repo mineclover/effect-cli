@@ -8,12 +8,12 @@
  * @created 2025-09-13
  */
 
-import * as TestContext from "@effect/vitest"
 import type * as Context from "effect/Context"
 import { millis, toMillis } from "effect/Duration"
 import type { Duration } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import { isFailure, isSuccess } from "effect/Exit"
+import type { Either } from "effect/Either"
 import { succeed } from "effect/Layer"
 import type { Layer } from "effect/Layer"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
@@ -33,7 +33,7 @@ export const testWithLayer = <R, E, A>(
   expectations?: (result: A) => void | Promise<void>
 ) =>
   it(name, () =>
-    TestContext.it(
+    Effect.runPromise(
       effect.pipe(
         Effect.provide(layer),
         Effect.tap((result) => Effect.sync(() => expectations?.(result)))
@@ -281,7 +281,7 @@ export const testEffectSteps = <R, _E, A>(
   stepVerifications?: Array<(stepResult: any, stepIndex: number) => void>
 ) =>
   it(name, () =>
-    TestContext.it(
+    Effect.runPromise(
       Effect.gen(function*() {
         const generator = effectGen()
         let stepIndex = 0
@@ -299,7 +299,7 @@ export const testEffectSteps = <R, _E, A>(
         }
 
         return result.value
-      }).pipe(Effect.provide(layer))
+      }).pipe(Effect.provide(layer)) as Effect.Effect<A, any, never>
     ))
 
 // ============================================================================
@@ -321,7 +321,7 @@ export const testConcurrentEffects = <A, E, R>(
   } = {}
 ) =>
   it(name, () =>
-    TestContext.it(
+    Effect.runPromise(
       Effect.gen(function*() {
         const startTime = yield* Effect.sync(() => Date.now())
 
@@ -365,7 +365,7 @@ export const testRetryBehavior = <A, E, R>(
   }
 ) =>
   it(name, () =>
-    TestContext.it(
+    Effect.runPromise(
       Effect.gen(function*() {
         let attempts = 0
 
@@ -389,7 +389,7 @@ export const testRetryBehavior = <A, E, R>(
         }
 
         return result
-      }).pipe(Effect.provide(layer))
+      }).pipe(Effect.provide(layer)) as Effect.Effect<Either<A, unknown>, never, never>
     ))
 
 // ============================================================================

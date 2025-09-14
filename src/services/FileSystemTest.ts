@@ -1,11 +1,11 @@
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
-import { get, make } from "effect/Ref"
+import { get, make as makeRef } from "effect/Ref"
 import { type FileInfo, FileSystem } from "./FileSystem.js"
 
 export const make = (mockFiles: ReadonlyArray<FileInfo>) =>
   Effect.gen(function*() {
-    const files = yield* make(mockFiles)
+    const files = yield* makeRef(mockFiles)
 
     return FileSystem.of({
       listDirectory: (_path: string) => get(files),
