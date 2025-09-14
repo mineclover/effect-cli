@@ -19,7 +19,8 @@ import { forever } from "effect/Schedule"
 
 
 import * as Effect from "effect/Effect"
-import * as Fiber from "effect/Fiber"
+import { interrupt } from "effect/Fiber"
+import type { RuntimeFiber } from "effect/Fiber"
 import { effect, succeed } from "effect/Layer"
 
 
@@ -34,7 +35,7 @@ import { generateTaskId, InternalQueue, QueueError, QueuePersistence } from "./t
 
 interface ProcessingState {
   readonly queue: Queue<QueueTask>
-  readonly processingFiber: Option<Fiber.RuntimeFiber<void, never>>
+  readonly processingFiber: Option<RuntimeFiber<void, never>>
   readonly isPaused: boolean
   readonly lastProcessed: Option<Date>
 }
@@ -42,7 +43,7 @@ interface ProcessingState {
 interface RunningTask {
   readonly task: QueueTask
   readonly startedAt: Date
-  readonly fiber: Fiber.RuntimeFiber<unknown, unknown>
+  readonly fiber: RuntimeFiber<unknown, unknown>
 }
 
 // ============================================================================
@@ -315,7 +316,7 @@ export const InternalQueueLive = effect(
         const totalRunning = running.size
         const processingFibers = [...states.values()]
           .map((state) => getOrNull(state.processingFiber))
-          .filter(Boolean) as Array<Fiber.RuntimeFiber<never, never>>
+          .filter(Boolean) as Array<RuntimeFiber<never, never>>
 
         const status: QueueStatus = {
           queues,
@@ -368,7 +369,7 @@ export const InternalQueueLive = effect(
 
         if (runningTask) {
           // Interrupt the running fiber
-          yield* Fiber.interrupt(runningTask.fiber)
+          yield* interrupt(runningTask.fiber)
 
           // Update task status
           yield* persistence.updateTaskStatus(taskId, "cancelled")
@@ -402,7 +403,7 @@ export const InternalQueueLive = effect(
         const states = yield* get(processingStates)
         const processingFibers = [...states.values()]
           .map((state) => getOrNull(state.processingFiber))
-          .filter(Boolean) as Array<Fiber.RuntimeFiber<never, never>>
+          .filter(Boolean) as Array<RuntimeFiber<never, never>>
 
         // Get all running task fibers
         const running = yield* get(runningTasks)
@@ -411,7 +412,7 @@ export const InternalQueueLive = effect(
         // Interrupt all fibers
         yield* Effect.forEach(
           [...processingFibers, ...taskFibers],
-          (fiber) => Fiber.interrupt(fiber),
+          (fiber) => interrupt(fiber),
           { concurrency: "unbounded" }
         )
 

@@ -1,6 +1,6 @@
 import { FileSystem } from "@effect/platform/FileSystem"
 import * as Path from "@effect/platform/Path"
-import * as Array from "effect/Array"
+import { sort } from "effect/Array"
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import { make } from "effect/Order"
@@ -37,7 +37,7 @@ export const FileSystemLive = effect(
           return a.name < b.name ? -1 : a.name > b.name ? 1 : 0
         })
 
-        return Array.sort(fileInfos, fileOrder)
+        return sort(fileInfos, fileOrder)
       }).pipe(
         Effect.withSpan("list-directory", {
           attributes: { path: dirPath }

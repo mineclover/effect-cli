@@ -10,13 +10,14 @@
  * @created 2025-01-12
  */
 
+import * as Fiber from "effect/Fiber"
 import { minutes, seconds, toMillis } from "effect/Duration"
 import * as Effect from "effect/Effect"
-import * as Fiber from "effect/Fiber"
+import { interrupt } from "effect/Fiber"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
 import { isSome } from "effect/Option"
-import * as Ref from "effect/Ref"
+import { make, update, get } from "effect/Ref"
 
 import type {
   CircuitBreakerState,
@@ -62,7 +63,7 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
     /**
      * Heartbeat state tracking
      */
-    const heartbeatState = yield* Ref.make<HeartbeatState>({
+    const heartbeatState = yield* make<HeartbeatState>({
       lastHeartbeat: new Date(),
       consecutiveFailures: 0,
       isHealthy: true,
@@ -357,7 +358,7 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
         const isHealthy = isSystemHealthy(metrics)
 
         // Update heartbeat state
-        yield* Ref.update(heartbeatState, (state) => ({
+        yield* update(heartbeatState, (state) => ({
           ...state,
           lastHeartbeat: new Date(),
           consecutiveFailures: isHealthy ? 0 : state.consecutiveFailures + 1,
@@ -365,7 +366,7 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
         }))
 
         // Log warnings for consecutive failures
-        const state = yield* Ref.get(heartbeatState)
+        const state = yield* get(heartbeatState)
         if (state.consecutiveFailures >= 3) {
           yield* Effect.log(`Health check failed ${state.consecutiveFailures} times consecutively`)
         }
@@ -396,7 +397,7 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
       /**
        * Get current heartbeat state
        */
-      getHeartbeat: () => Ref.get(heartbeatState),
+      getHeartbeat: () => get(heartbeatState),
 
       /**
        * Collect current health metrics
@@ -424,7 +425,7 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
        */
       cleanup: () =>
         Effect.gen(function*() {
-          yield* Fiber.interrupt(heartbeatFiber)
+          yield* interrupt(heartbeatFiber)
           yield* Effect.log("StabilityMonitor cleanup completed")
         })
     })
