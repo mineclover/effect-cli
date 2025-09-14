@@ -1,3 +1,5 @@
+import { toMillis, seconds, millis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
 /**
  * Transparent Queue Adapter
  *
@@ -12,7 +14,7 @@
  */
 
 import * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
+
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
@@ -62,7 +64,7 @@ export const TransparentQueueAdapter = Context.GenericTag<TransparentQueueAdapte
 export interface QueuedOperationOptions {
   readonly priority?: number
   readonly maxRetries?: number
-  readonly estimatedDuration?: Duration.Duration
+  readonly estimatedDuration?: Duration
   readonly resourceGroup?: ResourceGroup
   readonly operationData?: Record<string, unknown>
 }
@@ -221,7 +223,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         const resourceGroup = options.resourceGroup ||
           determineResourceGroup(
             operationType,
-            options.estimatedDuration ? Duration.toMillis(options.estimatedDuration) : 1000
+            options.estimatedDuration ? toMillis(options.estimatedDuration) : 1000
           )
 
         // Create queue task with proper configuration
@@ -230,7 +232,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           resourceGroup,
           priority: options.priority ?? 5,
           maxRetries: options.maxRetries ?? 3,
-          estimatedDuration: options.estimatedDuration ?? Duration.seconds(30),
+          estimatedDuration: options.estimatedDuration ?? seconds(30),
           operationData: options.operationData
         })
 
@@ -259,7 +261,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           "directory-list",
           // Mock file system operation - in real implementation would use actual FileSystem service
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(50)) // Simulate I/O
+            yield* Effect.sleep(millis(50)) // Simulate I/O
 
             // Mock directory listing
             const mockFiles: Array<FileInfo> = [
@@ -287,7 +289,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }),
           {
             resourceGroup: "filesystem",
-            estimatedDuration: Duration.millis(100),
+            estimatedDuration: millis(100),
             operationData: { filePath: path }
           }
         ).pipe(
@@ -299,7 +301,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "file-read",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(30))
+            yield* Effect.sleep(millis(30))
 
             // Mock file reading
             if (path.includes("nonexistent")) {
@@ -310,7 +312,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }),
           {
             resourceGroup: "filesystem",
-            estimatedDuration: Duration.millis(50),
+            estimatedDuration: millis(50),
             operationData: { filePath: path }
           }
         ).pipe(
@@ -322,19 +324,19 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "file-write",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(40))
+            yield* Effect.sleep(millis(40))
 
             // Mock file writing
             if (content.length > 10000) {
               // Large files get different treatment
-              yield* Effect.sleep(Duration.millis(200))
+              yield* Effect.sleep(millis(200))
             }
 
             return void 0
           }),
           {
             resourceGroup: "filesystem",
-            estimatedDuration: Duration.millis(80),
+            estimatedDuration: millis(80),
             operationData: { filePath: path, contentSize: content.length }
           }
         ).pipe(
@@ -346,7 +348,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "find-files",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(200)) // File searching takes longer
+            yield* Effect.sleep(millis(200)) // File searching takes longer
 
             // Mock file search results
             const mockResults: Array<FileInfo> = [
@@ -365,7 +367,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }),
           {
             resourceGroup: "computation", // File search is CPU intensive
-            estimatedDuration: Duration.millis(500),
+            estimatedDuration: millis(500),
             operationData: { pattern, directory }
           }
         ).pipe(
@@ -377,12 +379,12 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "file-write", // Directory creation is a write operation
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(20))
+            yield* Effect.sleep(millis(20))
             return void 0
           }),
           {
             resourceGroup: "filesystem",
-            estimatedDuration: Duration.millis(30),
+            estimatedDuration: millis(30),
             operationData: { filePath: path }
           }
         ).pipe(
@@ -394,12 +396,12 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "file-write", // File deletion is a write operation
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(25))
+            yield* Effect.sleep(millis(25))
             return void 0
           }),
           {
             resourceGroup: "filesystem",
-            estimatedDuration: Duration.millis(40),
+            estimatedDuration: millis(40),
             operationData: { filePath: path }
           }
         ).pipe(
@@ -411,12 +413,12 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "file-write",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(100)) // Copy takes longer
+            yield* Effect.sleep(millis(100)) // Copy takes longer
             return void 0
           }),
           {
             resourceGroup: "filesystem",
-            estimatedDuration: Duration.millis(150),
+            estimatedDuration: millis(150),
             operationData: { source, destination }
           }
         ).pipe(
@@ -428,12 +430,12 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "file-write",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(60))
+            yield* Effect.sleep(millis(60))
             return void 0
           }),
           {
             resourceGroup: "filesystem",
-            estimatedDuration: Duration.millis(80),
+            estimatedDuration: millis(80),
             operationData: { source, destination }
           }
         ).pipe(
@@ -454,7 +456,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "network-request",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(300)) // Network latency
+            yield* Effect.sleep(millis(300)) // Network latency
 
             // Mock HTTP request
             if (url.includes("error")) {
@@ -465,7 +467,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }),
           {
             resourceGroup: "network",
-            estimatedDuration: Duration.seconds(2),
+            estimatedDuration: seconds(2),
             operationData: { url, method: options.method || "GET" }
           }
         ).pipe(
@@ -477,13 +479,13 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "network-request",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(400))
+            yield* Effect.sleep(millis(400))
 
             return `Posted data to ${url}, response: success`
           }),
           {
             resourceGroup: "network",
-            estimatedDuration: Duration.seconds(3),
+            estimatedDuration: seconds(3),
             operationData: { url, method: "POST", hasData: true }
           }
         ).pipe(
@@ -495,12 +497,12 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "network-request",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.seconds(1)) // Downloads take longer
+            yield* Effect.sleep(seconds(1)) // Downloads take longer
             return void 0
           }),
           {
             resourceGroup: "network",
-            estimatedDuration: Duration.seconds(5),
+            estimatedDuration: seconds(5),
             operationData: { url, destination }
           }
         ).pipe(
@@ -536,7 +538,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }),
           {
             resourceGroup: data.length > 100 ? "memory-intensive" : "computation",
-            estimatedDuration: Duration.millis(data.length * 10),
+            estimatedDuration: millis(data.length * 10),
             operationData: { dataSize: data.length }
           }
         ).pipe(
@@ -547,7 +549,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "computation",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(files.length * 50))
+            yield* Effect.sleep(millis(files.length * 50))
 
             // Mock search results
             const results: Array<SearchResult> = files.map((file, index) => ({
@@ -561,7 +563,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }),
           {
             resourceGroup: "computation",
-            estimatedDuration: Duration.millis(files.length * 100),
+            estimatedDuration: millis(files.length * 100),
             operationData: { pattern, fileCount: files.length }
           }
         ).pipe(
@@ -572,7 +574,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "computation",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(data.length / 100))
+            yield* Effect.sleep(millis(data.length / 100))
 
             // Mock compression
             const compressionRatio = 0.7
@@ -582,7 +584,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }),
           {
             resourceGroup: data.length > 50000 ? "memory-intensive" : "computation",
-            estimatedDuration: Duration.millis(Math.max(100, data.length / 50)),
+            estimatedDuration: millis(Math.max(100, data.length / 50)),
             operationData: { originalSize: data.length }
           }
         ).pipe(
@@ -593,7 +595,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
         wrapOperation(
           "computation",
           Effect.gen(function*() {
-            yield* Effect.sleep(Duration.millis(50))
+            yield* Effect.sleep(millis(50))
 
             // Mock parsing
             try {
@@ -615,7 +617,7 @@ export const TransparentQueueAdapterLive: Layer<TransparentQueueAdapter, never, 
           }),
           {
             resourceGroup: "computation",
-            estimatedDuration: Duration.millis(100),
+            estimatedDuration: millis(100),
             operationData: { format, dataSize: data.length }
           }
         ).pipe(

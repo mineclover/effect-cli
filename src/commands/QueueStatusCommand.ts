@@ -1,3 +1,6 @@
+import { isSome, none } from "effect/Option"
+import type { Option } from "effect/Option"
+import { log } from "effect/Console"
 /**
  * Queue Status Command
  *
@@ -10,9 +13,9 @@
 
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Console from "effect/Console"
+
 import * as Effect from "effect/Effect"
-import * as Option from "effect/Option"
+
 import { BasicQueueSystemLayer, getQueueStatus, QueueMonitor, QueueSystem } from "../services/Queue/index.js"
 
 // ============================================================================
@@ -31,24 +34,24 @@ const sessionOption = Options.text("session")
 
 const displayTableFormat = (status: any) =>
   Effect.gen(function*() {
-    yield* Console.log("Queue System Status")
-    yield* Console.log("==================")
+    yield* log("Queue System Status")
+    yield* log("==================")
 
     // Overall metrics
-    yield* Console.log(`Session ID:        ${status.metrics.sessionId}`)
-    yield* Console.log(`Timestamp:         ${status.metrics.timestamp}`)
-    yield* Console.log(`Total Tasks:       ${status.metrics.totalTasks}`)
-    yield* Console.log(`Pending:           ${status.metrics.pendingTasks}`)
-    yield* Console.log(`Running:           ${status.metrics.runningTasks}`)
-    yield* Console.log(`Completed:         ${status.metrics.completedTasks}`)
-    yield* Console.log(`Failed:            ${status.metrics.failedTasks}`)
-    yield* Console.log(`Success Rate:      ${(status.metrics.successRate * 100).toFixed(1)}%`)
-    yield* Console.log(`Avg Process Time:  ${status.metrics.averageProcessingTime.toFixed(2)}ms`)
-    yield* Console.log(`Throughput/min:    ${status.metrics.throughputPerMinute.toFixed(2)}`)
-    yield* Console.log(`Memory Usage:      ${status.metrics.memoryUsageMb}MB`)
+    yield* log(`Session ID:        ${status.metrics.sessionId}`)
+    yield* log(`Timestamp:         ${status.metrics.timestamp}`)
+    yield* log(`Total Tasks:       ${status.metrics.totalTasks}`)
+    yield* log(`Pending:           ${status.metrics.pendingTasks}`)
+    yield* log(`Running:           ${status.metrics.runningTasks}`)
+    yield* log(`Completed:         ${status.metrics.completedTasks}`)
+    yield* log(`Failed:            ${status.metrics.failedTasks}`)
+    yield* log(`Success Rate:      ${(status.metrics.successRate * 100).toFixed(1)}%`)
+    yield* log(`Avg Process Time:  ${status.metrics.averageProcessingTime.toFixed(2)}ms`)
+    yield* log(`Throughput/min:    ${status.metrics.throughputPerMinute.toFixed(2)}`)
+    yield* log(`Memory Usage:      ${status.metrics.memoryUsageMb}MB`)
 
-    yield* Console.log("\nResource Group Status")
-    yield* Console.log("====================")
+    yield* log("\nResource Group Status")
+    yield* log("====================")
 
     // Resource groups
     const resourceGroups = ["filesystem", "network", "computation", "memory-intensive"] as const
@@ -57,18 +60,18 @@ const displayTableFormat = (status: any) =>
       const queue = status.queue.queues[group]
       const stats = status.metrics.resourceGroupStats[group] || {}
 
-      yield* Console.log(`\n${group.toUpperCase()}:`)
-      yield* Console.log(`  Queue Size:      ${queue.size}`)
-      yield* Console.log(`  Processing:      ${queue.isProcessing ? "Yes" : "No"}`)
-      yield* Console.log(`  Total Tasks:     ${stats.totalTasks || 0}`)
-      yield* Console.log(`  Completed:       ${stats.completedTasks || 0}`)
-      yield* Console.log(`  Failed:          ${stats.failedTasks || 0}`)
-      yield* Console.log(`  Avg Time:        ${(stats.averageProcessingTime || 0).toFixed(2)}ms`)
+      yield* log(`\n${group.toUpperCase()}:`)
+      yield* log(`  Queue Size:      ${queue.size}`)
+      yield* log(`  Processing:      ${queue.isProcessing ? "Yes" : "No"}`)
+      yield* log(`  Total Tasks:     ${stats.totalTasks || 0}`)
+      yield* log(`  Completed:       ${stats.completedTasks || 0}`)
+      yield* log(`  Failed:          ${stats.failedTasks || 0}`)
+      yield* log(`  Avg Time:        ${(stats.averageProcessingTime || 0).toFixed(2)}ms`)
     }
 
-    yield* Console.log("\nProcessing Fibers")
-    yield* Console.log("=================")
-    yield* Console.log(`Active Fibers:     ${status.queue.processingFibers.length}`)
+    yield* log("\nProcessing Fibers")
+    yield* log("=================")
+    yield* log(`Active Fibers:     ${status.queue.processingFibers.length}`)
   })
 
 const displayJsonFormat = (status: any) =>
@@ -81,7 +84,7 @@ const displayJsonFormat = (status: any) =>
       null,
       2
     )
-    yield* Console.log(output)
+    yield* log(output)
   })
 
 const displayCsvFormat = (status: any) =>
@@ -116,8 +119,8 @@ const displayCsvFormat = (status: any) =>
       status.metrics.queueDepth
     ]
 
-    yield* Console.log(headers.join(","))
-    yield* Console.log(values.join(","))
+    yield* log(headers.join(","))
+    yield* log(values.join(","))
   })
 
 // ============================================================================
@@ -126,22 +129,22 @@ const displayCsvFormat = (status: any) =>
 
 const queueStatusAction = (options: {
   format: "table" | "json" | "csv"
-  session: Option.Option<string>
+  session: Option<string>
 }) =>
   Effect.gen(function*() {
-    yield* Console.log("🔍 Fetching Queue Status...")
+    yield* log("🔍 Fetching Queue Status...")
 
     // Get queue status
     const status = yield* getQueueStatus()
 
     // If specific session requested, get metrics for that session
-    if (Option.isSome(options.session)) {
+    if (isSome(options.session)) {
       const monitor = yield* QueueMonitor
       const sessionMetrics = yield* monitor.getQueueStatus(options.session.value)
       status.metrics = sessionMetrics
     }
 
-    yield* Console.log("")
+    yield* log("")
 
     // Display in requested format
     switch (options.format) {
@@ -177,13 +180,13 @@ export const queueStatusCommand = Command.make(
 // STANDALONE EXECUTION
 // ============================================================================
 
-const program = queueStatusAction({ format: "table", session: Option.none() }).pipe(
+const program = queueStatusAction({ format: "table", session: none() }).pipe(
   Effect.provide(QueueSystem.BasicLayer),
   Effect.catchAll((error) =>
     Effect.gen(function*() {
-      yield* Console.log(`❌ Queue status check failed: ${error}`)
+      yield* log(`❌ Queue status check failed: ${error}`)
       if (error instanceof Error) {
-        yield* Console.log(`   Error: ${error.message}`)
+        yield* log(`   Error: ${error.message}`)
       }
     })
   )

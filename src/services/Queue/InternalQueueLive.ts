@@ -1,3 +1,11 @@
+import { millis, seconds } from "effect/Duration"
+import type { Duration } from "effect/Duration"
+import { none, some, isSome, getOrNull } from "effect/Option"
+import type { Option } from "effect/Option"
+import * as Option from "effect/Option"
+import { bounded, take, offer, size } from "effect/Queue"
+import type { Queue } from "effect/Queue"
+import { forever } from "effect/Schedule"
 /**
  * Internal Queue Service Implementation
  *
@@ -9,14 +17,14 @@
  * @created 2025-01-12
  */
 
-import * as Duration from "effect/Duration"
+
 import * as Effect from "effect/Effect"
 import * as Fiber from "effect/Fiber"
 import { effect, succeed } from "effect/Layer"
-import * as Option from "effect/Option"
-import * as Queue from "effect/Queue"
+
+
 import { get, make, set, update } from "effect/Ref"
-import * as Schedule from "effect/Schedule"
+
 import type { QueueStatus, QueueTask, ResourceGroup, TaskStatus } from "./types.js"
 import { generateTaskId, InternalQueue, QueueError, QueuePersistence } from "./types.js"
 
@@ -25,10 +33,10 @@ import { generateTaskId, InternalQueue, QueueError, QueuePersistence } from "./t
 // ============================================================================
 
 interface ProcessingState {
-  readonly queue: Queue.Queue<QueueTask>
-  readonly processingFiber: Option.Option<Fiber.RuntimeFiber<void, never>>
+  readonly queue: Queue<QueueTask>
+  readonly processingFiber: Option<Fiber.RuntimeFiber<void, never>>
   readonly isPaused: boolean
-  readonly lastProcessed: Option.Option<Date>
+  readonly lastProcessed: Option<Date>
 }
 
 interface RunningTask {
@@ -71,12 +79,12 @@ export const InternalQueueLive = effect(
       resourceGroups,
       (group) =>
         Effect.gen(function*() {
-          const queue = yield* Queue.bounded<QueueTask>(100) // Configurable queue size
+          const queue = yield* bounded<QueueTask>(100) // Configurable queue size
           const state: ProcessingState = {
             queue,
-            processingFiber: Option.none(),
+            processingFiber: none(),
             isPaused: false,
-            lastProcessed: Option.none()
+            lastProcessed: none()
           }
           return [group, state] as const
         })
@@ -107,12 +115,12 @@ export const InternalQueueLive = effect(
           const state = states.get(group)
 
           if (!state || state.isPaused) {
-            yield* Effect.sleep(Duration.millis(1000))
+            yield* Effect.sleep(millis(1000))
             continue
           }
 
           // Take next task from queue
-          const task = yield* Queue.take(state.queue)
+          const task = yield* take(state.queue)
 
           yield* Effect.log(`Processing task ${task.id} [${group}]`)
 
@@ -137,7 +145,7 @@ export const InternalQueueLive = effect(
 
             // Execute the actual operation
             const result = yield* task.operation.pipe(
-              Effect.timeout(Duration.seconds(300)), // 5 minute timeout
+              Effect.timeout(seconds(300)), // 5 minute timeout
               Effect.catchAll((error) =>
                 Effect.gen(function*() {
                   // Handle task failure
@@ -169,7 +177,7 @@ export const InternalQueueLive = effect(
                   if (currentState) {
                     newStates.set(group, {
                       ...currentState,
-                      lastProcessed: Option.some(new Date())
+                      lastProcessed: some(new Date())
                     })
                   }
                   return newStates
@@ -188,11 +196,11 @@ export const InternalQueueLive = effect(
           Effect.gen(function*() {
             yield* Effect.log(`Queue processor error for ${group}: ${error}`)
             // Continue processing after error
-            yield* Effect.sleep(Duration.seconds(1))
+            yield* Effect.sleep(seconds(1))
             return yield* processQueue(group)
           })
         ),
-        Effect.repeat(Schedule.forever)
+        Effect.repeat(forever)
       )
 
     /**
@@ -215,7 +223,7 @@ export const InternalQueueLive = effect(
               const newStates = new Map(currentStates)
               newStates.set(group, {
                 ...state,
-                processingFiber: Option.some(fiber)
+                processingFiber: some(fiber)
               })
 
               return newStates
@@ -239,24 +247,24 @@ export const InternalQueueLive = effect(
         const persistedTask = {
           ...task,
           createdAt: new Date(),
-          startedAt: Option.none(),
-          completedAt: Option.none(),
-          actualDuration: Option.none(),
+          startedAt: none(),
+          completedAt: none(),
+          actualDuration: none(),
           retryCount: 0,
-          lastError: Option.none(),
-          errorStack: Option.none(),
+          lastError: none(),
+          errorStack: none(),
           filePath: task.operationData.pipe(
             Option.map((data: any) => data.filePath as string | undefined),
             Option.filter((path): path is string => typeof path === "string")
           ),
-          fileSize: Option.none(),
-          fileHash: Option.none(),
+          fileSize: none(),
+          fileHash: none(),
           operationData: task.operationData.pipe(
             Option.map(JSON.stringify)
           ),
-          resultData: Option.none(),
-          memoryUsageKb: Option.none(),
-          cpuTimeMs: Option.none(),
+          resultData: none(),
+          memoryUsageKb: none(),
+          cpuTimeMs: none(),
           status: "pending" as TaskStatus
         }
 
@@ -273,7 +281,7 @@ export const InternalQueueLive = effect(
           )
         }
 
-        yield* Queue.offer(state.queue, task)
+        yield* offer(state.queue, task)
 
         yield* Effect.log(`Task enqueued: ${task.id} [${task.resourceGroup}] priority=${task.priority}`)
       })
@@ -287,7 +295,7 @@ export const InternalQueueLive = effect(
           Object.fromEntries(
             [...states.entries()].map(([group, state]) => [
               group,
-              Queue.size(state.queue)
+              size(state.queue)
             ])
           )
         )
@@ -297,7 +305,7 @@ export const InternalQueueLive = effect(
             group,
             {
               size: queueSizes[group] || 0,
-              isProcessing: !state.isPaused && Option.isSome(state.processingFiber),
+              isProcessing: !state.isPaused && isSome(state.processingFiber),
               lastProcessed: state.lastProcessed
             }
           ])
@@ -306,7 +314,7 @@ export const InternalQueueLive = effect(
         const totalPending = Object.values(queues).reduce((sum, q) => sum + q.size, 0)
         const totalRunning = running.size
         const processingFibers = [...states.values()]
-          .map((state) => Option.getOrNull(state.processingFiber))
+          .map((state) => getOrNull(state.processingFiber))
           .filter(Boolean) as Array<Fiber.RuntimeFiber<never, never>>
 
         const status: QueueStatus = {
@@ -393,7 +401,7 @@ export const InternalQueueLive = effect(
         // Get all processing fibers
         const states = yield* get(processingStates)
         const processingFibers = [...states.values()]
-          .map((state) => Option.getOrNull(state.processingFiber))
+          .map((state) => getOrNull(state.processingFiber))
           .filter(Boolean) as Array<Fiber.RuntimeFiber<never, never>>
 
         // Get all running task fibers
@@ -408,7 +416,7 @@ export const InternalQueueLive = effect(
         )
 
         // Wait a moment for graceful shutdown
-        yield* Effect.sleep(Duration.millis(500))
+        yield* Effect.sleep(millis(500))
 
         yield* Effect.log("Internal queue cleanup completed")
       })
@@ -443,7 +451,7 @@ export const createTask = <A, E>(
     resourceGroup: ResourceGroup
     priority?: number
     maxRetries?: number
-    estimatedDuration?: Duration.Duration
+    estimatedDuration?: Duration
     operationData?: Record<string, unknown> | undefined
   }
 ): QueueTask<A, E> => ({
@@ -453,11 +461,11 @@ export const createTask = <A, E>(
   resourceGroup: options.resourceGroup,
   operation,
   priority: options.priority ?? 5,
-  estimatedDuration: options.estimatedDuration ?? Duration.seconds(30),
+  estimatedDuration: options.estimatedDuration ?? seconds(30),
   maxRetries: options.maxRetries ?? 3,
   operationData: options.operationData
-    ? Option.some(options.operationData)
-    : Option.none() as Option.Option<Record<string, unknown>>
+    ? some(options.operationData)
+    : none() as Option<Record<string, unknown>>
 })
 
 /**

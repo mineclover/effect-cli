@@ -1,3 +1,4 @@
+import { some, none, match, getOrNull } from "effect/Option"
 /**
  * Queue Persistence Service Implementation
  *
@@ -10,7 +11,7 @@
 
 import * as Effect from "effect/Effect"
 import { effect, succeed } from "effect/Layer"
-import * as Option from "effect/Option"
+
 import { get, make, set } from "effect/Ref"
 import type { PersistedQueueTask, TaskStatus } from "./types.js"
 import {
@@ -151,21 +152,21 @@ export const QueuePersistenceLive = effect(
       priority: row.priority,
       status: row.status,
       createdAt: new Date(row.created_at),
-      startedAt: row.started_at ? Option.some(new Date(row.started_at)) : Option.none(),
-      completedAt: row.completed_at ? Option.some(new Date(row.completed_at)) : Option.none(),
+      startedAt: row.started_at ? some(new Date(row.started_at)) : none(),
+      completedAt: row.completed_at ? some(new Date(row.completed_at)) : none(),
       estimatedDuration: msToDuration(row.estimated_duration || 0),
-      actualDuration: row.actual_duration ? Option.some(msToDuration(row.actual_duration)) : Option.none(),
+      actualDuration: row.actual_duration ? some(msToDuration(row.actual_duration)) : none(),
       retryCount: row.retry_count || 0,
       maxRetries: row.max_retries || 3,
-      lastError: row.last_error ? Option.some(row.last_error) : Option.none(),
-      errorStack: Option.none(), // Not stored in this schema version
-      filePath: row.file_path ? Option.some(row.file_path) : Option.none(),
-      fileSize: row.file_size ? Option.some(row.file_size) : Option.none(),
-      fileHash: Option.none(), // Not implemented yet
-      operationData: row.operation_data ? Option.some(row.operation_data) : Option.none(),
-      resultData: Option.none(), // Not implemented yet
-      memoryUsageKb: Option.none(), // Not implemented yet
-      cpuTimeMs: Option.none() // Not implemented yet
+      lastError: row.last_error ? some(row.last_error) : none(),
+      errorStack: none(), // Not stored in this schema version
+      filePath: row.file_path ? some(row.file_path) : none(),
+      fileSize: row.file_size ? some(row.file_size) : none(),
+      fileHash: none(), // Not implemented yet
+      operationData: row.operation_data ? some(row.operation_data) : none(),
+      resultData: none(), // Not implemented yet
+      memoryUsageKb: none(), // Not implemented yet
+      cpuTimeMs: none() // Not implemented yet
     })
 
     /**
@@ -219,13 +220,13 @@ export const QueuePersistenceLive = effect(
     const persistTask = <A, E>(task: PersistedQueueTask<A, E>) =>
       Effect.gen(function*() {
         // Convert task data for database storage
-        const operationDataJson = Option.match(task.operationData, {
+        const operationDataJson = match(task.operationData, {
           onNone: () => null,
           onSome: (data) => data
         })
 
-        const filePath = Option.getOrNull(task.filePath)
-        const fileSize = Option.getOrNull(task.fileSize)
+        const filePath = getOrNull(task.filePath)
+        const fileSize = getOrNull(task.fileSize)
 
         // Execute insert
         yield* executeStatement(
@@ -352,10 +353,10 @@ export const QueuePersistenceLive = effect(
         )
 
         if (rows.length === 0) {
-          return Option.none()
+          return none()
         }
 
-        return Option.some(rowToPersistedTask(rows[0]))
+        return some(rowToPersistedTask(rows[0]))
       })
 
     const deleteTask = (taskId: string) =>
@@ -412,7 +413,7 @@ export const QueuePersistenceTest = succeed(
     clearQueueForNewSession: () => Effect.succeed(void 0),
     recoverFromCrash: () => Effect.succeed([]),
     getCurrentSession: () => Effect.succeed("test-session"),
-    getTaskById: () => Effect.succeed(Option.none()),
+    getTaskById: () => Effect.succeed(none()),
     deleteTask: () => Effect.succeed(void 0),
     cleanup: () => Effect.succeed(void 0)
   })

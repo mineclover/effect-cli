@@ -1,3 +1,5 @@
+import { toMillis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
 /**
  * Performance Profiler for Effect CLI Queue System
  *
@@ -11,7 +13,7 @@
  */
 
 import * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
+
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
@@ -99,11 +101,11 @@ export interface PerformanceProfiler {
     success: boolean,
     errorType?: string
   ) => Effect.Effect<OperationMetrics>
-  readonly getPerformanceStats: (timeWindow?: Duration.Duration) => Effect.Effect<PerformanceStats>
+  readonly getPerformanceStats: (timeWindow?: Duration) => Effect.Effect<PerformanceStats>
   readonly analyzeBottlenecks: () => Effect.Effect<ReadonlyArray<BottleneckAnalysis>>
   readonly getResourceUtilization: () => Effect.Effect<ReadonlyArray<ResourceUtilization>>
   readonly exportProfilingData: (format: "json" | "csv") => Effect.Effect<string>
-  readonly clearProfilingData: (olderThan?: Duration.Duration) => Effect.Effect<number>
+  readonly clearProfilingData: (olderThan?: Duration) => Effect.Effect<number>
 }
 
 export const PerformanceProfiler = Context.GenericTag<PerformanceProfiler>("@app/PerformanceProfiler")
@@ -318,10 +320,10 @@ export const PerformanceProfilerLive: Layer<PerformanceProfiler> = effect(
         return metrics
       })
 
-    const getPerformanceStats = (timeWindow?: Duration.Duration): Effect.Effect<PerformanceStats> =>
+    const getPerformanceStats = (timeWindow?: Duration): Effect.Effect<PerformanceStats> =>
       Effect.sync(() => {
         const windowStart = timeWindow
-          ? Date.now() - Duration.toMillis(timeWindow)
+          ? Date.now() - toMillis(timeWindow)
           : 0
 
         const filteredMetrics = operationMetrics.filter((m) => m.startTime >= windowStart)
@@ -452,10 +454,10 @@ export const PerformanceProfilerLive: Layer<PerformanceProfiler> = effect(
         }
       })
 
-    const clearProfilingData = (olderThan?: Duration.Duration): Effect.Effect<number> =>
+    const clearProfilingData = (olderThan?: Duration): Effect.Effect<number> =>
       Effect.gen(function*() {
         const cutoffTime = olderThan
-          ? Date.now() - Duration.toMillis(olderThan)
+          ? Date.now() - toMillis(olderThan)
           : 0
 
         const beforeCount = operationMetrics.length
@@ -469,7 +471,7 @@ export const PerformanceProfilerLive: Layer<PerformanceProfiler> = effect(
 
         yield* Effect.log(
           `🧹 Cleared ${removedCount} profiling records older than ${
-            olderThan ? Duration.toMillis(olderThan) : "all"
+            olderThan ? toMillis(olderThan) : "all"
           }ms`
         )
 

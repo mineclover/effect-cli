@@ -1,3 +1,7 @@
+import { hours, millis, toMillis, seconds } from "effect/Duration"
+import type { Duration } from "effect/Duration"
+import { none, some, isNone, isSome } from "effect/Option"
+import type { Option } from "effect/Option"
 /**
  * Advanced Cache System for Effect CLI Queue System
  *
@@ -11,11 +15,11 @@
  */
 
 import * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
+
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
-import * as Option from "effect/Option"
+
 // import * as HashMap from "effect/HashMap" // Unused import
 import type * as Schedule from "effect/Schedule"
 
@@ -73,7 +77,7 @@ export interface CacheStats {
 export interface CacheConfig {
   readonly maxMemorySize: number
   readonly maxEntries: number
-  readonly defaultTtl: Duration.Duration
+  readonly defaultTtl: Duration
   readonly evictionPolicy: EvictionPolicy
   readonly tierThresholds: Record<CacheTier, number>
   readonly preloadStrategies: ReadonlyArray<PreloadStrategy>
@@ -88,7 +92,7 @@ export interface PreloadStrategy {
   readonly name: string
   readonly pattern: string // Key pattern to match
   readonly priority: number
-  readonly refreshInterval: Duration.Duration
+  readonly refreshInterval: Duration
   readonly loader: (key: string) => Effect.Effect<any>
 }
 
@@ -106,7 +110,7 @@ export interface CacheWarmingConfig {
  * Advanced cache interface
  */
 export interface AdvancedCache {
-  readonly get: <T>(key: string, tier?: CacheTier) => Effect.Effect<Option.Option<T>>
+  readonly get: <T>(key: string, tier?: CacheTier) => Effect.Effect<Option<T>>
   readonly set: <T>(key: string, value: T, options?: CacheSetOptions) => Effect.Effect<void>
   readonly delete: (key: string) => Effect.Effect<boolean>
   readonly clear: (pattern?: string) => Effect.Effect<number>
@@ -125,7 +129,7 @@ export const AdvancedCache = Context.GenericTag<AdvancedCache>("@app/AdvancedCac
  * Options for cache set operation
  */
 export interface CacheSetOptions {
-  readonly ttl?: Duration.Duration
+  readonly ttl?: Duration
   readonly tier?: CacheTier
   readonly priority?: number
   readonly computeCost?: number
@@ -148,7 +152,7 @@ export interface CacheOptimizationResult {
  * Cache tier manager for multi-tier caching
  */
 interface CacheTierManager {
-  readonly getFromTier: (tier: CacheTier, key: string) => Effect.Effect<Option.Option<any>>
+  readonly getFromTier: (tier: CacheTier, key: string) => Effect.Effect<Option<any>>
   readonly setToTier: (tier: CacheTier, key: string, entry: CacheEntry<any>) => Effect.Effect<void>
   readonly evictFromTier: (tier: CacheTier, key: string) => Effect.Effect<boolean>
   readonly getTierStats: (tier: CacheTier) => Effect.Effect<TierStats>
@@ -195,7 +199,7 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
     const defaultConfig: CacheConfig = {
       maxMemorySize: 256 * 1024 * 1024, // 256MB
       maxEntries: 10000,
-      defaultTtl: Duration.hours(1),
+      defaultTtl: hours(1),
       evictionPolicy: "adaptive",
       tierThresholds: {
         memory: 128 * 1024 * 1024, // 128MB
@@ -348,25 +352,25 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
               break
             case "ssd":
               entry = ssdCacheEntries.get(key)
-              yield* Effect.sleep(Duration.millis(5)) // Simulate SSD access time
+              yield* Effect.sleep(millis(5)) // Simulate SSD access time
               break
             case "disk":
               entry = diskCacheEntries.get(key)
-              yield* Effect.sleep(Duration.millis(20)) // Simulate disk access time
+              yield* Effect.sleep(millis(20)) // Simulate disk access time
               break
             default:
-              return Option.none()
+              return none()
           }
 
           if (!entry || isExpired(entry)) {
-            return Option.none()
+            return none()
           }
 
           // Update access statistics
           entry.accessCount++
           entry.lastAccessed = Date.now()
 
-          return Option.some(entry.value)
+          return some(entry.value)
         }),
 
       setToTier: (tier: CacheTier, key: string, entry: CacheEntry<any>) =>
@@ -377,11 +381,11 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
               break
             case "ssd":
               ssdCacheEntries.set(key, entry)
-              yield* Effect.sleep(Duration.millis(10)) // Simulate SSD write time
+              yield* Effect.sleep(millis(10)) // Simulate SSD write time
               break
             case "disk":
               diskCacheEntries.set(key, entry)
-              yield* Effect.sleep(Duration.millis(50)) // Simulate disk write time
+              yield* Effect.sleep(millis(50)) // Simulate disk write time
               break
           }
         }),
@@ -434,7 +438,7 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
         Effect.gen(function*() {
           const value = yield* tierManager.getFromTier(fromTier, key)
 
-          if (Option.isNone(value)) {
+          if (isNone(value)) {
             return false
           }
 
@@ -477,7 +481,7 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
     // SERVICE IMPLEMENTATION
     // ========================================================================
 
-    const get = <T>(key: string, preferredTier?: CacheTier): Effect.Effect<Option.Option<T>> =>
+    const get = <T>(key: string, preferredTier?: CacheTier): Effect.Effect<Option<T>> =>
       Effect.gen(function*() {
         const searchTiers: Array<CacheTier> = preferredTier
           ? [preferredTier, "memory", "ssd", "disk"]
@@ -486,7 +490,7 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
         for (const tier of searchTiers) {
           const result = yield* tierManager.getFromTier(tier, key)
 
-          if (Option.isSome(result)) {
+          if (isSome(result)) {
             stats.totalHits++
 
             // Auto-promote frequently accessed entries to faster tiers
@@ -505,7 +509,7 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
         }
 
         stats.totalMisses++
-        return Option.none()
+        return none()
       })
 
     const set = <T>(key: string, value: T, options: CacheSetOptions = {}): Effect.Effect<void> =>
@@ -521,7 +525,7 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
           lastAccessed: now,
           accessCount: 0,
           size,
-          ...(options.ttl && { ttl: Duration.toMillis(options.ttl) }),
+          ...(options.ttl && { ttl: toMillis(options.ttl) }),
           priority: options.priority || 5,
           computeCost: options.computeCost || 1
         }
@@ -767,7 +771,7 @@ export const AdvancedCacheLive: Layer<AdvancedCache> = effect(
               // Mock warmup operation
               const keys = [`${pattern}-1`, `${pattern}-2`, `${pattern}-3`]
               yield* preload(keys)
-              yield* Effect.sleep(Duration.seconds(1))
+              yield* Effect.sleep(seconds(1))
             }
           }).pipe(
             Effect.repeat(config.warmupSchedule),

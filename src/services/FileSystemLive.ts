@@ -3,7 +3,8 @@ import * as Path from "@effect/platform/Path"
 import * as Array from "effect/Array"
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
-import * as Order from "effect/Order"
+import { make } from "effect/Order"
+
 import { type FileInfo, FileSystem as AppFileSystem } from "./FileSystem.js"
 
 export const FileSystemLive = effect(
@@ -29,7 +30,7 @@ export const FileSystemLive = effect(
             } satisfies FileInfo
           }))
 
-        const fileOrder = Order.make<FileInfo>((a, b) => {
+        const fileOrder = make<FileInfo>((a, b) => {
           if (a.isDirectory !== b.isDirectory) {
             return a.isDirectory ? -1 : 1
           }

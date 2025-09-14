@@ -1,3 +1,7 @@
+import { seconds, millis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
+import { getOrElse, fromNullable } from "effect/Option"
+import * as Option from "effect/Option"
 /**
  * Effect CLI Queue System - Main Export Module
  *
@@ -9,10 +13,10 @@
  * @created 2025-01-12
  */
 
-import * as Duration from "effect/Duration"
+
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
-import * as Option from "effect/Option"
+
 import * as Schedule from "effect/Schedule"
 
 // ============================================================================
@@ -212,7 +216,7 @@ export const queueFileOperation = <A, E>(
     filePath?: string
     priority?: number
     maxRetries?: number
-    estimatedDuration?: Duration.Duration
+    estimatedDuration?: Duration
   }
 ) =>
   Effect.gen(function*() {
@@ -223,7 +227,7 @@ export const queueFileOperation = <A, E>(
       resourceGroup: "filesystem",
       priority: options.priority ?? 5,
       maxRetries: options.maxRetries ?? 3,
-      estimatedDuration: options.estimatedDuration ?? Duration.seconds(30),
+      estimatedDuration: options.estimatedDuration ?? seconds(30),
       operationData: options.filePath ? { filePath: options.filePath } : undefined
     })
 
@@ -240,7 +244,7 @@ export const queueNetworkOperation = <A, E>(
   options: {
     priority?: number
     maxRetries?: number
-    estimatedDuration?: Duration.Duration
+    estimatedDuration?: Duration
     url?: string
   } = {}
 ) =>
@@ -252,7 +256,7 @@ export const queueNetworkOperation = <A, E>(
       resourceGroup: "network",
       priority: options.priority ?? 5,
       maxRetries: options.maxRetries ?? 3,
-      estimatedDuration: options.estimatedDuration ?? Duration.seconds(30),
+      estimatedDuration: options.estimatedDuration ?? seconds(30),
       operationData: options.url ? { url: options.url } : undefined
     })
 
@@ -269,7 +273,7 @@ export const queueComputationTask = <A, E>(
   options: {
     priority?: number
     maxRetries?: number
-    estimatedDuration?: Duration.Duration
+    estimatedDuration?: Duration
     isMemoryIntensive?: boolean
   } = {}
 ) =>
@@ -283,7 +287,7 @@ export const queueComputationTask = <A, E>(
       resourceGroup,
       priority: options.priority ?? 5,
       maxRetries: options.maxRetries ?? 3,
-      estimatedDuration: options.estimatedDuration ?? Duration.seconds(30)
+      estimatedDuration: options.estimatedDuration ?? seconds(30)
     })
 
     yield* queue.enqueue(task)
@@ -324,7 +328,7 @@ export const waitForTask = (taskId: string, timeoutMs: number = 60000) =>
         Effect.map((taskOpt) =>
           taskOpt.pipe(
             Option.map((t) => ({ status: t.status, task: t })),
-            Option.getOrElse(() => ({ status: "not-found" as const, task: null }))
+            getOrElse(() => ({ status: "not-found" as const, task: null }))
           )
         )
       )
@@ -334,12 +338,12 @@ export const waitForTask = (taskId: string, timeoutMs: number = 60000) =>
       Effect.repeat(
         Schedule.recurWhile(
           (result: any) => result.status === "pending" || result.status === "running"
-        ).pipe(Schedule.addDelay(() => Duration.millis(100)))
+        ).pipe(Schedule.addDelay(() => millis(100)))
       ),
-      Effect.timeout(Duration.millis(timeoutMs))
+      Effect.timeout(millis(timeoutMs))
     )
 
-    return Option.fromNullable(result?.task)
+    return fromNullable(result?.task)
   })
 
 /**
@@ -376,7 +380,7 @@ export const checkQueueHealth = () =>
     const isHealthy = status.queue.processingFibers.length > 0 &&
       !heartbeat.pipe(
         Option.map((h) => h.memoryLeakDetected || h.circuitBreakerOpen),
-        Option.getOrElse(() => false)
+        getOrElse(() => false)
       )
 
     return {

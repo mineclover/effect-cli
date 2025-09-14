@@ -1,3 +1,5 @@
+import { toMillis, millis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
 /**
  * Effect CLI Queue System - Type Definitions
  *
@@ -9,7 +11,7 @@
  */
 
 import * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
+
 import type * as Effect from "effect/Effect"
 import type * as Fiber from "effect/Fiber"
 import type * as Option from "effect/Option"
@@ -88,8 +90,8 @@ export interface PersistedQueueTask<A = unknown, E = unknown> {
   readonly createdAt: Date
   readonly startedAt: Option.Option<Date>
   readonly completedAt: Option.Option<Date>
-  readonly estimatedDuration: Duration.Duration
-  readonly actualDuration: Option.Option<Duration.Duration>
+  readonly estimatedDuration: Duration
+  readonly actualDuration: Option.Option<Duration>
 
   // Error handling
   readonly retryCount: number
@@ -122,7 +124,7 @@ export interface QueueTask<A = unknown, E = unknown> {
   readonly resourceGroup: ResourceGroup
   readonly operation: Effect.Effect<A, E>
   readonly priority: number
-  readonly estimatedDuration: Duration.Duration
+  readonly estimatedDuration: Duration
   readonly maxRetries: number
   readonly operationData: Option.Option<Record<string, unknown>>
 }
@@ -266,7 +268,7 @@ export class TaskTimeoutError extends Error {
   constructor(
     message: string,
     public readonly taskId: string,
-    public readonly timeout: Duration.Duration,
+    public readonly timeout: Duration,
     public readonly cause?: unknown
   ) {
     super(message)
@@ -523,7 +525,7 @@ export type TaskFactory<A, E> = (
 export interface TaskOptions {
   readonly priority: number
   readonly maxRetries: number
-  readonly estimatedDuration: Duration.Duration
+  readonly estimatedDuration: Duration
   readonly filePath: string
   readonly operationData: Record<string, unknown>
 }
@@ -613,15 +615,15 @@ export const calculatePriorityScore = (
 /**
  * Convert Duration to milliseconds for database storage
  */
-export const durationToMs = (duration: Duration.Duration): number => {
-  return Duration.toMillis(duration)
+export const durationToMs = (duration: Duration): number => {
+  return toMillis(duration)
 }
 
 /**
  * Convert milliseconds to Duration
  */
-export const msToDuration = (ms: number): Duration.Duration => {
-  return Duration.millis(ms)
+export const msToDuration = (ms: number): Duration => {
+  return millis(ms)
 }
 
 /**

@@ -1,3 +1,5 @@
+import { some, none, match, getOrElse } from "effect/Option"
+import type { Option } from "effect/Option"
 /**
  * SQLite Schema Management Service for Effect CLI Queue System
  *
@@ -9,7 +11,7 @@ import { createHash } from "crypto"
 import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
-import * as Option from "effect/Option"
+
 import { readFileSync } from "fs"
 import { dirname, join } from "path"
 import { fileURLToPath } from "url"
@@ -41,7 +43,7 @@ export class MigrationError extends Error {
 
 export interface SchemaManager {
   readonly initializeSchema: () => Effect.Effect<void, SchemaError>
-  readonly getCurrentVersion: () => Effect.Effect<Option.Option<string>, SchemaError>
+  readonly getCurrentVersion: () => Effect.Effect<Option<string>, SchemaError>
   readonly needsMigration: (targetVersion: string) => Effect.Effect<boolean, SchemaError>
   readonly migrate: (targetVersion: string) => Effect.Effect<void, MigrationError | SchemaError>
   readonly validateSchema: () => Effect.Effect<boolean, SchemaError>
@@ -175,15 +177,15 @@ export const SchemaManagerLive = effect(
         )
 
         return versions.length > 0
-          ? Option.some(versions[0].version)
-          : Option.none()
+          ? some(versions[0].version)
+          : none()
       })
 
     const needsMigration = (targetVersion: string) =>
       Effect.gen(function*() {
         const currentVersion = yield* getCurrentVersion()
 
-        return Option.match(currentVersion, {
+        return match(currentVersion, {
           onNone: () => true,
           onSome: (version) => version !== targetVersion
         })
@@ -194,7 +196,7 @@ export const SchemaManagerLive = effect(
         const currentVersion = yield* getCurrentVersion()
 
         yield* Effect.log(
-          `Starting migration from ${Option.getOrElse(currentVersion, () => "none")} to ${targetVersion}`
+          `Starting migration from ${getOrElse(currentVersion, () => "none")} to ${targetVersion}`
         )
 
         // For now, we only support migrating to the current version
@@ -325,7 +327,7 @@ export const getDatabaseStatus = () =>
     const isValid = yield* schemaManager.validateSchema()
 
     return {
-      currentVersion: Option.getOrElse(currentVersion, () => "unknown"),
+      currentVersion: getOrElse(currentVersion, () => "unknown"),
       totalMigrations: migrations.length,
       isValid,
       lastMigration: migrations.length > 0

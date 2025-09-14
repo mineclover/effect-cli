@@ -1,3 +1,4 @@
+import { log } from "effect/Console"
 /**
  * Simple Queue Command - Basic queue system demonstration
  *
@@ -5,7 +6,7 @@
  */
 
 import * as Command from "@effect/cli/Command"
-import * as Console from "effect/Console"
+
 import { millis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import {
@@ -20,14 +21,14 @@ export const simpleQueueCommand = Command.make(
   {},
   () =>
     Effect.gen(function*() {
-      yield* Console.log("🚀 Queue System Demo")
+      yield* log("🚀 Queue System Demo")
 
       // Initialize queue system
       const sessionId = yield* initializeQueueSystem()
-      yield* Console.log(`📋 Session ID: ${sessionId}`)
+      yield* log(`📋 Session ID: ${sessionId}`)
 
       // Add some demo tasks
-      yield* Console.log("📝 Adding computation tasks to queue...")
+      yield* log("📝 Adding computation tasks to queue...")
 
       const task1 = queueComputationTask(
         Effect.gen(function*() {
@@ -50,24 +51,24 @@ export const simpleQueueCommand = Command.make(
       const taskId1 = yield* task1
       const taskId2 = yield* task2
 
-      yield* Console.log(`✅ Added tasks: ${taskId1}, ${taskId2}`)
+      yield* log(`✅ Added tasks: ${taskId1}, ${taskId2}`)
 
       // Show queue status
-      yield* Console.log("📊 Queue Status:")
+      yield* log("📊 Queue Status:")
       const status = yield* getQueueStatus()
-      yield* Console.log(`  - Queue sizes: ${JSON.stringify(status.queue.queues)}`)
-      yield* Console.log(`  - Processing fibers: ${status.queue.processingFibers.length}`)
+      yield* log(`  - Queue sizes: ${JSON.stringify(status.queue.queues)}`)
+      yield* log(`  - Processing fibers: ${status.queue.processingFibers.length}`)
 
       // Wait a moment for tasks to process
       yield* Effect.sleep(millis(500))
 
       // Show final status
       const finalStatus = yield* getQueueStatus()
-      yield* Console.log("📈 Final Queue Status:")
-      yield* Console.log(`  - Queue sizes: ${JSON.stringify(finalStatus.queue.queues)}`)
-      yield* Console.log(`  - Processing fibers: ${finalStatus.queue.processingFibers.length}`)
+      yield* log("📈 Final Queue Status:")
+      yield* log(`  - Queue sizes: ${JSON.stringify(finalStatus.queue.queues)}`)
+      yield* log(`  - Processing fibers: ${finalStatus.queue.processingFibers.length}`)
 
-      yield* Console.log("✨ Queue demo completed!")
+      yield* log("✨ Queue demo completed!")
     })
       .pipe(
         Effect.provide(BasicQueueSystemLayer)

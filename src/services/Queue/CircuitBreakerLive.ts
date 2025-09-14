@@ -1,3 +1,4 @@
+import { none, fromNullable } from "effect/Option"
 /**
  * Circuit Breaker Service Implementation
  *
@@ -13,7 +14,7 @@
 // import * as Duration from "effect/Duration" // Unused import
 import * as Effect from "effect/Effect"
 import { effect, succeed } from "effect/Layer"
-import * as Option from "effect/Option"
+
 import { get, make, update } from "effect/Ref"
 import type { CircuitBreakerState, ResourceGroup } from "./types.js"
 import { CircuitBreaker, QueuePersistence } from "./types.js"
@@ -226,8 +227,8 @@ export const CircuitBreakerLive = effect(
             state: "closed" as CircuitBreakerState,
             failureCount: 0,
             successCount: 0,
-            lastFailureTime: Option.none(),
-            lastSuccessTime: Option.none(),
+            lastFailureTime: none(),
+            lastSuccessTime: none(),
             stateChangedAt: new Date(),
             failureThreshold: config.failureThreshold,
             recoveryTimeoutMs: config.timeoutMs,
@@ -246,8 +247,8 @@ export const CircuitBreakerLive = effect(
           state: state.state,
           failureCount: state.failureCount,
           successCount: state.successCount,
-          lastFailureTime: Option.fromNullable(state.lastFailureTime),
-          lastSuccessTime: Option.none(), // We don't track success time in our current implementation
+          lastFailureTime: fromNullable(state.lastFailureTime),
+          lastSuccessTime: none(), // We don't track success time in our current implementation
           stateChangedAt: state.lastStateChange,
           failureThreshold: config.failureThreshold,
           recoveryTimeoutMs: config.timeoutMs,
@@ -298,8 +299,8 @@ export const CircuitBreakerTest = succeed(
         state: "closed" as CircuitBreakerState,
         failureCount: 0,
         successCount: 0,
-        lastFailureTime: Option.none(),
-        lastSuccessTime: Option.none(),
+        lastFailureTime: none(),
+        lastSuccessTime: none(),
         stateChangedAt: new Date(),
         failureThreshold: 5,
         recoveryTimeoutMs: 30000,

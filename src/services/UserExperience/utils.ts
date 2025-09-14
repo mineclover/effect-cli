@@ -1,3 +1,5 @@
+import { millis, toMillis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
 /**
  * User Experience Utilities
  *
@@ -10,7 +12,7 @@
  * @created 2025-01-12
  */
 
-import * as Duration from "effect/Duration"
+
 import * as Effect from "effect/Effect"
 
 import type {
@@ -33,7 +35,7 @@ import { UserExperienceEnhancer } from "./UserExperienceEnhancer.js"
  */
 export const createProgressTracker = (
   operation: string,
-  estimatedDuration?: Duration.Duration,
+  estimatedDuration?: Duration,
   options?: ProgressOptions
 ): Effect.Effect<ProgressTracker, never, UserExperienceEnhancer> =>
   Effect.gen(function*() {
@@ -45,7 +47,7 @@ export const createProgressTracker = (
       showEta: estimatedDuration !== undefined,
       showSteps: operation.includes("build") || operation.includes("analyze"),
       showQueuePosition: true,
-      updateInterval: Duration.millis(300),
+      updateInterval: millis(300),
       ...options
     }
 
@@ -164,7 +166,7 @@ export const createUserPattern = (
 export const analyzeCommandUsage = (
   command: string,
   options: Record<string, unknown>,
-  duration: Duration.Duration
+  duration: Duration
 ): Array<UserPattern> => {
   const patterns: Array<UserPattern> = []
 
@@ -177,7 +179,7 @@ export const analyzeCommandUsage = (
   }
 
   // Detect performance focus
-  const durationMs = Duration.toMillis(duration)
+  const durationMs = toMillis(duration)
   if (durationMs < 100 && command !== "help") {
     patterns.push(createUserPattern("performance_focused", `Quick ${command} execution`))
   }
@@ -209,7 +211,7 @@ export const analyzeCommandUsage = (
  */
 export const createFeedbackContext = (
   operation: string,
-  duration: Duration.Duration,
+  duration: Duration,
   errorCount: number = 0,
   userLevel: UserLevel = "intermediate"
 ): FeedbackContext => ({
@@ -265,8 +267,8 @@ export const generateContextualTips = (
 /**
  * Format duration for user-friendly display
  */
-export const formatUserFriendlyDuration = (duration: Duration.Duration): string => {
-  const ms = Duration.toMillis(duration)
+export const formatUserFriendlyDuration = (duration: Duration): string => {
+  const ms = toMillis(duration)
 
   if (ms < 1000) {
     return `${ms}ms`
@@ -293,7 +295,7 @@ export const formatUserFriendlyDuration = (duration: Duration.Duration): string 
 export const calculateComplexityScore = (
   operation: string,
   fileCount: number = 0,
-  estimatedDuration?: Duration.Duration
+  estimatedDuration?: Duration
 ): number => {
   let score = 0
 
@@ -310,7 +312,7 @@ export const calculateComplexityScore = (
 
   // Duration impact
   if (estimatedDuration) {
-    const durationMs = Duration.toMillis(estimatedDuration)
+    const durationMs = toMillis(estimatedDuration)
     if (durationMs > 30000) score += 0.3
     else if (durationMs > 5000) score += 0.2
     else if (durationMs > 1000) score += 0.1

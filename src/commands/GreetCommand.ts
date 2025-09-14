@@ -1,3 +1,4 @@
+import { log } from "effect/Console"
 /**
  * Basic Greet Command Template
  *
@@ -7,7 +8,7 @@
 
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
-import * as Console from "effect/Console"
+
 import * as Effect from "effect/Effect"
 
 const nameArg = Args.text({ name: "name" }).pipe(
@@ -18,7 +19,7 @@ export const greetCommand = Command.make("greet", { name: nameArg }).pipe(
   Command.withDescription("A simple greeting command template"),
   Command.withHandler(({ name }) =>
     Effect.gen(function*() {
-      yield* Console.log(`Hello, ${name}!`)
+      yield* log(`Hello, ${name}!`)
     })
   )
 )

@@ -1,3 +1,6 @@
+import { toMillis, millis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
+import { fixed } from "effect/Schedule"
 /**
  * User Experience Enhancer
  *
@@ -12,11 +15,11 @@
  */
 
 import * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
+
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
-import * as Schedule from "effect/Schedule"
+
 
 import { InternalQueue } from "../Queue/index.js"
 import type { QueueMetrics } from "../Queue/types.js"
@@ -34,7 +37,7 @@ import type { QueueMetrics } from "../Queue/types.js"
  */
 export interface UserExperienceEnhancer {
   // Progress Tracking
-  readonly startProgress: (operation: string, estimatedDuration?: Duration.Duration, options?: ProgressOptions) => Effect.Effect<ProgressTracker>
+  readonly startProgress: (operation: string, estimatedDuration?: Duration, options?: ProgressOptions) => Effect.Effect<ProgressTracker>
   readonly trackLongRunningOperation: <A, E>(
     operation: Effect.Effect<A, E>,
     description: string,
@@ -71,7 +74,7 @@ export interface ProgressOptions {
   readonly showEta?: boolean
   readonly showSteps?: boolean
   readonly showQueuePosition?: boolean
-  readonly updateInterval?: Duration.Duration
+  readonly updateInterval?: Duration
   readonly style?: ProgressStyle
 }
 
@@ -82,7 +85,7 @@ export type ProgressStyle = "bar" | "spinner" | "dots" | "minimal"
  */
 export interface FeedbackContext {
   readonly operation: string
-  readonly duration: Duration.Duration
+  readonly duration: Duration
   readonly queueMetrics?: QueueMetrics
   readonly errorCount?: number
   readonly userExperienceLevel?: UserLevel
@@ -121,7 +124,7 @@ class LiveProgressTracker implements ProgressTracker {
 
   constructor(
     private operation: string,
-    private estimatedDuration?: Duration.Duration,
+    private estimatedDuration?: Duration,
     private options: ProgressOptions = {}
   ) {}
 
@@ -219,7 +222,7 @@ class LiveProgressTracker implements ProgressTracker {
 
     // Add ETA if available and requested
     if (this.options.showEta && this.estimatedDuration && progress > 0) {
-      const totalMs = Duration.toMillis(this.estimatedDuration)
+      const totalMs = toMillis(this.estimatedDuration)
       const eta = ((totalMs / progress) * (100 - progress)) / 100
       display += ` (ETA: ${this.formatDuration(eta)})`
     }
@@ -264,7 +267,7 @@ export const UserExperienceEnhancerLive: Layer<UserExperienceEnhancer, never, In
 
     const startProgress = (
       operation: string,
-      estimatedDuration?: Duration.Duration,
+      estimatedDuration?: Duration,
       options: ProgressOptions = {}
     ): Effect.Effect<ProgressTracker> =>
       Effect.gen(function*() {
@@ -294,8 +297,8 @@ export const UserExperienceEnhancerLive: Layer<UserExperienceEnhancer, never, In
                   currentProgress = Math.min(90, currentProgress + 10)
                   yield* progress.update(currentProgress, "Processing...")
                 }),
-                Schedule.fixed(
-                  Duration.millis(options.updateInterval ? Duration.toMillis(options.updateInterval) : 500)
+                fixed(
+                  millis(options.updateInterval ? toMillis(options.updateInterval) : 500)
                 )
               )
             }).pipe(Effect.forever)
@@ -385,7 +388,7 @@ export const UserExperienceEnhancerLive: Layer<UserExperienceEnhancer, never, In
 
     const provideSmartFeedback = (context: FeedbackContext): Effect.Effect<void> =>
       Effect.gen(function*() {
-        const duration = Duration.toMillis(context.duration)
+        const duration = toMillis(context.duration)
 
         // Provide contextual feedback based on operation characteristics
         if (duration > 5000) {

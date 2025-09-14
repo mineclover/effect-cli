@@ -1,3 +1,5 @@
+import { millis, toMillis } from "effect/Duration"
+import type { Duration } from "effect/Duration"
 /**
  * Memory Optimizer for Effect CLI Queue System
  *
@@ -11,7 +13,7 @@
  */
 
 import * as Context from "effect/Context"
-import * as Duration from "effect/Duration"
+
 import * as Effect from "effect/Effect"
 import { effect } from "effect/Layer"
 import type { Layer } from "effect/Layer"
@@ -32,7 +34,7 @@ export interface MemoryPoolConfig {
   readonly maxSize: number
   readonly growthFactor: number
   readonly shrinkThreshold: number
-  readonly maxIdleTime: Duration.Duration
+  readonly maxIdleTime: Duration
 }
 
 /**
@@ -124,7 +126,7 @@ export interface MemoryOptimizer {
   readonly optimizeMemory: (aggressive?: boolean) => Effect.Effect<ReadonlyArray<OptimizationResult>>
   readonly setMemoryLimit: (limit: number) => Effect.Effect<void>
   readonly getAvailableStrategies: () => Effect.Effect<ReadonlyArray<OptimizationStrategy>>
-  readonly scheduleMemoryMaintenance: (interval: Duration.Duration) => Effect.Effect<void>
+  readonly scheduleMemoryMaintenance: (interval: Duration) => Effect.Effect<void>
 }
 
 export const MemoryOptimizer = Context.GenericTag<MemoryOptimizer>("@app/MemoryOptimizer")
@@ -356,7 +358,7 @@ export const MemoryOptimizerLive: Layer<MemoryOptimizer> = effect(
             if (global.gc) {
               global.gc()
               global.gc() // Run twice for thorough cleanup
-              yield* Effect.sleep(Duration.millis(100))
+              yield* Effect.sleep(millis(100))
             }
 
             const afterStats = getCurrentMemoryStats()
@@ -521,7 +523,7 @@ export const MemoryOptimizerLive: Layer<MemoryOptimizer> = effect(
     const getAvailableStrategies = (): Effect.Effect<ReadonlyArray<OptimizationStrategy>> =>
       Effect.succeed(optimizationStrategies)
 
-    const scheduleMemoryMaintenance = (interval: Duration.Duration): Effect.Effect<void> =>
+    const scheduleMemoryMaintenance = (interval: Duration): Effect.Effect<void> =>
       Effect.gen(function*() {
         if (maintenanceScheduled) {
           yield* Effect.log("🔄 Memory maintenance already scheduled")
@@ -530,7 +532,7 @@ export const MemoryOptimizerLive: Layer<MemoryOptimizer> = effect(
 
         maintenanceScheduled = true
 
-        yield* Effect.log(`⏰ Scheduling memory maintenance every ${Duration.toMillis(interval)}ms`)
+        yield* Effect.log(`⏰ Scheduling memory maintenance every ${toMillis(interval)}ms`)
 
         // Schedule recurring maintenance
         yield* Effect.fork(

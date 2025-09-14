@@ -1,3 +1,4 @@
+import { log, error } from "effect/Console"
 /**
  * Queue Management Commands
  *
@@ -12,7 +13,7 @@
 
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
-import * as Console from "effect/Console"
+
 import { seconds } from "effect/Duration"
 import * as Effect from "effect/Effect"
 
@@ -147,7 +148,7 @@ const statusCommand = Command.make("status", {
             }
           }
 
-          yield* Console.log(JSON.stringify(jsonOutput, null, 2))
+          yield* log(JSON.stringify(jsonOutput, null, 2))
           return
         }
 
@@ -157,93 +158,93 @@ const statusCommand = Command.make("status", {
         }
 
         // Header
-        yield* Console.log("📊 Effect CLI Queue System Status")
-        yield* Console.log("═".repeat(60))
-        yield* Console.log("")
+        yield* log("📊 Effect CLI Queue System Status")
+        yield* log("═".repeat(60))
+        yield* log("")
 
         // Basic Information
-        yield* Console.log("🔧 System Information:")
-        yield* Console.log(`  Session ID: ${metrics.sessionId || "unknown"}`)
-        yield* Console.log(`  Uptime: ${formatUptime(heartbeat.uptimeStart)}`)
-        yield* Console.log(`  Last Heartbeat: ${formatTime(heartbeat.lastHeartbeat)}`)
+        yield* log("🔧 System Information:")
+        yield* log(`  Session ID: ${metrics.sessionId || "unknown"}`)
+        yield* log(`  Uptime: ${formatUptime(heartbeat.uptimeStart)}`)
+        yield* log(`  Last Heartbeat: ${formatTime(heartbeat.lastHeartbeat)}`)
 
         const health = getHealthDisplay(heartbeat.isHealthy)
-        yield* Console.log(`  ${health.icon} Health Status: ${health.color}${health.text}\x1b[0m`)
+        yield* log(`  ${health.icon} Health Status: ${health.color}${health.text}\x1b[0m`)
 
         if (heartbeat.consecutiveFailures > 0) {
-          yield* Console.log(`  ⚠️  Consecutive Failures: ${heartbeat.consecutiveFailures}`)
+          yield* log(`  ⚠️  Consecutive Failures: ${heartbeat.consecutiveFailures}`)
         }
-        yield* Console.log("")
+        yield* log("")
 
         // Task Statistics
-        yield* Console.log("📋 Task Statistics:")
-        yield* Console.log(`  Total Tasks: ${metrics.totalTasks}`)
-        yield* Console.log(`  ✅ Completed: ${metrics.completedTasks}`)
-        yield* Console.log(`  ❌ Failed: ${metrics.failedTasks}`)
-        yield* Console.log(`  🔄 Running: ${queue.processingFibers.length}`)
-        yield* Console.log(`  ⏳ Pending: ${metrics.pendingTasks}`)
-        yield* Console.log(`  📈 Success Rate: ${metrics.successRate.toFixed(1)}%`)
-        yield* Console.log("")
+        yield* log("📋 Task Statistics:")
+        yield* log(`  Total Tasks: ${metrics.totalTasks}`)
+        yield* log(`  ✅ Completed: ${metrics.completedTasks}`)
+        yield* log(`  ❌ Failed: ${metrics.failedTasks}`)
+        yield* log(`  🔄 Running: ${queue.processingFibers.length}`)
+        yield* log(`  ⏳ Pending: ${metrics.pendingTasks}`)
+        yield* log(`  📈 Success Rate: ${metrics.successRate.toFixed(1)}%`)
+        yield* log("")
 
         // Performance Metrics
-        yield* Console.log("⚡ Performance:")
-        yield* Console.log(`  Avg Processing Time: ${metrics.averageProcessingTime.toFixed(1)}ms`)
-        yield* Console.log(
+        yield* log("⚡ Performance:")
+        yield* log(`  Avg Processing Time: ${metrics.averageProcessingTime.toFixed(1)}ms`)
+        yield* log(
           `  System Load: CPU ${(healthMetrics.systemLoad.cpu * 100).toFixed(1)}%, Memory ${
             (healthMetrics.systemLoad.memory * 100).toFixed(1)
           }%`
         )
-        yield* Console.log(`  Queue Backlog: ${healthMetrics.systemLoad.queueBacklog} tasks`)
-        yield* Console.log("")
+        yield* log(`  Queue Backlog: ${healthMetrics.systemLoad.queueBacklog} tasks`)
+        yield* log("")
 
         // Detailed Information (if requested)
         if (detailed) {
-          yield* Console.log("🔍 Detailed System Information:")
+          yield* log("🔍 Detailed System Information:")
 
           // Database Health
           const dbHealth = healthMetrics.database
           const dbStatus = dbHealth.connected ? "✅ Connected" : "❌ Disconnected"
-          yield* Console.log(`  Database: ${dbStatus}`)
+          yield* log(`  Database: ${dbStatus}`)
           if (dbHealth.responseTime !== null) {
-            yield* Console.log(`    Response Time: ${dbHealth.responseTime}ms`)
+            yield* log(`    Response Time: ${dbHealth.responseTime}ms`)
           }
           if (dbHealth.error) {
-            yield* Console.log(`    Error: ${dbHealth.error}`)
+            yield* log(`    Error: ${dbHealth.error}`)
           }
 
           // Circuit Breaker Status
           const breakerStatus = healthMetrics.circuitBreaker
           const breakerIcon = breakerStatus === "closed" ? "✅" : breakerStatus === "open" ? "❌" : "⚠️"
-          yield* Console.log(`  Circuit Breaker: ${breakerIcon} ${breakerStatus.toUpperCase()}`)
+          yield* log(`  Circuit Breaker: ${breakerIcon} ${breakerStatus.toUpperCase()}`)
 
           // Memory Information
           const memory = healthMetrics.memory
-          yield* Console.log(`  Memory Usage:`)
-          yield* Console.log(`    RSS: ${formatMemory(memory.rss)} ${memory.warnings.highRSS ? "⚠️" : ""}`)
-          yield* Console.log(`    Heap Used: ${formatMemory(memory.heapUsed)} ${memory.warnings.highHeap ? "⚠️" : ""}`)
-          yield* Console.log(`    Heap Total: ${formatMemory(memory.heapTotal)}`)
-          yield* Console.log(
+          yield* log(`  Memory Usage:`)
+          yield* log(`    RSS: ${formatMemory(memory.rss)} ${memory.warnings.highRSS ? "⚠️" : ""}`)
+          yield* log(`    Heap Used: ${formatMemory(memory.heapUsed)} ${memory.warnings.highHeap ? "⚠️" : ""}`)
+          yield* log(`    Heap Total: ${formatMemory(memory.heapTotal)}`)
+          yield* log(
             `    External: ${formatMemory(memory.external)} ${memory.warnings.highExternal ? "⚠️" : ""}`
           )
-          yield* Console.log("")
+          yield* log("")
         }
 
         // Resource Group Status
-        yield* Console.log("🎛️  Resource Groups:")
+        yield* log("🎛️  Resource Groups:")
         const resourceGroups = ["filesystem", "network", "computation", "memory-intensive"] as const
         const totalRunning = queue.processingFibers.length
 
         for (const group of resourceGroups) {
           // For now, show generic running status since fibers don't have resourceGroup property
           const icon = totalRunning > 0 ? "🔄" : "💤"
-          yield* Console.log(`  ${icon} ${group}: active`)
+          yield* log(`  ${icon} ${group}: active`)
         }
-        yield* Console.log("")
+        yield* log("")
 
         // Footer with current time
-        yield* Console.log(`📅 Updated at: ${new Date().toLocaleString()}`)
+        yield* log(`📅 Updated at: ${new Date().toLocaleString()}`)
         if (watch) {
-          yield* Console.log("👁️  Watching... Press Ctrl+C to exit")
+          yield* log("👁️  Watching... Press Ctrl+C to exit")
         }
       })
 
@@ -309,20 +310,20 @@ const clearCommand = Command.make("clear", {
 
       // Safety check - no tasks to clear
       if (tasksToRemove === 0) {
-        yield* Console.log(`ℹ️  No ${clearDescription} found to clear.`)
+        yield* log(`ℹ️  No ${clearDescription} found to clear.`)
         return
       }
 
       // Confirmation prompt (unless force flag is used)
       if (!force) {
-        yield* Console.log(`⚠️  This will permanently remove ${tasksToRemove} ${clearDescription}.`)
-        yield* Console.log("💡 Use --force (-f) to confirm this action.")
-        yield* Console.log("   Example: queue clear --force --type all")
+        yield* log(`⚠️  This will permanently remove ${tasksToRemove} ${clearDescription}.`)
+        yield* log("💡 Use --force (-f) to confirm this action.")
+        yield* log("   Example: queue clear --force --type all")
         return
       }
 
       // Perform the clearing operation
-      yield* Console.log(`🧹 Clearing ${tasksToRemove} ${clearDescription}...`)
+      yield* log(`🧹 Clearing ${tasksToRemove} ${clearDescription}...`)
 
       try {
         const sessionId = yield* persistence.getCurrentSession()
@@ -346,16 +347,16 @@ const clearCommand = Command.make("clear", {
             break
         }
 
-        yield* Console.log(`✅ Successfully cleared ${tasksToRemove} ${clearDescription}`)
+        yield* log(`✅ Successfully cleared ${tasksToRemove} ${clearDescription}`)
 
         // Show updated status
         const updatedStatus = yield* getQueueStatus()
         const updatedMetrics = updatedStatus.metrics
-        yield* Console.log(
+        yield* log(
           `📊 Updated status: ${updatedMetrics.pendingTasks} pending, ${updatedMetrics.failedTasks} failed`
         )
       } catch (error) {
-        yield* Console.error(`❌ Failed to clear tasks: ${error instanceof Error ? error.message : String(error)}`)
+        yield* error(`❌ Failed to clear tasks: ${error instanceof Error ? error.message : String(error)}`)
       }
     })
   )
@@ -386,7 +387,7 @@ const exportCommand = Command.make("export", {
   Command.withHandler((options) =>
     Effect.gen(function*() {
       const { format, include, output } = options
-      yield* Console.log(`📤 Exporting queue data in ${format.toUpperCase()} format...`)
+      yield* log(`📤 Exporting queue data in ${format.toUpperCase()} format...`)
 
       // Gather comprehensive data
       const [queueStatus, systemHealth] = yield* Effect.all([
@@ -485,12 +486,12 @@ const exportCommand = Command.make("export", {
       // Output to file or stdout
       if (output) {
         yield* writeToFile(output, formattedData)
-        yield* Console.log(`✅ Queue data exported to ${output}`)
-        yield* Console.log(
+        yield* log(`✅ Queue data exported to ${output}`)
+        yield* log(
           `📊 Exported ${Object.keys(exportData).length} data categories in ${format.toUpperCase()} format`
         )
       } else {
-        yield* Console.log(formattedData)
+        yield* log(formattedData)
       }
     })
   )
@@ -512,20 +513,20 @@ export const queueCommand = Command.make("queue").pipe(
   ]),
   Command.withHandler(() =>
     Effect.gen(function*() {
-      yield* Console.log("📊 Effect CLI Queue Management")
-      yield* Console.log("════════════════════════════════")
-      yield* Console.log("")
-      yield* Console.log("Available commands:")
-      yield* Console.log("  queue status     - Display current queue status and metrics")
-      yield* Console.log("  queue clear      - Clear pending/failed tasks from queue")
-      yield* Console.log("  queue export     - Export queue data and metrics")
-      yield* Console.log("")
-      yield* Console.log("Use 'queue <command> --help' for detailed command information")
-      yield* Console.log("")
-      yield* Console.log("Examples:")
-      yield* Console.log("  ./cli queue status --detailed")
-      yield* Console.log("  ./cli queue clear --force --type pending")
-      yield* Console.log("  ./cli queue export json -o metrics.json --include full")
+      yield* log("📊 Effect CLI Queue Management")
+      yield* log("════════════════════════════════")
+      yield* log("")
+      yield* log("Available commands:")
+      yield* log("  queue status     - Display current queue status and metrics")
+      yield* log("  queue clear      - Clear pending/failed tasks from queue")
+      yield* log("  queue export     - Export queue data and metrics")
+      yield* log("")
+      yield* log("Use 'queue <command> --help' for detailed command information")
+      yield* log("")
+      yield* log("Examples:")
+      yield* log("  ./cli queue status --detailed")
+      yield* log("  ./cli queue clear --force --type pending")
+      yield* log("  ./cli queue export json -o metrics.json --include full")
     })
   )
 )
