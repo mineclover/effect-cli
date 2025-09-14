@@ -4,6 +4,38 @@
 
 A production-ready framework for building type-safe, scalable command-line applications using Effect.js and @effect/cli.
 
+## 🚀 Quick Start
+
+### Installation & Setup
+
+```bash
+# Install dependencies
+npm install
+
+# Run tests to verify setup
+npm test
+
+# Build the project
+npm run build
+```
+
+### Basic Usage
+
+```bash
+# Show available commands
+node dist/bin.cjs --help
+
+# Try the greet command
+node dist/bin.cjs greet "Your Name"
+
+# Queue management
+node dist/bin.cjs queue add "sample task" --type computation
+node dist/bin.cjs queue-status
+
+# Simple queue operations
+node dist/bin.cjs simple-queue "background task"
+```
+
 ## 🎯 Project Structure
 
 ### Core Framework (`src/`)
@@ -53,77 +85,81 @@ docs/testing/
 
 ## 📖 Documentation
 
+### Development Guides
+- **[🛠️ CLI Development Guide](docs/CLI_DEVELOPMENT.md)** - How to add new CLI commands
+- **[🧪 Testing Guide](docs/TESTING_GUIDE.md)** - Testing setup and best practices
+- **[📋 Test Conventions](docs/testing/TEST_CONVENTIONS.md)** - Detailed testing standards
+- **[🏗️ TDD Guidelines](docs/testing/TDD_GUIDELINES.md)** - Test-driven development approach
+
 ### Queue System (Core Feature)
 - **[🚀 Quick Start Guide](docs/queue-system/README.md)** - Get started with the queue system
 - **[📘 Complete User Guide](docs/EFFECT_CLI_QUEUE_SYSTEM.md)** - Comprehensive documentation
 - **[🔧 API Reference](docs/QUEUE_SYSTEM_API.md)** - Technical API documentation
 - **[💡 Examples](docs/queue-system/examples.md)** - Code examples and patterns
 
-### Development Framework
-- **[🧪 TDD Guidelines](docs/testing/TDD_GUIDELINES.md)** - Test-driven development approach
-- **[📋 Test Conventions](docs/testing/TEST_CONVENTIONS.md)** - Testing standards
+### Technical References
 - **[📚 Testing Reference](docs/testing/TESTING_REFERENCE.md)** - Complete testing guide
-- **[🎯 Effect Patterns](docs/api/EFFECT_PATTERNS.md)** - Effect.js patterns and usage 
+- **[🎯 Effect Patterns](docs/api/EFFECT_PATTERNS.md)** - Effect.js patterns and usage
 
-## Running Code
+## 🔧 Development
 
-This template leverages [tsx](https://tsx.is) to allow execution of TypeScript files via NodeJS as if they were written in plain JavaScript.
+### Adding New Commands
 
-To execute a file with `tsx`:
+1. **Create Command File**: Create new command in `src/commands/`
+2. **Register Command**: Add to `src/commands/index.ts` and `src/Cli.ts`
+3. **Write Tests**: Add tests in `test/commands/`
+4. **Validate**: Run `npm run check` and `npm test`
 
-```sh
-pnpm tsx ./path/to/the/file.ts
+See [CLI Development Guide](docs/CLI_DEVELOPMENT.md) for detailed instructions.
+
+### Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test file
+npm test GreetCommand.test.ts
+
+# Type check
+npm run check
+
+# Full validation
+npm run check && npm test && npm run build
 ```
+
+See [Testing Guide](docs/TESTING_GUIDE.md) for comprehensive testing information.
 
 ## Operations
 
 **Building**
 
-To build the package:
-
-```sh
-pnpm build
+```bash
+npm run build
 ```
 
 **Testing**
 
-To test the package:
-
-```sh
-pnpm test
+```bash
+npm test
 ```
 
 **Code Formatting**
 
-To format the code:
-
-```sh
+```bash
 # Format all files
-pnpm format
+npm run format
 
-# Format with watch mode (auto-format on file changes)
-pnpm format:watch
+# Format with watch mode
+npm run format:watch
 ```
 
-## Code Formatting Setup
+### Code Quality
 
-이 프로젝트는 저장 시 자동 포맷팅이 설정되어 있습니다:
-
-### VSCode 설정
-- `"editor.formatOnSave": true` - 저장 시 자동 포맷
-- `"source.fixAll.eslint": "always"` - ESLint 자동 수정
-- `"source.organizeImports": "always"` - import 자동 정리
-
-### 수동 포맷팅
-```sh
-# 전체 프로젝트 포맷
-pnpm format
-
-# 파일 변경 감지하여 자동 포맷 (개발 중 유용)
-pnpm format:watch
-```
-
-VSCode에서 파일을 저장하면 자동으로 ESLint 규칙에 따라 포맷팅됩니다.
+- **Type Safety**: No `any` types - strict TypeScript throughout
+- **Testing**: 31+ tests with 80%+ coverage
+- **Linting**: ESLint + Prettier with auto-format on save
+- **CI/CD**: All tests must pass before commits
 
 ## Project Structure
 
