@@ -10,30 +10,33 @@ A production-ready framework for building type-safe, scalable command-line appli
 
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Run tests to verify setup
-npm test
+pnpm test
 
 # Build the project
-npm run build
+pnpm build
 ```
 
 ### Basic Usage
 
 ```bash
 # Show available commands
-node dist/bin.cjs --help
+pnpm dev --help
 
 # Try the greet command
-node dist/bin.cjs greet "Your Name"
+pnpm dev greet "Your Name"
 
 # Queue management
-node dist/bin.cjs queue add "sample task" --type computation
-node dist/bin.cjs queue-status
+pnpm dev queue add "sample task" --type computation
+pnpm dev queue-status
 
 # Simple queue operations
-node dist/bin.cjs simple-queue "background task"
+pnpm dev simple-queue "background task"
+
+# List files (example command)
+pnpm dev list ./
 ```
 
 ## 🎯 Project Structure
@@ -42,10 +45,14 @@ node dist/bin.cjs simple-queue "background task"
 ```
 src/
 ├── commands/           # 🎯 Main CLI Commands
-│   ├── GreetCommand.ts     # Basic template example
-│   ├── QueueCommand.ts     # Queue management (core feature)
+│   ├── GreetCommand.ts     # Basic greeting example
+│   ├── QueueCommand.ts     # Advanced queue management
 │   ├── QueueStatusCommand.ts
 │   └── SimpleQueueCommand.ts
+├── examples/           # 📚 CLI Pattern Examples
+│   ├── ListCommand.ts      # File operations example
+│   ├── SampleCommand.ts    # Comprehensive patterns
+│   └── config.ts          # Example configuration
 ├── services/           # 🔧 Core Services
 │   ├── Queue/              # Task queue management system
 │   ├── UserExperience/     # UX enhancement services
@@ -53,17 +60,6 @@ src/
 │   └── FileSystemLive.ts   # File system implementation
 ├── Cli.ts             # Main CLI configuration
 └── bin.ts             # CLI entry point
-```
-
-### Learning Samples (`samples/`)
-```
-samples/
-├── commands/          # 📚 CLI Pattern Examples
-│   ├── ListCommand.ts      # Basic file operations
-│   ├── SampleCommand.ts    # Advanced CLI patterns
-│   ├── EnhancedListCommand.ts
-│   └── [10+ more examples]
-└── README.md          # Sample documentation
 ```
 
 ### Development Guides (`docs/testing/`)
@@ -108,93 +104,17 @@ docs/testing/
 1. **Create Command File**: Create new command in `src/commands/`
 2. **Register Command**: Add to `src/commands/index.ts` and `src/Cli.ts`
 3. **Write Tests**: Add tests in `test/commands/`
-4. **Validate**: Run `npm run check` and `npm test`
+4. **Validate**: Run `pnpm run check` and `pnpm test`
 
 See [CLI Development Guide](docs/CLI_DEVELOPMENT.md) for detailed instructions.
 
-### Testing
+### Example Commands
+
+Try these example commands to explore the patterns:
 
 ```bash
-# Run all tests
-npm test
-
-# Run specific test file
-npm test GreetCommand.test.ts
-
-# Type check
-npm run check
-
-# Full validation
-npm run check && npm test && npm run build
-```
-
-See [Testing Guide](docs/TESTING_GUIDE.md) for comprehensive testing information.
-
-## Operations
-
-**Building**
-
-```bash
-npm run build
-```
-
-**Testing**
-
-```bash
-npm test
-```
-
-**Code Formatting**
-
-```bash
-# Format all files
-npm run format
-
-# Format with watch mode
-npm run format:watch
-```
-
-### Code Quality
-
-- **Type Safety**: No `any` types - strict TypeScript throughout
-- **Testing**: 31+ tests with 80%+ coverage
-- **Linting**: ESLint + Prettier with auto-format on save
-- **CI/CD**: All tests must pass before commits
-
-## Project Structure
-
-```
-src/
-├── commands/           # Production commands
-│   └── index.ts       # Production command registry
-├── examples/          # Example/demo commands  
-│   ├── config.ts      # Example command configuration
-│   ├── index.ts       # Example command registry
-│   ├── ListCommand.ts # File listing example
-│   ├── CatCommand.ts  # File reading example
-│   ├── FindCommand.ts # File searching example
-│   └── SampleCommand.ts # Comprehensive patterns
-├── services/          # Effect services
-│   ├── FileSystem.ts  # FileSystem service interface
-│   └── FileSystemLive.ts # FileSystem implementation
-├── Cli.ts            # Main CLI configuration
-└── bin.ts            # CLI entry point
-```
-
-## Quick Start
-
-### 1. Install Dependencies
-```sh
-pnpm install
-```
-
-### 2. Try Example Commands
-```sh
 # List files in current directory
 pnpm dev list ./
-
-# List with detailed information
-pnpm dev list --long ./
 
 # Try the comprehensive sample command
 pnpm dev sample package.json ./ "ts"
@@ -202,109 +122,43 @@ pnpm dev sample package.json ./ "ts"
 # Sample with verbose output and JSON format
 pnpm dev sample --verbose --format json package.json ./ "config"
 
-# Sample with table format and limit results
-pnpm dev sample --format table --limit 5 package.json ./ "md"
-
 # See all available commands
 pnpm dev --help
-
-# Check specific command help
-pnpm dev sample --help
-
-# Try the Queue System Demo
-pnpm tsx src/examples/QueueDemo.ts
-
-# Check Queue Status
-pnpm tsx src/examples/QueueStatusCommand.ts
 ```
 
-### 3. Sample Command Examples
+The `sample` command demonstrates advanced CLI patterns including:
+- Multiple argument types and validation
+- Output formatting (text, JSON, table)
+- File system operations with Effect.js
+- Error handling and user experience
 
-The `sample` command demonstrates various CLI patterns:
+### Development Commands
 
-**Basic Usage:**
-```sh
-pnpm dev sample <file> <path> <pattern>
+```bash
+# Run in development mode
+pnpm dev [command] [args]
+
+# Run tests
+pnpm test
+
+# Type check
+pnpm check
+
+# Format code
+pnpm format
+
+# Build for production
+pnpm build
 ```
 
-**Advanced Options:**
-```sh
-# Verbose mode with JSON output
-pnpm dev sample --verbose --format json package.json ./ "config"
-
-# Table format with result limit
-pnpm dev sample --format table --limit 3 README.md src/ "Command"
-
-# Default text format
-pnpm dev sample package.json ./ "ts"
-```
-
-**Sample Command Features:**
-- **Arguments**: File to read, directory to search, search pattern
-- **Output Formats**: `text` (default), `json`, `table`
-- **Options**: `--verbose`, `--limit`, `--format`
-- **File Analysis**: Shows file content preview and line count
-- **Directory Search**: Finds files/folders matching the pattern
-- **Flexible Output**: Multiple format options for different use cases
-
-### 4. Queue System Usage
-
-The template includes a comprehensive queue system for managing background tasks:
-
-```typescript
-import { 
-  QueueSystem,
-  queueFileOperation,
-  queueComputationTask,
-  initializeQueueSystem,
-  getQueueStatus 
-} from "./services/Queue/index.js"
-
-// Initialize queue system
-const sessionId = yield* initializeQueueSystem()
-
-// Queue file operations
-const taskId = yield* queueFileOperation(
-  Effect.gen(function* () {
-    // Your file operation here
-    return yield* readFile("data.txt")
-  }),
-  {
-    type: "file-read",
-    filePath: "data.txt",
-    priority: 1 // High priority
-  }
-)
-
-// Queue computations
-yield* queueComputationTask(
-  Effect.gen(function* () {
-    // Your computation here
-    return complexCalculation(data)
-  }),
-  {
-    priority: 5,
-    isMemoryIntensive: true
-  }
-)
-
-// Monitor queue status
-const status = yield* getQueueStatus()
-console.log(`Pending: ${status.queue.totalPending}`)
-```
-
-### 5. Add Your Own Commands
-
-Learn from the comprehensive sample command pattern first:
-- 📄 **[SimpleSampleCommand.ts](src/examples/SimpleSampleCommand.ts)** - Complete example with all patterns
-- 📄 **[SimpleListCommand.ts](src/examples/SimpleListCommand.ts)** - Basic file system usage
+### Adding Your Own Commands
 
 Create a new command in `src/commands/`:
 
 ```typescript
 // src/commands/MyCommand.ts
 import * as Command from "@effect/cli/Command"
-import * as Args from "@effect/cli/Args"  
+import * as Args from "@effect/cli/Args"
 import * as Effect from "effect/Effect"
 import * as Console from "effect/Console"
 
@@ -332,74 +186,18 @@ export const productionCommands = [
 ]
 ```
 
-## Managing Examples
+### Managing Examples
 
-### Disable All Examples
-
-Edit `src/examples/config.ts`:
+Examples can be toggled via `src/examples/config.ts`:
 
 ```typescript
-export const ENABLE_EXAMPLES = false
-```
-
-### Disable Specific Examples
-
-```typescript
+export const ENABLE_EXAMPLES = false // Disable all examples
 export const ExampleConfig = {
   LIST_COMMAND: true,
-  CAT_COMMAND: false,    // Disable cat command
-  FIND_COMMAND: true,
-  SAMPLE_COMMAND: false, // Disable sample command
-  ADVANCED_COMMAND: true,
+  SAMPLE_COMMAND: false, // Disable specific command
+  // ...other examples
 }
 ```
 
-### Auto-disable in Production
-
-```typescript
-// Uncomment this line in config.ts
-export const ENABLE_EXAMPLES = process.env.NODE_ENV !== 'production'
-```
-
-📖 **자세한 내용**: [Configuration > Examples](docs/configuration/EXAMPLES.md)
-
-## 🏗️ Effect.js Patterns
-
-주요 패턴들 (자세한 설명은 문서 참조):
-
-- **Effect.gen**: Generator 스타일 비동기 처리
-- **Service Pattern**: Context.GenericTag를 통한 의존성 주입  
-- **Error Handling**: 타입 안전한 에러 관리
-- **CLI Integration**: 타입 안전한 명령행 인터페이스
-
-📖 **자세한 내용**: [API > Effect Patterns](docs/api/EFFECT_PATTERNS.md)
-
-## Development
-
-### Running in Development
-```sh
-# Run with hot reload
-pnpm dev [command] [args]
-
-# Example: List files with verbose output  
-pnpm dev list --all --long ./src
-```
-
-### Building for Production
-```sh
-# Build the project
-pnpm build
-
-# Run built version
-node dist/bin.js [command] [args]
-```
-
-### Testing
-```sh
-# Run tests
-pnpm test
-
-# Run tests in watch mode
-pnpm test:watch
-```
+📖 **더 자세한 내용**: [Configuration > Examples](docs/configuration/EXAMPLES.md)
 
