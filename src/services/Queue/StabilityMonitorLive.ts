@@ -10,7 +10,7 @@
  * @created 2025-01-12
  */
 
-import * as Fiber from "effect/Fiber"
+import { never } from "effect/Fiber"
 import { minutes, seconds, toMillis } from "effect/Duration"
 import * as Effect from "effect/Effect"
 import { interrupt } from "effect/Fiber"
@@ -384,7 +384,7 @@ export const StabilityMonitorLive: Layer<StabilityMonitor, PersistenceError, Que
       Effect.catchAll((error) =>
         Effect.gen(function*() {
           yield* Effect.log(`Heartbeat fiber failed: ${(error as any) instanceof Error ? (error as Error).message : String(error)}`)
-          return yield* Fiber.never
+          return yield* never
         })
       )
     )

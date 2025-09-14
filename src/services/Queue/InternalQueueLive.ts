@@ -2,7 +2,7 @@ import { millis, seconds } from "effect/Duration"
 import type { Duration } from "effect/Duration"
 import { none, some, isSome, getOrNull } from "effect/Option"
 import type { Option } from "effect/Option"
-import * as Option from "effect/Option"
+import { map, filter } from "effect/Option"
 import { bounded, take, offer, size } from "effect/Queue"
 import type { Queue } from "effect/Queue"
 import { forever } from "effect/Schedule"
@@ -255,13 +255,13 @@ export const InternalQueueLive = effect(
           lastError: none(),
           errorStack: none(),
           filePath: task.operationData.pipe(
-            Option.map((data: any) => data.filePath as string | undefined),
-            Option.filter((path): path is string => typeof path === "string")
+            map((data: any) => data.filePath as string | undefined),
+            filter((path): path is string => typeof path === "string")
           ),
           fileSize: none(),
           fileHash: none(),
           operationData: task.operationData.pipe(
-            Option.map(JSON.stringify)
+            map(JSON.stringify)
           ),
           resultData: none(),
           memoryUsageKb: none(),

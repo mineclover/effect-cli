@@ -1,7 +1,7 @@
 import { seconds, millis } from "effect/Duration"
 import type { Duration } from "effect/Duration"
 import { getOrElse, fromNullable } from "effect/Option"
-import * as Option from "effect/Option"
+import { map } from "effect/Option"
 /**
  * Effect CLI Queue System - Main Export Module
  *
@@ -327,7 +327,7 @@ export const waitForTask = (taskId: string, timeoutMs: number = 60000) =>
         Effect.succeed,
         Effect.map((taskOpt) =>
           taskOpt.pipe(
-            Option.map((t) => ({ status: t.status, task: t })),
+            map((t) => ({ status: t.status, task: t })),
             getOrElse(() => ({ status: "not-found" as const, task: null }))
           )
         )
@@ -379,7 +379,7 @@ export const checkQueueHealth = () =>
 
     const isHealthy = status.queue.processingFibers.length > 0 &&
       !heartbeat.pipe(
-        Option.map((h) => h.memoryLeakDetected || h.circuitBreakerOpen),
+        map((h) => h.memoryLeakDetected || h.circuitBreakerOpen),
         getOrElse(() => false)
       )
 
