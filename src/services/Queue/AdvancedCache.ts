@@ -23,8 +23,6 @@ import type { Layer } from "effect/Layer"
 //  // Unused import
 import type * as Schedule from "effect/Schedule"
 
-// import type { ResourceGroup, OperationType } from "./types.js" // Unused import
-
 // ============================================================================
 // TYPE DEFINITIONS
 // ============================================================================

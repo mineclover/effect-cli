@@ -18,7 +18,6 @@ import { effect, succeed } from "effect/Layer"
 import { get, make, update } from "effect/Ref"
 import type { CircuitBreakerState, ResourceGroup } from "./types.js"
 import { CircuitBreaker, QueuePersistence } from "./types.js"
-// import { CircuitBreakerError, PersistenceError } from "./types.js" // Unused imports
 
 // ============================================================================
 // INTERNAL TYPES
