@@ -9,12 +9,8 @@ import * as Command from "@effect/cli/Command"
 // Main commands (core functionality + templates)
 import { greetCommand, queueCommand, queueStatusCommand, simpleQueueCommand } from "./commands/index.js"
 
-// 메인 커맨드 생성
-const mainCommand = Command.make(
-  "effect-cli",
-  {},
-  () => log("Effect CLI Application - use --help to see available commands")
-)
+// 메인 커맨드 생성 - 기본 핸들러 없이 서브커맨드만 사용
+const mainCommand = Command.make("effect-cli")
 
 // CLI 구성: 메인 기능 명령어들
 const command = mainCommand.pipe(
