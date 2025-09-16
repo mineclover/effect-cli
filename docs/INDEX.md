@@ -1,115 +1,119 @@
 # 📚 Documentation Index
 
-Effect CLI 프로젝트의 모든 문서를 주제별로 정리한 중앙 인덱스입니다.
+Central documentation hub for the Effect CLI framework with intelligent performance optimization and comprehensive development guides.
 
 ## 🚀 Quick Start
 
-처음 시작하는 분들을 위한 필수 문서들:
+Essential documents for getting started:
 
-| 문서 | 용도 | 대상 |
-|------|------|------|
-| [README.md](../README.md) | 프로젝트 소개 및 빠른 시작 | 모든 사용자 |
-| [CLI Usage Guide](./CLI_USAGE.md) ✅ | 완전한 CLI 사용법 및 명령어 레퍼런스 | 사용자 |
-| [Development Guide](./DEVELOPMENT.md) ✅ | 개발 환경 설정 및 확장 가이드 | 개발자 |
+| Document | Purpose | Audience |
+|----------|---------|----------|
+| [README.md](../README.md) | Project overview and quick start with performance features | All users |
+| [CLI Usage Guide](./CLI_USAGE.md) ✅ | Complete CLI usage and command reference with optimization details | Users |
+| [Development Guide](./DEVELOPMENT.md) ✅ | Development setup, best practices, and extension guide | Developers |
+| [CLI Development Guide](./CLI_DEVELOPMENT.md) ✅ | Comprehensive command development with performance patterns | Developers |
 
-## 📖 주제별 문서
+## 📖 Documentation by Topic
 
 ### 🏗️ Architecture & Design
-프로젝트의 구조와 설계 원칙
+Project structure and design principles with performance optimization
 
-- [프로젝트 구조](./architecture/PROJECT_STRUCTURE.md) - 디렉토리 구조 및 파일 역할
-- [CLI 아키텍처](./architecture/CLI_ARCHITECTURE.md) - Effect CLI 구조 및 패턴
-- [서비스 패턴](./architecture/SERVICE_PATTERN.md) - Effect 서비스 레이어 설계
+- **[Intelligent Layer Loading](./DEVELOPMENT.md#intelligent-layer-loading)** ✅ - Performance optimization patterns
+- **[Service Layer Pattern](./DEVELOPMENT.md#service-development-patterns)** ✅ - Effect service architecture
+- **[Command Classification](./CLI_DEVELOPMENT.md#command-classification)** ✅ - Simple vs complex command patterns
+- **[Error Handling Standards](./DEVELOPMENT.md#error-handling-standards)** ✅ - Comprehensive error management
 
 ### ⚙️ Development
-개발자를 위한 기술 가이드
+Technical guides for developers with best practices
 
-- [명령어 개발 가이드](./development/COMMAND_DEVELOPMENT.md) - 새 명령어 추가 방법
-- [타입 안전성](./development/TYPE_SAFETY.md) - Effect.js 타입 안전성 패턴
-- [테스트 작성](./development/TESTING.md) - 명령어 테스트 방법
-- [디버깅](./development/DEBUGGING.md) - 개발 중 문제 해결
-- [Queue System Tasks](./development/QUEUE_SYSTEM_TASKS.md) ✅ - 큐 시스템 구현 작업 계획
+- **[Command Development Workflow](./CLI_DEVELOPMENT.md#command-development-workflow)** ✅ - Step-by-step command creation
+- **[Advanced Command Patterns](./CLI_DEVELOPMENT.md#advanced-command-patterns)** ✅ - Complex arguments, validation, progress tracking
+- **[Performance Optimization](./CLI_DEVELOPMENT.md#performance-optimization)** ✅ - Fast vs heavy command patterns
+- **[Testing Patterns](./CLI_DEVELOPMENT.md#testing-patterns)** ✅ - Command and service testing strategies
+- **[Quality Gates](./DEVELOPMENT.md#quality-gates-mandatory)** ✅ - Mandatory development process
 
-### 📋 Configuration
-설정 및 커스터마이징
+### 📋 Configuration & Customization
+Settings and performance tuning
 
-- [Example 관리](./configuration/EXAMPLES.md) - 예제 명령어 설정
-- [Production 배포](./configuration/PRODUCTION.md) - 프로덕션 환경 설정
-- [환경 설정](./configuration/ENVIRONMENT.md) - 개발 환경 구성
+- **[Code Change Methodology](./DEVELOPMENT.md#code-change-methodology)** ✅ - Proper development workflow
+- **[Feature Addition Process](./DEVELOPMENT.md#feature-addition-methodology)** ✅ - Step-by-step feature development
+- **[Layer Migration](./CLI_DEVELOPMENT.md#layer-migration)** ✅ - Updating layer architecture
+- **[Bundle Analysis](./DEVELOPMENT.md#bundle-analysis)** ✅ - Performance optimization techniques
 
 ### 🔧 API Reference
-기술 레퍼런스
+Technical reference with examples
 
-- [Effect.js 패턴](./api/EFFECT_PATTERNS.md) ✅ - Effect.js 사용 패턴
-- [Effect.js 가이드](./effect-js-guide.md) ✅ - 프로젝트 특화 Effect.js API
-- [CLI API](./api/CLI_API.md) 📝 - Effect CLI API 레퍼런스
-- [서비스 API](./api/SERVICE_API.md) 📝 - 파일시스템 서비스 API
+- **[Service Integration Patterns](./CLI_DEVELOPMENT.md#service-integration-patterns)** ✅ - Creating and using services
+- **[Command Patterns](./CLI_DEVELOPMENT.md#advanced-command-patterns)** ✅ - Arguments, validation, progress tracking
+- **[Error Management](./DEVELOPMENT.md#error-handling-standards)** ✅ - Effect error handling patterns
+- **[Documentation Standards](./CLI_DEVELOPMENT.md#documentation-standards)** ✅ - JSDoc and command documentation
 
 ### 📚 Guides & Tutorials
-실무 가이드 및 튜토리얼
+Practical guides with real examples
 
-- [첫 번째 명령어 만들기](./guides/FIRST_COMMAND.md) - 단계별 명령어 생성
-- [복잡한 명령어 구현](./guides/ADVANCED_COMMANDS.md) - 고급 패턴 활용
-- [Queue System](./guides/QUEUE_SYSTEM.md) ✅ - 내부 큐 관리 및 복원력 시스템
-- [모범 사례](./guides/BEST_PRACTICES.md) - 권장 개발 패턴
+- **[Your First Command](./CLI_DEVELOPMENT.md#step-2-create-command-structure)** ✅ - Basic command creation
+- **[Complex Commands](./CLI_DEVELOPMENT.md#advanced-command-patterns)** ✅ - Advanced implementation patterns
+- **[Queue System Integration](./CLI_DEVELOPMENT.md#commands-with-progress-tracking)** ✅ - Task management and monitoring
+- **[Best Practices Summary](./CLI_DEVELOPMENT.md#best-practices-summary)** ✅ - Do's and don'ts
 
-### 🚨 Operations
-운영 및 배포
+### 🚨 Operations & Performance
+Production deployment and optimization
 
-- [MCP 도구 사용법](./operations/MCP_USAGE.md) ✅ - Notion MCP 문서화 워크플로우
-- [빌드 및 배포](./operations/BUILD_DEPLOY.md) 📝 - CI/CD 및 배포 가이드
-- [모니터링](./operations/MONITORING.md) 📝 - 로깅 및 에러 추적
-- [성능 최적화](./operations/PERFORMANCE.md) 📝 - CLI 성능 개선
+- **[Quality Gates](./DEVELOPMENT.md#quality-gates-mandatory)** ✅ - Mandatory checks before deployment
+- **[Performance Patterns](./CLI_DEVELOPMENT.md#performance-optimization)** ✅ - Fast vs heavy command optimization
+- **[Build Process](./DEVELOPMENT.md#intelligent-layer-loading)** ✅ - Intelligent compilation and bundling
+- **[Testing Strategy](./CLI_DEVELOPMENT.md#testing-patterns)** ✅ - Comprehensive testing approaches
 
-## 🎯 문서 찾기
+## 🎯 Finding Documentation
 
-### 목적별 추천
+### Recommended Learning Paths
 
-**새로 시작하는 분**:
-1. README.md → Getting Started → First Command
+**🆕 New Users**:
+1. README.md → CLI Usage Guide → Your First Command
 
-**기존 프로젝트 확장**:
-1. Project Structure → Command Development → Examples
+**🔧 Extending Existing Project**:
+1. CLI Development Guide → Service Integration → Advanced Patterns
 
-**프로덕션 배포**:
-1. Production → Build Deploy → Performance
+**🚀 Production Deployment**:
+1. Quality Gates → Performance Optimization → Build Process
 
-**문제 해결**:
-1. Debugging → API Reference → Best Practices
+**🐛 Troubleshooting**:
+1. Testing Patterns → Error Management → Best Practices
 
-### 난이도별 분류
+### By Difficulty Level
 
-- 🟢 **초급**: Getting Started, Examples, First Command
-- 🟡 **중급**: Command Development, Service Pattern, Advanced Commands
-- 🔴 **고급**: CLI Architecture, Type Safety, Performance
+- 🟢 **Beginner**: README, CLI Usage, Basic Command Structure
+- 🟡 **Intermediate**: Command Development, Service Patterns, Advanced Commands
+- 🔴 **Advanced**: Performance Optimization, Layer Architecture, Error Management
 
-## 📝 문서 기여
+## 📝 Contributing to Documentation
 
-새로운 문서 추가 시:
+When adding new documentation:
 
-1. **주제 확인**: 기존 주제에 맞는지 확인
-2. **중복 방지**: INDEX.md에서 유사한 내용 검색
-3. **인덱스 업데이트**: 새 문서를 INDEX.md에 등록
-4. **크로스 레퍼런스**: 관련 문서들과 상호 링크
+1. **Topic Verification**: Ensure it fits existing topic structure
+2. **Avoid Duplication**: Search INDEX.md for similar content
+3. **Update Index**: Register new documents in INDEX.md
+4. **Cross-Reference**: Link related documents appropriately
 
-### 문서 작성 규칙
+### Documentation Standards
 
-- **하나의 주제**: 각 문서는 하나의 주제만 다룸
-- **명확한 제목**: 내용을 정확히 반영하는 제목
-- **실용적 예제**: 실제 코드 예제 포함
-- **업데이트 날짜**: 마지막 수정일 명시
+- **Single Topic**: Each document covers one focused topic
+- **Clear Titles**: Titles accurately reflect content
+- **Practical Examples**: Include real code examples with explanations
+- **Performance Context**: Consider performance implications in examples
+- **Quality Gates**: All examples must pass type checking and linting
 
-## 🔄 문서 상태
+## 🔄 Document Status
 
-| 문서 상태 | 의미 | 표시 |
-|-----------|------|------|
-| ✅ 완성 | 내용 완료, 리뷰 완료 | ✅ |
-| 🚧 작성중 | 내용 작성 진행 중 | 🚧 |
-| 📝 계획 | 작성 예정 | 📝 |
-| 🔄 업데이트 | 내용 업데이트 필요 | 🔄 |
+| Status | Meaning | Symbol |
+|--------|---------|--------|
+| ✅ Complete | Content finished, reviewed, tested | ✅ |
+| 🚧 In Progress | Content being written | 🚧 |
+| 📝 Planned | Scheduled for creation | 📝 |
+| 🔄 Needs Update | Content requires updating | 🔄 |
 
 ---
 
-**💡 Tip**: Ctrl+F로 키워드 검색해서 원하는 문서를 빠르게 찾으세요!
+**💡 Tip**: Use Ctrl+F to search for keywords and quickly find relevant documentation!
 
-**❓ 문의**: 찾는 문서가 없거나 추가 문의는 Issues에서 문의해주세요.
+**❓ Questions**: If you can't find what you're looking for or need help, please create an issue.

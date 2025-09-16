@@ -455,6 +455,349 @@ effect-cli greet "Test"     # Should be fast, minimal output
 effect-cli queue status     # Full initialization when needed
 ```
 
+## Development Best Practices
+
+### Code Change Methodology
+
+**🎯 Always Follow This Process:**
+
+1. **Understand Before Changing**
+   - Read existing code patterns and conventions
+   - Check how similar features are implemented
+   - Review related tests and documentation
+
+2. **Test-Driven Development**
+   - Write tests first when adding new features
+   - Run existing tests before making changes
+   - Ensure all tests pass after changes
+
+3. **Incremental Changes**
+   - Make small, focused commits
+   - Test each change independently
+   - Document the reasoning behind changes
+
+4. **Quality Gates (MANDATORY)**
+   ```bash
+   # Before every commit
+   pnpm check    # TypeScript type checking
+   pnpm lint     # ESLint code quality
+   pnpm build    # Production build verification
+   pnpm test     # All tests must pass
+   ```
+
+### Code Modification Guidelines
+
+#### ✅ **Appropriate Code Changes**
+
+**Adding New Commands:**
+```typescript
+// 1. Create command file following existing patterns
+// src/commands/NewCommand.ts
+import * as Command from "@effect/cli/Command"
+import * as Args from "@effect/cli/Args"
+import * as Effect from "effect/Effect"
+import * as Console from "effect/Console"
+
+const inputArg = Args.text("input").pipe(
+  Args.withDescription("Input parameter")
+)
+
+export const newCommand = Command.make("new-command", { input: inputArg }).pipe(
+  Command.withDescription("New command description"),
+  Command.withHandler(({ input }) =>
+    Effect.gen(function* () {
+      yield* Console.log(`Processing: ${input}`)
+    })
+  )
+)
+
+// 2. Register in src/Cli.ts
+import { newCommand } from "./commands/NewCommand.js"
+
+const command = mainCommand.pipe(
+  Command.withSubcommands([
+    greetCommand,
+    queueCommand,
+    queueStatusCommand,
+    simpleQueueCommand,
+    newCommand  // Add here
+  ])
+)
+
+// 3. Update bin.ts if needed (for layer requirements)
+const needsQueueSystem = (argv: Array<string>) => {
+  const commandKeywords = ["queue", "queue-status", "queue-demo", "new-command"]
+  return commandKeywords.some((keyword) => argv.includes(keyword))
+}
+```
+
+**Modifying Existing Features:**
+```typescript
+// ✅ Good: Extend existing patterns
+export const enhancedGreetCommand = greetCommand.pipe(
+  Command.withOptions({ verbose: Options.boolean("verbose") }),
+  Command.withHandler(({ name, verbose }) =>
+    Effect.gen(function* () {
+      if (verbose) {
+        yield* Console.log(`Preparing to greet: ${name}`)
+      }
+      yield* Console.log(`Hello, ${name}!`)
+    })
+  )
+)
+
+// ✅ Good: Use Effect service pattern for complex logic
+export const DatabaseServiceLive = Layer.effect(
+  DatabaseService,
+  Effect.gen(function* () {
+    return {
+      query: (sql: string) =>
+        Effect.gen(function* () {
+          // Implementation with proper error handling
+        })
+    }
+  })
+)
+```
+
+**Performance-Conscious Changes:**
+```typescript
+// ✅ Good: Conditional loading for heavy dependencies
+const needsAdvancedFeatures = (argv: Array<string>) => {
+  return argv.some(arg => ["advanced", "complex"].includes(arg))
+}
+
+// ✅ Good: Lazy loading for optional features
+const OptionalServiceLive = Layer.effect(
+  OptionalService,
+  Effect.suspend(() => import("./heavy-service.js")).pipe(
+    Effect.map(mod => mod.createService())
+  )
+)
+```
+
+#### ❌ **Avoid These Patterns**
+
+**Don't Break Layer Architecture:**
+```typescript
+// ❌ Bad: Direct imports without service pattern
+import * as fs from "fs"  // Use FileSystem service instead
+
+// ❌ Bad: Ignoring intelligent layer loading
+// Always consider if new command needs queue system
+
+// ❌ Bad: Hardcoded dependencies
+const result = database.query("SELECT * FROM users")  // Use service injection
+```
+
+**Don't Ignore Performance:**
+```typescript
+// ❌ Bad: Always loading heavy dependencies
+import { HeavyAnalytics } from "./heavy-analytics.js"  // Load conditionally
+
+// ❌ Bad: Synchronous operations without Effect
+const data = fs.readFileSync("file.txt")  // Use Effect and FileSystem service
+```
+
+### Feature Addition Methodology
+
+#### 🚀 **Step-by-Step Feature Addition**
+
+**Phase 1: Planning & Design**
+```bash
+# 1. Analyze requirements
+# - Does this need queue system integration?
+# - Should this be a simple or complex command?
+# - What services does this require?
+
+# 2. Check existing patterns
+grep -r "similar-feature" src/
+```
+
+**Phase 2: Implementation**
+```typescript
+// 1. Create feature interface (if needed)
+export interface NewFeatureService {
+  readonly processData: (input: string) => Effect.Effect<string, FeatureError>
+}
+
+// 2. Implement service
+export const NewFeatureServiceLive = Layer.effect(
+  NewFeatureService,
+  Effect.gen(function* () {
+    // Service implementation with dependencies
+    const fileSystem = yield* FileSystem
+
+    return {
+      processData: (input: string) =>
+        Effect.gen(function* () {
+          // Feature logic with proper error handling
+          return `Processed: ${input}`
+        })
+    }
+  })
+)
+
+// 3. Create command
+export const newFeatureCommand = Command.make("feature", { input: inputArg }).pipe(
+  Command.withDescription("New feature command"),
+  Command.withHandler(({ input }) =>
+    Effect.gen(function* () {
+      const service = yield* NewFeatureService
+      const result = yield* service.processData(input)
+      yield* Console.log(result)
+    })
+  )
+)
+```
+
+**Phase 3: Integration**
+```typescript
+// 1. Update CLI configuration
+// 2. Add to layer loading logic if needed
+// 3. Update documentation
+// 4. Add tests
+```
+
+**Phase 4: Testing & Validation**
+```bash
+# 1. Unit tests
+pnpm test
+
+# 2. Integration testing
+pnpm dev feature "test-input"
+
+# 3. Build verification
+pnpm build
+
+# 4. Type and lint checking
+pnpm check && pnpm lint
+```
+
+### Service Development Patterns
+
+#### **Creating New Services**
+
+```typescript
+// 1. Define service interface
+export interface EmailService {
+  readonly send: (to: string, message: string) => Effect.Effect<void, EmailError>
+  readonly validate: (email: string) => Effect.Effect<boolean, ValidationError>
+}
+
+// 2. Create service tag
+export const EmailService = Context.GenericTag<EmailService>("EmailService")
+
+// 3. Implement live service
+export const EmailServiceLive = Layer.effect(
+  EmailService,
+  Effect.gen(function* () {
+    // Dependencies
+    const config = yield* Config.string("EMAIL_PROVIDER")
+
+    return {
+      send: (to: string, message: string) =>
+        Effect.gen(function* () {
+          // Implementation with proper error handling
+          yield* Effect.logInfo(`Sending email to ${to}`)
+        }),
+
+      validate: (email: string) =>
+        Effect.succeed(email.includes("@"))
+    }
+  })
+)
+
+// 4. Create test implementation
+export const EmailServiceTest = Layer.succeed(
+  EmailService,
+  {
+    send: () => Effect.succeed(void 0),
+    validate: () => Effect.succeed(true)
+  }
+)
+```
+
+#### **Service Composition**
+
+```typescript
+// Compose multiple services
+export const AppServiceLayer = Layer.mergeAll(
+  FileSystemLive,
+  EmailServiceLive,
+  DatabaseServiceLive
+)
+
+// Conditional service loading
+const getServiceLayer = (features: Array<string>) => {
+  let layer = CoreServiceLayer
+
+  if (features.includes("email")) {
+    layer = Layer.merge(layer, EmailServiceLive)
+  }
+
+  if (features.includes("analytics")) {
+    layer = Layer.merge(layer, AnalyticsServiceLive)
+  }
+
+  return layer
+}
+```
+
+### Error Handling Standards
+
+#### **Proper Error Management**
+
+```typescript
+// 1. Define domain errors
+export class FeatureError extends Data.TaggedError("FeatureError")<{
+  readonly reason: string
+  readonly context?: Record<string, unknown>
+}> {}
+
+// 2. Use in service implementation
+export const processWithErrorHandling = (input: string) =>
+  Effect.gen(function* () {
+    // Validate input
+    if (!input.trim()) {
+      return yield* new FeatureError({
+        reason: "Input cannot be empty",
+        context: { providedInput: input }
+      })
+    }
+
+    // Process with error recovery
+    const result = yield* dangerousOperation(input).pipe(
+      Effect.catchAll(error =>
+        Effect.gen(function* () {
+          yield* Effect.logWarning(`Operation failed: ${error}`)
+          return defaultValue
+        })
+      )
+    )
+
+    return result
+  })
+
+// 3. Handle in command
+export const safeCommand = Command.make("safe", { input: inputArg }).pipe(
+  Command.withHandler(({ input }) =>
+    Effect.gen(function* () {
+      const result = yield* processWithErrorHandling(input).pipe(
+        Effect.catchTag("FeatureError", error =>
+          Effect.gen(function* () {
+            yield* Console.error(`Error: ${error.reason}`)
+            yield* Effect.fail(new Error("Command failed"))
+          })
+        )
+      )
+
+      yield* Console.log(`Success: ${result}`)
+    })
+  )
+)
+```
+
 ## Contributing
 
 ### Code Style
@@ -463,6 +806,7 @@ effect-cli queue status     # Full initialization when needed
 - Use Effect.js patterns consistently
 - Write comprehensive tests
 - Document public APIs with JSDoc
+- Always run quality gates before committing
 
 ### Commit Messages
 
