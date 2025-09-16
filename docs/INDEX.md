@@ -9,8 +9,8 @@ Effect CLI 프로젝트의 모든 문서를 주제별로 정리한 중앙 인덱
 | 문서 | 용도 | 대상 |
 |------|------|------|
 | [README.md](../README.md) | 프로젝트 소개 및 빠른 시작 | 모든 사용자 |
-| [Getting Started](./guides/GETTING_STARTED.md) | 단계별 설치 및 첫 명령어 실행 | 초보자 |
-| [Architecture](./architecture/OVERVIEW.md) | 프로젝트 구조 이해 | 개발자 |
+| [CLI Usage Guide](./CLI_USAGE.md) ✅ | 완전한 CLI 사용법 및 명령어 레퍼런스 | 사용자 |
+| [Development Guide](./DEVELOPMENT.md) ✅ | 개발 환경 설정 및 확장 가이드 | 개발자 |
 
 ## 📖 주제별 문서
 

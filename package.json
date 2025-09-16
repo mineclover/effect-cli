@@ -1,10 +1,13 @@
 {
-  "name": "@template/cli",
+  "name": "effect-cli",
   "version": "0.0.0",
   "type": "module",
   "packageManager": "pnpm@10.14.0",
   "license": "MIT",
   "description": "A basic Effect CLI application",
+  "bin": {
+    "effect-cli": "./bin.cjs"
+  },
   "repository": {
     "type": "git",
     "url": "<PLACEHOLDER>"
