@@ -1,4 +1,3 @@
-import { log } from "effect/Console"
 /**
  * Effect CLI Application
  *

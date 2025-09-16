@@ -8,7 +8,6 @@ import * as NodeRuntime from "@effect/platform-node/NodeRuntime"
 import * as Effect from "effect/Effect"
 import { mergeAll } from "effect/Layer"
 import * as Logger from "effect/Logger"
-import * as LogLevel from "effect/LogLevel"
 import { run } from "./Cli.js"
 import { BasicQueueSystemLayer } from "./services/Queue/index.js"
 
@@ -29,8 +28,8 @@ const isQuiet = process.env.LOG_LEVEL === "error" || (!process.env.LOG_LEVEL && 
 const LoggerLayer = Logger.replace(
   Logger.defaultLogger,
   isQuiet
-    ? Logger.none  // No logging in production unless explicitly requested
-    : Logger.stringLogger  // Default logging for development
+    ? Logger.none // No logging in production unless explicitly requested
+    : Logger.stringLogger // Default logging for development
 )
 
 // Absolute minimal layer - just platform services without complex queue dependencies
@@ -42,9 +41,9 @@ const AppLayer = mergeAll(
 )
 
 // Check if command needs queue system
-const needsQueueSystem = (argv: string[]) => {
-  const commandKeywords = ['queue', 'queue-status', 'queue-demo']
-  return commandKeywords.some(keyword => argv.includes(keyword))
+const needsQueueSystem = (argv: Array<string>) => {
+  const commandKeywords = ["queue", "queue-status", "queue-demo"]
+  return commandKeywords.some((keyword) => argv.includes(keyword))
 }
 
 // Simple layer for non-queue commands
@@ -64,7 +63,6 @@ const FullAppLayer = mergeAll(
 const selectedLayer = needsQueueSystem(process.argv) ? FullAppLayer : SimpleAppLayer
 
 run(process.argv).pipe(
-  Effect.provide(selectedLayer),
-  Effect.tapErrorCause(Effect.logError),
+  Effect.provide(selectedLayer) as any,
   NodeRuntime.runMain
 )
